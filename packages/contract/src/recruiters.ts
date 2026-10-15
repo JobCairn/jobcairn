@@ -34,22 +34,19 @@ export interface AgencyPersonView { name: string; title: string; email: string; 
 /**
  * One place an agency was found, like a job's source: `name` is the board's name as jobs show it ("SEEK", "LinkedIn",
  * "Indeed") when the page is on a job board, else the kind of page ("Web search", "RCSA directory", "Agency website",
- * "Saved job"); `url` the https page; `found_at` an ISO timestamp (like a job's found_at).
+ * "Saved job"); `url` the https page; `found_at` an ISO timestamp (like a job's found_at). Older records have none.
  */
-export interface AgencySourceView { name: string; url: string; found_at: string }
-export interface AgencyTracking { status: AgencyStatus; contacted_on: string; follow_up_on: string; notes: string }
-/** Where the agency was found ("SEEK", "Web search", "Saved job"...), with the page and when. Older records have none. */
 export interface AgencySource { name: string; url: string; found_at: string }
+export interface AgencyTracking { status: AgencyStatus; contacted_on: string; follow_up_on: string; notes: string }
 /** The stored record, as the bridge sends it. */
 export interface AgencyRecordView {
   name: string; slug: string; website: string; since: number | null; specialties: string[]; tags: string[]; cities: string[];
   hiring_summary: string; about_url: string; city_links: { city: string; url: string }[]; linkedin_url: string;
   team_note: { text: string; source_url: string }; best_contact: { name: string; source_url: string };
   contacts: AgencyContactView[]; people: AgencyPersonView[]; job_refs: string[]; favourite: boolean; tracking: AgencyTracking;
-  sources?: AgencySource[];
   timeline: { at: string; event: string; note: string }[];
   /** Where it was found, oldest first (merged by url). Records read through the store always have it ([] by default). */
-  sources?: AgencySourceView[];
+  sources?: AgencySource[];
 }
 export interface AgencyJob { company_slug: string; id: string; title: string; location: string; job_type: string; status: string; open: boolean; sponsor_friendly: boolean }
 /** One card on the Recruiters screen. */

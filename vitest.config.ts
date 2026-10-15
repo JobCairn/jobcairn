@@ -20,6 +20,7 @@ const alias = [
 export default defineConfig({
   resolve: { alias },
   test: {
+    globalSetup: [r("tests/run-tmp.ts")],
     projects: [
       { extends: true, test: { name: "node", environment: "node", include: ["packages/*/test/**/*.test.ts", "tests/**/*.test.ts"] } },
       {

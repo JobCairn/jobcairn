@@ -31,12 +31,15 @@ export const AGENCY_FOLLOW_UP_DAYS = 5;
 export interface AgencyContactView { kind: "email" | "phone"; value: string; label: string; source_url: string; found_on: string; confirmed: boolean }
 export interface AgencyPersonView { name: string; title: string; email: string; phone: string; source_url: string; specialties: string[]; job_refs: string[] }
 export interface AgencyTracking { status: AgencyStatus; contacted_on: string; follow_up_on: string; notes: string }
+/** Where the agency was found ("SEEK", "Web search", "Saved job"...), with the page and when. Older records have none. */
+export interface AgencySource { name: string; url: string; found_at: string }
 /** The stored record, as the bridge sends it. */
 export interface AgencyRecordView {
   name: string; slug: string; website: string; since: number | null; specialties: string[]; tags: string[]; cities: string[];
   hiring_summary: string; about_url: string; city_links: { city: string; url: string }[]; linkedin_url: string;
   team_note: { text: string; source_url: string }; best_contact: { name: string; source_url: string };
   contacts: AgencyContactView[]; people: AgencyPersonView[]; job_refs: string[]; favourite: boolean; tracking: AgencyTracking;
+  sources?: AgencySource[];
   timeline: { at: string; event: string; note: string }[];
 }
 export interface AgencyJob { company_slug: string; id: string; title: string; location: string; job_type: string; status: string; open: boolean; sponsor_friendly: boolean }

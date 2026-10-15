@@ -5,6 +5,7 @@ import { ApplyScreen } from "./Apply";
 import { ApprovalsScreen } from "./Approvals";
 import { CompaniesScreen } from "./Companies";
 import { CompanyScreen } from "./Company";
+import { RecruiterScreen } from "./Recruiter";
 import { RecruitersScreen } from "./Recruiters";
 import { HomeScreen } from "./Home";
 import { InboxScreen } from "./Inbox";
@@ -24,5 +25,5 @@ export { OnboardingScreen } from "./Onboarding";
 
 export const SCREENS: Record<ScreenName, (p: { route: Route }) => JSX.Element> = {
   home: HomeScreen, jobs: JobsScreen, job: JobScreen, apply: ApplyScreen, resume: ResumeStudioScreen, "resume-variant": ResumeStudioScreen, resumes: ResumesScreen, applications: ApplicationsScreen, inbox: InboxScreen, learn: LearnScreen, mail: MailScreen,
-  companies: CompaniesScreen, company: CompanyScreen, recruiters: RecruitersScreen, searches: SearchesScreen, settings: SettingsScreen, privacy: PrivacyScreen, approvals: ApprovalsScreen, video: VideoScreen, videos: VideosScreen,
+  companies: CompaniesScreen, company: CompanyScreen, recruiters: RecruitersScreen, recruiter: RecruiterScreen, searches: SearchesScreen, settings: SettingsScreen, privacy: PrivacyScreen, approvals: ApprovalsScreen, video: VideoScreen, videos: VideosScreen,
 };

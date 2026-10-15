@@ -1,0 +1,18 @@
+.t-display { font-family: var(--font-family-display); font-size: var(--font-size-48); line-height: var(--font-line-height-tight); letter-spacing: var(--font-tracking-display); font-weight: var(--font-weight-regular); margin: 0; }
+.t-hero { font-family: var(--font-family-display); font-size: var(--font-size-64); line-height: var(--font-line-height-hero); font-weight: var(--font-weight-regular); font-variant-numeric: lining-nums tabular-nums; }
+.t-heading-1 { font-family: var(--font-family-display); font-size: var(--font-size-32); line-height: var(--font-line-height-snug); letter-spacing: var(--font-tracking-heading); font-weight: var(--font-weight-regular); margin: 0; }
+.t-heading-2 { font-family: var(--font-family-display); font-size: var(--font-size-24); line-height: var(--font-line-height-snug); font-weight: var(--font-weight-regular); margin: 0; }
+.t-body { font-family: var(--font-family-sans); font-size: var(--font-size-14); line-height: var(--font-line-height-body); margin: 0; }
+.t-body-sm { font-family: var(--font-family-sans); font-size: var(--font-size-13); line-height: var(--font-line-height-body); margin: 0; }
+/* Small labels stay in sentence case: an uppercase transform would rewrite user data such as "me/identity". */
+.t-label { font-family: var(--font-family-sans); font-size: var(--font-size-12); font-weight: var(--font-weight-medium); line-height: var(--font-line-height-snug); color: var(--color-text-muted); margin: 0; }
+/* Figures use the regular UI face, never monospace: tabular so columns of numbers still line up. */
+/* Long-form text in a serif: resume pages with serif text. Sets the family only. */
+.t-text-serif { font-family: var(--font-family-text-serif); }
+.t-numeric { font-family: var(--font-family-sans); font-variant-numeric: lining-nums tabular-nums; }
+.t-strong { font-weight: var(--font-weight-semibold); }
+.t-muted { color: var(--color-text-muted); }
+.truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+/* Reading prose (job descriptions, guides): headings in the display face, quotes as pull quotes. */
+.prose h1, .prose h2 { font-family: var(--font-family-display); font-weight: var(--font-weight-regular); font-size: var(--font-size-24); line-height: var(--font-line-height-snug); }
+.t-quote { font-family: var(--font-family-display); font-size: var(--font-size-20); line-height: var(--font-line-height-snug); font-style: italic; }

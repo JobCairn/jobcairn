@@ -1,0 +1,140 @@
+1
+00:00:00,953 --> 00:00:01,763
+Acme Corp wants an AI
+
+2
+00:00:01,803 --> 00:00:03,243
+Engineer to build its clinic
+
+3
+00:00:03,283 --> 00:00:04,103
+assistant.
+
+4
+00:00:04,143 --> 00:00:05,123
+Here is what the role
+
+5
+00:00:05,163 --> 00:00:05,723
+asks for.
+
+6
+00:00:06,755 --> 00:00:07,848
+The must-haves.
+
+7
+00:00:07,888 --> 00:00:08,688
+LLM agents.
+
+8
+00:00:08,728 --> 00:00:10,178
+Retrieval with citations.
+
+9
+00:00:10,218 --> 00:00:11,880
+Evaluation with test
+
+10
+00:00:11,920 --> 00:00:11,978
+sets.
+
+11
+00:00:12,018 --> 00:00:13,218
+And clear writing for people
+
+12
+00:00:13,258 --> 00:00:14,403
+who aren't engineers.
+
+13
+00:00:15,458 --> 00:00:16,533
+Here is how the assistant
+
+14
+00:00:16,573 --> 00:00:17,312
+fits together.
+
+15
+00:00:17,352 --> 00:00:18,623
+A staff question goes to
+
+16
+00:00:18,663 --> 00:00:19,513
+the agent.
+
+17
+00:00:19,553 --> 00:00:20,963
+The agent searches the clinic's
+
+18
+00:00:21,003 --> 00:00:21,743
+policies.
+
+19
+00:00:21,783 --> 00:00:22,963
+The answer comes back with
+
+20
+00:00:23,003 --> 00:00:23,783
+its sources.
+
+21
+00:00:24,883 --> 00:00:25,821
+Now your match.
+
+22
+00:00:25,861 --> 00:00:26,951
+Retrieval is a match.
+
+23
+00:00:26,991 --> 00:00:28,408
+Evaluation is a match.
+
+24
+00:00:28,448 --> 00:00:29,331
+Agents are a match.
+
+25
+00:00:29,371 --> 00:00:30,201
+Healthcare is a gap,
+
+26
+00:00:30,241 --> 00:00:31,321
+but it's only a nice
+
+27
+00:00:31,361 --> 00:00:31,942
+to have.
+
+28
+00:00:32,803 --> 00:00:33,772
+And the best part.
+
+29
+00:00:33,812 --> 00:00:34,902
+The ad says it plainly.
+
+30
+00:00:34,942 --> 00:00:36,692
+Visa sponsorship available for the
+
+31
+00:00:36,732 --> 00:00:37,888
+right candidate.
+
+32
+00:00:38,925 --> 00:00:39,813
+So the plan.
+
+33
+00:00:39,853 --> 00:00:41,298
+Lead with your evaluation suite,
+
+34
+00:00:41,338 --> 00:00:42,428
+mention your agent,
+
+35
+00:00:42,468 --> 00:00:43,843
+and apply this week.
+

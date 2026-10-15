@@ -1,0 +1,207 @@
+{
+  "schema": 1,
+  "type": "skill-gap-lesson",
+  "type_version": 2,
+  "subject": {
+    "kind": "topic",
+    "topic": "Evaluating LLM apps"
+  },
+  "options": {
+    "length_s": 50,
+    "review": "if_problems"
+  },
+  "created_at": "2026-10-11T11:46:42.817Z",
+  "updated_at": "2026-10-11T11:47:38.531Z",
+  "captions": {
+    "style": "rail",
+    "estimated": false,
+    "srt": "captions.srt",
+    "vtt": "captions.vtt"
+  },
+  "locked_facts": [],
+  "title": "Evaluating LLM apps",
+  "status": "done",
+  "voice": {
+    "engine": "supertonic",
+    "voice": "F4",
+    "fell_back": false
+  },
+  "length_s": 34.82,
+  "renders": {
+    "draft": null,
+    "final": {
+      "path": "renders/final.mp4",
+      "at": "2026-10-11T11:47:36.848Z",
+      "duration_s": 34.833333,
+      "quality": "final"
+    }
+  },
+  "stages": {
+    "request": {
+      "status": "done",
+      "hash": "",
+      "at": "2026-10-11T11:46:42.818Z",
+      "ms": 0,
+      "message": "Saved"
+    },
+    "sources": {
+      "status": "done",
+      "hash": "",
+      "at": "2026-10-11T11:46:42.821Z",
+      "ms": 1,
+      "message": "1 file"
+    },
+    "write": {
+      "status": "done",
+      "hash": "",
+      "at": "2026-10-11T11:46:42.822Z",
+      "ms": 1,
+      "message": "Written"
+    },
+    "check": {
+      "status": "done",
+      "hash": "",
+      "at": "2026-10-11T11:46:42.828Z",
+      "ms": 6,
+      "message": "No problems left"
+    },
+    "review": {
+      "status": "skipped",
+      "hash": "",
+      "at": "2026-10-11T11:46:42.829Z",
+      "ms": 0,
+      "message": "The script passed its checks, so it went straight on to the video"
+    },
+    "narrate": {
+      "status": "done",
+      "hash": "acbc6cd6c33bef99632eb3af7b76d43172190f7762ee244e3be8a4a047280be6",
+      "at": "2026-10-11T11:46:56.272Z",
+      "ms": 13450,
+      "message": "Narrated with supertonic while the script was checked",
+      "parts": [
+        {
+          "name": "Narrated 6 paragraphs, while the script was checked",
+          "ms": 13450
+        }
+      ]
+    },
+    "captions": {
+      "status": "done",
+      "hash": "7481d7e6f1508ee429876bb6932b4d4be7484a347953068033dd2ceb2f461c51",
+      "at": "2026-10-11T11:46:59.626Z",
+      "ms": 3353,
+      "message": "27 caption lines"
+    },
+    "media": {
+      "status": "done",
+      "hash": "",
+      "at": "2026-10-11T11:47:01.779Z",
+      "ms": 2151,
+      "message": "18 sound effects",
+      "parts": [
+        {
+          "name": "Pictures and sound",
+          "ms": 2150
+        }
+      ]
+    },
+    "expand": {
+      "status": "done",
+      "hash": "aba6ba8cddb8a8b289afa93f39823b98c20f170a78d7c1b5c7b4dc6049483cb9",
+      "at": "2026-10-11T11:47:01.788Z",
+      "ms": 8,
+      "message": "6 scenes, 35 seconds"
+    },
+    "lint": {
+      "status": "done",
+      "hash": "aba6ba8cddb8a8b289afa93f39823b98c20f170a78d7c1b5c7b4dc6049483cb9",
+      "at": "2026-10-11T11:47:10.598Z",
+      "ms": 8809,
+      "message": "11 warnings",
+      "parts": [
+        {
+          "name": "Quick lint and layout check",
+          "ms": 8807
+        }
+      ]
+    },
+    "draft": {
+      "status": "skipped",
+      "hash": "",
+      "at": "2026-10-11T11:47:10.598Z",
+      "ms": 0,
+      "message": "Not needed for the final video"
+    },
+    "final": {
+      "status": "done",
+      "hash": "aba6ba8cddb8a8b289afa93f39823b98c20f170a78d7c1b5c7b4dc6049483cb9",
+      "at": "2026-10-11T11:47:38.529Z",
+      "ms": 27930,
+      "message": "35 seconds, 15 QA stills",
+      "parts": [
+        {
+          "name": "Render",
+          "ms": 26137
+        },
+        {
+          "name": "Label the file",
+          "ms": 68
+        },
+        {
+          "name": "Check the file",
+          "ms": 43
+        },
+        {
+          "name": "Contact sheet",
+          "ms": 538
+        },
+        {
+          "name": "QA stills",
+          "ms": 1040
+        },
+        {
+          "name": "Caption sync",
+          "ms": 103
+        }
+      ]
+    },
+    "save": {
+      "status": "done",
+      "hash": "",
+      "at": "2026-10-11T11:47:38.530Z",
+      "ms": 0,
+      "message": "Saved"
+    }
+  },
+  "issues": {
+    "errors": 0,
+    "warnings": 0
+  },
+  "sources": [
+    "learning/evaluating-llm-apps/guide.md"
+  ],
+  "error": "",
+  "custom": {},
+  "autofix": {
+    "repairs": [],
+    "claude_passes": 0,
+    "claude_fixed": 0,
+    "at": "2026-10-11T11:46:42.826Z"
+  },
+  "check_notes": [
+    {
+      "area": "runtime",
+      "text": "GSAP target #s2-l1 .kn-ink not found. https://gsap.com"
+    },
+    {
+      "area": "runtime",
+      "text": "GSAP target not found. https://gsap.com"
+    }
+  ],
+  "last_run": {
+    "phase": "final",
+    "status": "done",
+    "started_at": "2026-10-11T11:46:42.817Z",
+    "total_ms": 55714
+  }
+}

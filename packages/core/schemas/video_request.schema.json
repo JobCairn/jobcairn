@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "careeros/video_request",
+  "type": "object",
+  "required": ["schema", "type", "subject", "created_at"],
+  "$defs": {
+    "slug": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$", "maxLength": 120 },
+    "subject": {
+      "type": "object", "additionalProperties": false, "required": ["kind"],
+      "properties": {
+        "kind": { "enum": ["job", "company", "topic", "week"] },
+        "company_slug": { "$ref": "#/$defs/slug" },
+        "id": { "$ref": "#/$defs/slug" },
+        "topic": { "type": "string", "minLength": 1, "maxLength": 80, "pattern": "^[^\\u0000-\\u001f\\u007f]+$" },
+        "week": { "type": "string", "pattern": "^\\d{4}-W(0[1-9]|[1-4]\\d|5[0-3])$" }
+      },
+      "allOf": [
+        { "if": { "properties": { "kind": { "const": "job" } } }, "then": { "required": ["company_slug", "id"] } },
+        { "if": { "properties": { "kind": { "const": "company" } } }, "then": { "required": ["company_slug"] } },
+        { "if": { "properties": { "kind": { "const": "topic" } } }, "then": { "required": ["topic"] } },
+        { "if": { "properties": { "kind": { "const": "week" } } }, "then": { "required": ["week"] } }
+      ]
+    },
+    "options": {
+      "type": "object", "additionalProperties": false, "default": {},
+      "properties": {
+        "length_s": { "type": "integer", "minimum": 10, "maximum": 600 },
+        "mode": { "enum": ["practice", "watch"] },
+        "note": { "type": "string", "maxLength": 500 },
+        "review": { "enum": ["always", "if_problems"] },
+        "sound": { "enum": ["on", "off"] }
+      }
+    }
+  },
+  "properties": {
+    "schema": { "type": "integer", "minimum": 1 },
+    "type": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$", "maxLength": 40 },
+    "type_version": { "type": "integer", "minimum": 1, "default": 1 },
+    "subject": { "$ref": "#/$defs/subject" },
+    "options": { "$ref": "#/$defs/options" },
+    "created_at": { "type": "string" },
+    "requested_by": { "enum": ["app", "chat"], "default": "app" },
+    "custom": { "type": "object", "default": {} }
+  }
+}

@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "careeros/integrations",
+  "type": "object",
+  "required": ["schema"],
+  "properties": {
+    "schema": { "type": "integer", "minimum": 1 },
+    "email": { "type": "object", "default": {}, "properties": { "method": { "enum": ["none", "smtp", "gmail_connector"], "default": "none" }, "address": { "type": "string", "default": "" } } },
+    "chrome": { "type": "object", "default": {}, "properties": { "profile": { "type": "string", "default": "" }, "port": { "type": "integer", "default": 9222 } } },
+    "voice": {
+      "type": "object", "default": {},
+      "x-ui": { "label": "Video narration", "help": "Voice used for learning guides and interview videos. Use Preview to listen before choosing." },
+      "properties": {
+        "engine": { "enum": ["supertonic", "macos_say", "elevenlabs"], "default": "supertonic",
+          "x-ui": { "label": "Voice engine", "options": { "supertonic": "Supertonic (on your Mac, free)", "macos_say": "Mac built-in voice", "elevenlabs": "ElevenLabs (needs your API key)" } } },
+        "voice": { "enum": ["F4", "M3", "F1", "F2", "F3", "F5", "M1", "M2", "M4", "M5"], "default": "F4", "x-ui": { "label": "Voice", "help": "Recommended: F4 (female) or M3 (male), the most natural-sounding Supertonic voices." } },
+        "lang": { "type": "string", "default": "en", "x-ui": { "label": "Language" } },
+        "expressions": { "type": "boolean", "default": true, "x-ui": { "label": "Natural expressions (breaths, light laughs)" } },
+        "per_type": {
+          "type": "object", "default": {},
+          "properties": {
+            "guide": { "type": "string", "default": "", "x-ui": { "label": "Voice for learning guides (blank = default)" } },
+            "interview": { "type": "string", "default": "", "x-ui": { "label": "Voice for interview prep (blank = default)" } },
+            "slides": { "type": "string", "default": "", "x-ui": { "label": "Voice for slide recaps (blank = default)" } }
+          }
+        }
+      }
+    },
+    "mail": {
+      "type": "object", "default": {},
+      "x-ui": { "label": "Email", "help": "Connect Gmail in Settings > Email. These settings control syncing and sending." },
+      "properties": {
+        "provider": { "enum": ["gmail"], "default": "gmail" },
+        "address": { "type": "string", "maxLength": 254, "default": "" },
+        "display_name": { "type": "string", "maxLength": 100, "default": "" },
+        "signature": { "type": "string", "maxLength": 2000, "default": "" },
+        "sync_minutes": { "type": "integer", "minimum": 5, "maximum": 240, "default": 15, "x-ui": { "label": "Check for new mail every (minutes)" } },
+        "first_sync_days": { "type": "integer", "minimum": 1, "maximum": 365, "default": 30, "x-ui": { "label": "First sync looks back (days)" } },
+        "background": {
+          "type": "object", "default": {},
+          "properties": { "on": { "type": "boolean", "default": false }, "minutes": { "type": "integer", "minimum": 15, "maximum": 1440, "default": 60 } }
+        },
+        "send_limit_per_hour": { "type": "integer", "minimum": 1, "maximum": 50, "default": 10, "x-ui": { "label": "Most emails sent per hour" } }
+      }
+    },
+    "video": {
+      "type": "object", "default": {},
+      "x-ui": { "label": "Videos", "help": "How your videos are built. Tools status and custom video types are below this form." },
+      "properties": {
+        "captions": {
+          "enum": ["rail", "pill", "highlight", "none"], "default": "rail",
+          "x-ui": { "label": "Caption style", "options": { "rail": "Rail (calm, one line at a time)", "pill": "Pill (short groups)", "highlight": "Highlight (no background)", "none": "No burned-in captions" } }
+        },
+        "motion": {
+          "enum": ["full", "reduced"], "default": "full",
+          "x-ui": { "label": "Motion", "options": { "full": "Full (moving diagrams, slow zooms)", "reduced": "Reduced (short fades only)" } }
+        },
+        "sound": {
+          "enum": ["subtle", "off"], "default": "subtle",
+          "x-ui": { "label": "Sound effects", "options": { "subtle": "Subtle (soft whooshes and pops under the voice)", "off": "Off" } }
+        },
+        "music": { "type": "boolean", "default": false, "x-ui": { "label": "Quiet music bed under the narration" } },
+        "lengths": {
+          "type": "object", "default": {},
+          "x-ui": { "label": "Default lengths in seconds (0 uses the type's own target)" },
+          "properties": {
+            "skill_gap_lesson": { "type": "integer", "minimum": 0, "maximum": 600, "default": 0, "x-ui": { "label": "Skill-gap lesson" } },
+            "jd_walkthrough": { "type": "integer", "minimum": 0, "maximum": 600, "default": 0, "x-ui": { "label": "JD walkthrough" } },
+            "company_briefing": { "type": "integer", "minimum": 0, "maximum": 600, "default": 0, "x-ui": { "label": "Company briefing" } },
+            "interview_prep": { "type": "integer", "minimum": 0, "maximum": 600, "default": 0, "x-ui": { "label": "Interview prep" } },
+            "pitch": { "type": "integer", "minimum": 0, "maximum": 600, "default": 0, "x-ui": { "label": "Tell me about yourself" } },
+            "application_summary": { "type": "integer", "minimum": 0, "maximum": 600, "default": 0, "x-ui": { "label": "Application summary" } },
+            "weekly_recap": { "type": "integer", "minimum": 0, "maximum": 600, "default": 0, "x-ui": { "label": "Weekly recap" } }
+          }
+        }
+      }
+    },
+    "claude_code": {
+      "type": "object",
+      "description": "Consent to the Claude Code notice (the app starts the person's own Claude Code). Set by Settings > Claude.",
+      "properties": {
+        "consent_at": { "type": "string" },
+        "notice_version": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "read_aloud": {
+      "type": "object", "default": {},
+      "x-ui": { "label": "Reading aloud", "help": "Voice used when you press Listen on a job, a guide or a document." },
+      "properties": {
+        "voice": { "enum": ["F4", "M3", "F1", "F2", "F3", "F5", "M1", "M2", "M4", "M5"], "default": "F4", "x-ui": { "label": "Voice" } },
+        "speed": { "type": "number", "minimum": 0.75, "maximum": 1.5, "default": 1, "x-ui": { "label": "Speed" } },
+        "lang": { "type": "string", "pattern": "^[a-z]{2,3}(-[A-Za-z0-9]{2,8})?$", "default": "en", "x-ui": { "label": "Language" } }
+      }
+    },
+    "custom": { "type": "object", "default": {} }
+  }
+}

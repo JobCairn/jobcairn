@@ -1,0 +1,100 @@
+/* Lane B: table screens (Jobs, Sponsors, Searches, Approvals) and their drawers. */
+
+/* Sponsors: four fields, then the checkbox in its own content-sized track, level with the inputs. */
+.filters--wrap { grid-template-columns: minmax(0, 1.4fr) repeat(3, minmax(0, 1fr)) auto; }
+.filters__check { align-self: end; display: flex; align-items: center; min-height: var(--input-height); white-space: nowrap; }
+
+/* Jobs: search gets the room it needs; "Minimum fit" is a number, so it is the narrowest. The second line holds
+   saved views and the show-hidden toggle, left-aligned and level with each other. */
+.filters--jobs { grid-template-columns: minmax(0, 2fr) repeat(2, minmax(0, 1.2fr)) minmax(0, 0.8fr) minmax(0, 1.2fr); }
+.filters__more { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-3) var(--space-4); }
+.filters__more > .field { width: calc(var(--space-12) * 4); }
+.filters__more > .row { min-height: var(--input-height); }
+.filters__more > .checkbox { min-height: var(--input-height); }
+.table-count { margin: 0 0 var(--space-2); }
+
+/* Score: number plus a short bar */
+.score-meter { display: inline-flex; align-items: center; gap: var(--space-2); justify-content: flex-end; width: 100%; }
+/* The ring: a 28px circle, track plus a coloured arc from 12 o'clock, number centred inside. */
+.score-ring { position: relative; display: inline-grid; place-items: center; width: 28px; height: 28px; flex: none; }
+.score-ring__svg { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
+.score-ring__track, .score-ring__fill { fill: none; stroke-width: 3; }
+.score-ring__track { stroke: var(--color-surface-hover); }
+.score-ring__fill { stroke-linecap: round; }
+.score-ring .score-meter__value { position: relative; font-size: var(--font-size-11); font-weight: var(--font-weight-medium); line-height: 1; }
+.score-meter__fill--high { stroke: var(--color-success); }
+.score-meter__fill--mid { stroke: var(--color-warning); }
+.score-meter__fill--low { stroke: var(--color-text-muted); }
+.score-meter__fill--none { stroke: var(--color-danger); }
+.score-meter--start { justify-content: flex-start; width: auto; }
+
+/* Two-line cells */
+.cell-two { display: flex; flex-direction: column; min-width: 0; }
+.cell-two > * { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Dates */
+.date-text { display: inline-flex; flex-direction: column; min-width: 0; }
+.date-text__hint { font-size: var(--font-size-12); }
+
+/* Recent-search marker: a quiet dot, not a pill */
+.recent-dot { display: inline-block; width: var(--space-2); height: var(--space-2); border-radius: var(--radius-full); background: var(--color-accent); margin-right: var(--space-2); vertical-align: middle; flex: 0 0 auto; }
+.recent-dot--off { background: transparent; border: var(--size-border) solid var(--color-border-strong); }
+.when-cell { display: inline-flex; align-items: center; }
+.legend { display: flex; align-items: center; gap: var(--space-1); margin: 0 0 var(--space-3); }
+.table-toolbar .legend { margin: 0; }
+
+/* Drawer sections */
+.drawer-section { display: flex; flex-direction: column; gap: var(--space-2); }
+.drawer-section__title { font-size: var(--font-size-13); font-weight: var(--font-weight-semibold); color: var(--color-text); margin: 0; }
+.reasons { margin: var(--space-1) 0 0; padding-left: var(--space-4); color: var(--color-text-muted); font-size: var(--font-size-13); }
+.reasons li + li { margin-top: var(--space-1); }
+
+/* Evidence timeline, newest first */
+.evidence { list-style: none; margin: 0; padding: 0; border-left: var(--size-border) solid var(--color-border-strong); }
+.evidence__item { position: relative; padding: 0 0 var(--space-4) var(--space-4); display: flex; flex-direction: column; gap: var(--space-1); }
+.evidence__item::before {
+  content: ""; position: absolute; left: calc(var(--space-1) * -1 - var(--size-border) / 2); top: var(--space-1);
+  width: var(--space-2); height: var(--space-2); border-radius: var(--radius-full); background: var(--color-bg-raised); border: var(--size-border) solid var(--color-text-muted);
+}
+.evidence__item:first-child::before { background: var(--color-accent); border-color: var(--color-accent); }
+.evidence__item:last-child { padding-bottom: 0; }
+.evidence__note { overflow-wrap: anywhere; }
+.evidence__url { overflow-wrap: anywhere; }
+
+/* Related jobs */
+.related { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.related__link {
+  display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); width: 100%;
+  padding: var(--space-2) var(--space-2); margin: 0 calc(var(--space-2) * -1); border: 0; border-radius: var(--radius-md);
+  background: transparent; color: var(--color-text); text-align: left; cursor: pointer; font: inherit;
+}
+.related__link:hover { background: var(--color-surface-hover); }
+.related__link > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-decoration: underline; text-decoration-color: var(--color-border-strong); text-underline-offset: var(--space-1); }
+
+/* Readable payload / proposal in the Approvals drawer */
+.proposal-steps { margin: 0; padding-left: var(--space-5); display: flex; flex-direction: column; gap: var(--space-1); }
+.file-chips { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+.file-chip { font-size: var(--font-size-12); padding: 0 var(--space-2); border-radius: var(--radius-sm); border: var(--size-border) solid var(--color-border); color: var(--color-text-muted); overflow-wrap: anywhere; }
+
+/* Sponsors: latest evidence cell and score line */
+.evidence-cell { display: flex; align-items: center; gap: var(--space-2); min-width: 0; }
+.evidence-cell__text { flex: 1; min-width: 0; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; }
+.evidence-cell__url { max-width: 40%; }
+.score-line { display: inline-flex; align-items: center; gap: var(--space-2); }
+.score-line .score-meter { width: auto; }
+
+/* Searches: counts with extra detail get a dotted underline hint */
+.count { display: inline-flex; align-items: baseline; gap: 1px; }
+.count.has-more .t-numeric { text-decoration: underline dotted var(--color-text-muted); text-underline-offset: var(--space-1); }
+.evidence__item p, .details__value p { margin: 0; }
+/* Jobs: the role title may take two lines before anything else gives way; pills shrink first */
+.role-title { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; white-space: normal; }
+.table td .pill { max-width: 100%; }
+.ready-to-prepare { margin-top: var(--space-6); }
+/* Inline text links that act like buttons (open a job, its notes) */
+.link-btn { padding: 0; border: 0; background: transparent; font: inherit; color: var(--color-accent); text-align: left; cursor: pointer; text-decoration: underline; text-underline-offset: var(--space-1); text-decoration-color: color-mix(in srgb, var(--color-accent) 45%, transparent); }
+.link-btn:hover { text-decoration-color: currentColor; }
+.link-btn--quiet { color: var(--color-text-muted); text-decoration-color: var(--color-border-strong); }
+.approval-job { gap: var(--space-4); }
+.stack-tight { display: flex; flex-direction: column; gap: var(--space-1); align-items: flex-start; }
+.quiet-section { display: flex; flex-direction: column; gap: var(--space-1); padding: var(--space-2) 0; }

@@ -1,0 +1,200 @@
+/* Claude Code engine: run panel, setup wizard, sidebar indicator. Graphite/Paper tokens only. */
+
+.crun {
+  flex-basis: 100%;
+  display: flex; flex-direction: column; gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: var(--size-border) solid var(--color-border);
+  border-left: 2px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-raised);
+}
+.crun--running, .crun--queued { border-left-color: var(--color-accent); }
+.crun--succeeded { border-left-color: var(--color-success); }
+.crun--failed { border-left-color: var(--color-danger); }
+.crun--setup { border-left-color: var(--color-warning); }
+.crun--compact { padding: var(--space-2) var(--space-3); gap: var(--space-2); }
+
+.crun__head { display: flex; align-items: center; gap: var(--space-3); min-height: 28px; }
+.crun__title { display: inline-flex; align-items: center; gap: var(--space-2); flex: 1; min-width: 0; overflow: hidden; }
+.crun__title-text { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* The current step sits on the same line as the title, so the card never grows while Claude works. */
+.crun__now {
+  flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-size: var(--font-size-13); color: var(--color-text-muted);
+}
+.crun__now::before { content: "·"; margin-right: var(--space-2); color: var(--color-text-muted); }
+.crun__toggle {
+  flex: none; display: inline-flex; align-items: center; gap: var(--space-1); padding: 2px var(--space-2);
+  border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--color-text-muted); font: inherit; font-size: var(--font-size-12); cursor: pointer;
+}
+.crun__toggle:hover { color: var(--color-text); background: var(--color-surface-hover); }
+.crun__toggle:focus-visible { outline: var(--size-focus-ring) solid var(--color-focus); outline-offset: 1px; }
+.crun__count {
+  font-size: var(--font-size-12); font-variant-numeric: tabular-nums; color: var(--color-text-muted);
+  padding: 0 var(--space-1); border-radius: var(--radius-sm); background: var(--color-surface);
+}
+.crun__title-text, .csetup__title { font-weight: var(--font-weight-medium); color: var(--color-text); }
+.csetup__notice li p, .crun__steps p { margin: 0; }
+.crun__time {
+  font-size: var(--font-size-12); font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted); letter-spacing: 0.02em;
+}
+.crun__pulse {
+  width: 8px; height: 8px; border-radius: var(--radius-full); background: var(--color-accent);
+  box-shadow: 0 0 0 0 var(--color-glow); animation: crun-pulse 1.8s ease-out infinite;
+}
+@keyframes crun-pulse { 0% { box-shadow: 0 0 0 0 var(--color-glow); } 70% { box-shadow: 0 0 0 6px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
+
+/* Steps: a quiet vertical log. A hairline joins the marks. */
+.crun__steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; max-height: 220px; overflow-y: auto; }
+.crun__step {
+  position: relative; display: flex; align-items: center; gap: var(--space-3);
+  padding: 3px 0; font-size: var(--font-size-13); color: var(--color-text-muted);
+}
+.crun__step + .crun__step::before {
+  content: ""; position: absolute; left: 6.5px; top: -6px; height: 10px; width: 1px; background: var(--color-border-strong);
+}
+.crun__step--active { color: var(--color-text); }
+.crun__step--failed { color: var(--color-danger); }
+.crun__mark {
+  flex: none; display: inline-grid; place-items: center; width: 14px; height: 14px; border-radius: var(--radius-full);
+}
+.crun__mark--done { color: var(--color-success); background: var(--color-success-soft); }
+.crun__mark--failed { color: var(--color-danger); background: var(--color-danger-soft); }
+.crun__mark--active {
+  border: 1.5px solid var(--color-accent); border-right-color: transparent;
+  animation: brand-spin 0.9s linear infinite;
+}
+
+.crun__summary { color: var(--color-text); }
+.crun__files { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.crun__chip {
+  display: inline-flex; align-items: center; gap: var(--space-1); max-width: 100%;
+  padding: 2px 2px 2px var(--space-3); border: var(--size-border) solid var(--color-border-strong); border-radius: var(--radius-full);
+  background: var(--color-surface); font-size: var(--font-size-13);
+}
+.crun__chip:hover { background: var(--color-surface-hover); }
+.crun__chip-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.crun__chip .btn { border-radius: var(--radius-full); }
+/* Files that changed elsewhere during a run: a small caution line with a Show per file, not a box. */
+.crun__caution { display: flex; align-items: flex-start; gap: var(--space-2); }
+.crun__caution > svg, .crun__caution > .icon { flex: none; margin-top: 3px; color: var(--color-warning); }
+.crun__caution-body { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+.crun__caution-list li { display: flex; align-items: center; gap: var(--space-2); min-height: 1.75rem; }
+.crun__caution-list li > span { overflow-wrap: anywhere; }
+.crun__error { color: var(--color-danger); }
+/* Boards a run stopped early: a visible line each, with "Open <board>". */
+.crun__stops { display: flex; flex-direction: column; gap: var(--space-1); margin-top: var(--space-2); }
+.crun__stops .crun__caution { align-items: center; flex-wrap: wrap; }
+.crun__stops .crun__caution > .icon, .crun__stops .crun__caution > svg { margin-top: 0; }
+.crun__stop-text { flex: 1 1 16rem; min-width: 0; overflow-wrap: anywhere; }
+.crun__actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.crun__prompt { flex-basis: 100%; max-height: 240px; overflow: auto; white-space: pre-wrap; }
+
+/* Setup wizard */
+.csetup { display: flex; flex-direction: column; gap: var(--space-4); }
+.csetup__notice {
+  display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-4);
+  border-radius: var(--radius-md); border: var(--size-border) solid var(--color-border-strong); background: var(--color-surface);
+}
+.csetup__notice ul { margin: 0; padding-left: var(--space-5); display: flex; flex-direction: column; gap: var(--space-1); }
+.csetup__steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.csetup__step { display: grid; grid-template-columns: 28px 1fr; gap: var(--space-3); padding: var(--space-3) 0; position: relative; }
+.csetup__step + .csetup__step { border-top: var(--size-border) solid var(--color-border); }
+.csetup__num {
+  width: 24px; height: 24px; border-radius: var(--radius-full); display: grid; place-items: center;
+  font-size: var(--font-size-12);
+  border: var(--size-border) solid var(--color-border-strong); color: var(--color-text-muted);
+}
+.csetup__step--done .csetup__num { border-color: transparent; background: var(--color-success-soft); color: var(--color-success); }
+.csetup__step--current .csetup__num { border-color: var(--color-accent); color: var(--color-accent-strong); }
+.csetup__step--blocked { opacity: 0.75; }
+.csetup__body { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
+.csetup__row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.csetup__code {
+  font-size: var(--font-size-12); padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm); background: var(--color-surface); border: var(--size-border) solid var(--color-border); user-select: all;
+}
+
+/* Inline run chip: one line at the button's height, in place of the action button. Never grows. */
+.rchip {
+  display: inline-flex; align-items: center; gap: 2px; height: var(--button-height-sm); max-width: 100%;
+  padding: 0 2px 0 0; border: var(--size-border) solid var(--color-border-strong); border-radius: var(--radius-md);
+  background: var(--color-surface); white-space: nowrap; vertical-align: middle;
+}
+.rchip--running, .rchip--queued { border-color: color-mix(in srgb, var(--color-accent) 45%, var(--color-border-strong)); }
+.rchip--failed { border-color: color-mix(in srgb, var(--color-danger) 45%, var(--color-border-strong)); }
+.rchip__main {
+  display: inline-flex; align-items: center; gap: var(--space-2); height: 100%; min-width: 0; padding: 0 var(--space-2) 0 var(--space-3);
+  border: 0; border-radius: var(--radius-md) 0 0 var(--radius-md); background: transparent; color: var(--color-text); font: inherit; font-size: var(--font-size-13); cursor: pointer;
+}
+.rchip__main:hover:not(:disabled) { background: var(--color-surface-hover); }
+.rchip__main:disabled { cursor: default; }
+.rchip__main:focus-visible { outline: var(--size-focus-ring) solid var(--color-focus); outline-offset: -2px; }
+.rchip__text { overflow: hidden; text-overflow: ellipsis; }
+.rchip__time { font-size: var(--font-size-12); font-variant-numeric: tabular-nums; color: var(--color-text-muted); min-width: 3.2em; }
+.rchip__spin {
+  flex: none; width: 12px; height: 12px; border-radius: var(--radius-full);
+  border: 1.5px solid var(--color-accent); border-right-color: transparent; animation: brand-spin 0.9s linear infinite;
+}
+.rchip__dot { flex: none; width: 8px; height: 8px; border-radius: var(--radius-full); background: var(--color-text-muted); }
+.rchip--failed .rchip__dot { background: var(--color-danger); }
+.rchip .rchip__btn { height: calc(var(--button-height-sm) - 6px); }
+
+/* Activity panel rows */
+.act-group { display: flex; flex-direction: column; gap: var(--space-2); }
+.act-group__title { color: var(--color-text-muted); margin: 0; }
+.act-list { display: flex; flex-direction: column; gap: var(--space-2); }
+.act-row { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-2); border: var(--size-border) solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); }
+.act-row__line { display: flex; align-items: center; gap: var(--space-1); }
+.act-row__main {
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: var(--space-3); padding: var(--space-1) var(--space-2);
+  border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--color-text); font: inherit; text-align: left; cursor: pointer;
+}
+.act-row__main:hover { background: var(--color-surface-hover); }
+.act-row__main:focus-visible { outline: var(--size-focus-ring) solid var(--color-focus); outline-offset: 1px; }
+.act-row__dot { flex: none; width: 8px; height: 8px; border-radius: var(--radius-full); background: var(--color-text-muted); }
+.act-row__dot--running, .act-row__dot--queued { background: var(--color-accent); }
+.act-row__dot--succeeded { background: var(--color-success); }
+.act-row__dot--failed { background: var(--color-danger); }
+.act-row__text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.act-row__label { font-size: var(--font-size-13); font-weight: var(--font-weight-medium); }
+.act-row__sub { font-size: var(--font-size-12); color: var(--color-text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.act-row__meta { flex: none; font-size: var(--font-size-12); color: var(--color-text-muted); font-variant-numeric: tabular-nums; }
+
+/* Job page Activity tab */
+.job-activity { display: flex; flex-direction: column; gap: var(--space-3); max-width: 880px; }
+
+/* The sidebar footer's Claude icon is styled with the other status icons (app.css, .rail-stat). */
+
+@media (prefers-reduced-motion: reduce) {
+  .crun__pulse, .crun__mark--active, .rchip__spin { animation: none; }
+  .rchip__spin { border-right-color: var(--color-accent); background: var(--color-accent-soft); }
+  .crun__mark--active { border-right-color: var(--color-accent); background: var(--color-accent-soft); }
+}
+
+/* Activity History: one compact line per finished task. */
+.act-row__main--static { cursor: default; }
+.act-hist { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: var(--space-3); padding: var(--space-1) 0; border-top: var(--size-border) solid var(--color-border); }
+.act-hist:first-child { border-top: 0; }
+.act-hist__label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--color-text); }
+.act-hist__meta { font-size: var(--font-size-13); color: var(--color-text-muted); white-space: nowrap; }
+
+/* Settings › Claude: this project's setup checklist and auto mode */
+.cws { margin-top: var(--space-4); padding-top: var(--space-4); border-top: var(--size-border) solid var(--color-border); }
+.cws__list { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); list-style: none; margin: 0; padding: 0; }
+.cws__item { display: inline-flex; align-items: center; gap: var(--space-1); }
+.cws__item > span[aria-hidden] { font-weight: var(--font-weight-medium); color: var(--color-success); }
+.cws__item[data-ok="false"] > span[aria-hidden] { color: var(--color-warning); }
+.cws__auto { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-4); align-items: start; }
+.cws__auto .switch { margin-top: var(--space-1); }
+
+/* A Chrome run's Details: how each board's tab was opened. Closed by default, same quiet disclosure as Settings. */
+.crun__details { margin-top: var(--space-2); }
+.crun__details summary { cursor: pointer; width: fit-content; color: var(--color-text-muted); border-radius: var(--radius-sm); }
+.crun__details summary:hover { color: var(--color-text); }
+.crun__details summary:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+.crun__details-list { margin: var(--space-1) 0 0; display: flex; flex-direction: column; gap: var(--space-2); max-width: 72ch; overflow-wrap: anywhere; }
+.crun__details-list ul { padding-left: var(--space-4); display: flex; flex-direction: column; gap: 2px; }
+.crun__retry { display: flex; align-items: center; gap: var(--space-1); color: var(--color-text-muted); }

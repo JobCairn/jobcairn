@@ -1,0 +1,8 @@
+{
+  "name": "@careeros/video",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "dependencies": { "@careeros/brand": "0.1.0", "@careeros/contract": "0.1.0", "@careeros/core": "0.1.0", "gsap": "3.14.2" }
+}

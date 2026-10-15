@@ -1,0 +1,53 @@
+{
+  "slug": "track-everything",
+  "title": "Track everything in one place with JobCairn",
+  "resolution": "720p",
+  "layoutWidth": 1280,
+  "theme": "dark",
+  "clock": "2026-01-15T23:00:00Z",
+  "maxMB": 5.5,
+  "replace": [["CareerOS", "JobCairn"]],
+  "cards": {
+    "title": { "heading": "Track everything in one place", "sub": "Your day, your applications, your mail and your files, all in order." },
+    "end": { "heading": "Everything in its place.", "sub": "JobCairn. Your job search, in one place." },
+    "disclaimer": "An example job search. Every person and company shown is made up."
+  },
+  "poster": { "beat": "home", "at": 2.0 },
+  "beats": [
+    { "id": "title", "card": "title", "voice": "Here is how JobCairn keeps your search in order.", "lead": 1.3, "tail": 1.0 },
+    { "id": "home", "route": "#/home",
+      "voice": "Home shows your day at a glance: what is ready, what is next, and how the search is going.",
+      "steps": [
+        { "at": 0.3, "hover": "4 roles with sponsorship" },
+        { "at": 1.6, "hover": "1 approval waiting" },
+        { "at": 3.0, "scrollTo": "Pipeline", "offset": 100 },
+        { "at": 4.4, "hover": "Shortlisted", "exact": true }
+      ], "lead": 0.3, "tail": 1.2 },
+    { "id": "applications", "route": "#/applications",
+      "voice": "Applications and each job's timeline show where every application stands.",
+      "steps": [
+        { "at": 0.3, "hover": "Full Stack Engineer, AI Products" },
+        { "at": 1.5, "role": "tab", "name": "Sent 9" },
+        { "at": 2.8, "hash": "#/job/acme-corp/2026-01-12-ai-engineer?tab=timeline" },
+        { "at": 3.6, "zoom": "Status: Applied", "scale": 1.35, "ms": 900 }
+      ], "lead": 0.3, "tail": 1.2 },
+    { "id": "mail", "route": "#/mail",
+      "voice": "Mail files each reply under its job, without you sorting a thing.",
+      "pre": [
+        { "type": { "selector": "input[placeholder^='Search subject']", "text": "AI Engineer" } },
+        { "wait": 900 }
+      ],
+      "steps": [
+        { "at": 0.3, "hover": "Interview for AI Engineer" },
+        { "at": 1.6, "zoom": "Interview for AI Engineer", "scale": 1.35, "ms": 900 }
+      ], "lead": 0.3, "tail": 1.2 },
+    { "id": "dropbox", "route": "#/inbox",
+      "voice": "Drop in a file, and JobCairn suggests where it belongs.",
+      "steps": [
+        { "at": 0.3, "hover": "acme-corp-cover-letter.pdf" },
+        { "at": 1.4, "zoom": "The name mentions Acme Corp.", "scale": 1.3, "ms": 900 },
+        { "at": 3.0, "hover": "Job: AI Engineer · Application documents" }
+      ], "lead": 0.3, "tail": 1.2 },
+    { "id": "end", "card": "end", "voice": "JobCairn. Everything in its place.", "lead": 0.8, "tail": 1.6 }
+  ]
+}

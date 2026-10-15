@@ -1,0 +1,64 @@
+{
+  "schema": 1,
+  "id": "2026-01-12-ai-developer",
+  "company_slug": "acme-recruiting",
+  "client": "Example University",
+  "title": "AI Developer",
+  "source": "pasted",
+  "source_site": "Pasted link",
+  "url": "https://jobs.example.com/rec/3",
+  "apply_via": "",
+  "posted": "",
+  "found_at": "2026-01-12T09:00:00.000Z",
+  "location": "Sampletown NSW",
+  "work_mode": "",
+  "job_type": "",
+  "salary": {
+    "text": "",
+    "min": null,
+    "max": null,
+    "currency": "",
+    "period": ""
+  },
+  "timeline": [
+    {
+      "at": "2026-01-12T09:00:00.000Z",
+      "event": "Found",
+      "note": "Pasted link"
+    }
+  ],
+  "work_rights": {
+    "label": "citizen_pr_only",
+    "quotes": [
+      "Must be an Australian citizen or permanent resident."
+    ],
+    "decided_by": "scan"
+  },
+  "scores": {
+    "fit": {
+      "value": null,
+      "must_haves": [],
+      "nice_to_haves": []
+    },
+    "sponsor": {
+      "value": null,
+      "tier": "",
+      "reasons": []
+    },
+    "career": {
+      "match": null,
+      "odds": null,
+      "tier": "",
+      "scored_at": ""
+    }
+  },
+  "status": "Found",
+  "files": [
+    {
+      "path": "jd.md",
+      "label": "Job description",
+      "at": "2026-01-12T09:00:00.000Z"
+    }
+  ],
+  "custom": {}
+}

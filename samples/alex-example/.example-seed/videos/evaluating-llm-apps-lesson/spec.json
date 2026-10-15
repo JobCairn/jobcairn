@@ -1,0 +1,112 @@
+{
+  "version": 2,
+  "title": "Evaluating LLM apps",
+  "voice_type": "guide",
+  "scenes": [
+    {
+      "type": "title",
+      "cue": "Here is how",
+      "kicker": "Skill-gap lesson",
+      "title": "Evaluating LLM apps",
+      "underline": "Evaluating"
+    },
+    {
+      "type": "kinetic",
+      "cue": "Start with",
+      "lines": [
+        {
+          "text": "A fixed test set.",
+          "cue": "fixed test set"
+        },
+        {
+          "text": "Real questions, expected answers.",
+          "cue": "Real questions"
+        }
+      ],
+      "emphasis": "fixed"
+    },
+    {
+      "type": "flowchart",
+      "cue": "Then run the loop",
+      "headline": "The evaluation loop",
+      "direction": "lr",
+      "nodes": [
+        {
+          "id": "run",
+          "label": "Run the app",
+          "cue": "Run the app"
+        },
+        {
+          "id": "score",
+          "label": "Score answers",
+          "cue": "Score each"
+        },
+        {
+          "id": "fix",
+          "label": "Fix the prompt",
+          "cue": "Fix the prompt"
+        }
+      ],
+      "edges": [
+        [
+          "run",
+          "score"
+        ],
+        [
+          "score",
+          "fix"
+        ]
+      ]
+    },
+    {
+      "type": "icon-grid",
+      "cue": "Score three things",
+      "headline": "Score three things",
+      "items": [
+        {
+          "label": "Correct",
+          "icon": "circle-check",
+          "cue": "correct"
+        },
+        {
+          "label": "Grounded",
+          "icon": "book-open",
+          "cue": "grounded"
+        },
+        {
+          "label": "Right format",
+          "icon": "list-checks",
+          "cue": "format"
+        }
+      ]
+    },
+    {
+      "type": "code-typing",
+      "cue": "Then gate",
+      "lang": "python",
+      "code": "if score < last_score - 2:\n    raise SystemExit(\"Release blocked\")",
+      "label": "A release gate",
+      "cue_done": "stops"
+    },
+    {
+      "type": "recap-card",
+      "cue": "So remember",
+      "headline": "Remember these three",
+      "closing": "Write twenty questions today.",
+      "items": [
+        {
+          "text": "A fixed test set",
+          "cue": "fixed test set"
+        },
+        {
+          "text": "Three scores",
+          "cue": "three scores"
+        },
+        {
+          "text": "A release gate",
+          "cue": "release gate"
+        }
+      ]
+    }
+  ]
+}

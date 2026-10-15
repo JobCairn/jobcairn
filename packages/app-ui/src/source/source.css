@@ -1,0 +1,33 @@
+/* SourceBadge: an icon (an official board mark, in its own brand colour, or a quiet monogram) plus an
+   optional name, for "where did this job come from". A mark is a bundled real app icon with its own
+   opaque background, so it renders in full colour and stays legible in both Graphite and Paper without
+   depending on currentColor or the page behind it. A monogram (no official mark was obtainable - see
+   board-marks.ts) stays deliberately generic and tinted to the theme. */
+.source-badge {
+  display: inline-flex; align-items: center; gap: var(--space-2); min-width: 0;
+  background: none; border: 0; padding: 0; margin: 0; font: inherit; color: var(--color-text-muted); text-align: left;
+}
+.source-badge--link { cursor: pointer; }
+.source-badge--link:hover { color: var(--color-text); }
+
+.source-badge__mark, .source-badge__mono { flex: none; }
+/* An official board mark: a small opaque square (its own brand colour and background baked in),
+   rounded to match the app's other tiles, on a neutral backstop in case the source image has any
+   transparent edge. */
+.source-badge__mark { width: var(--size-icon-sm); height: var(--size-icon-sm); border-radius: var(--radius-sm); display: block; object-fit: cover; background: var(--color-surface); }
+.source-badge--md .source-badge__mark { width: var(--size-icon-md); height: var(--size-icon-md); }
+
+.source-badge__mono {
+  display: inline-grid; place-items: center; width: var(--size-icon-sm); height: var(--size-icon-sm);
+  border-radius: var(--radius-sm); border: var(--size-border) solid transparent;
+  font-size: var(--font-size-11); font-weight: var(--font-weight-medium); line-height: 1; letter-spacing: 0;
+}
+.source-badge--md .source-badge__mono { width: var(--size-icon-md); height: var(--size-icon-md); font-size: var(--font-size-12); }
+
+.source-badge__mono--accent { color: var(--color-accent); background: color-mix(in srgb, var(--color-accent) 16%, transparent); border-color: color-mix(in srgb, var(--color-accent) 35%, transparent); }
+.source-badge__mono--success { color: var(--color-success); background: color-mix(in srgb, var(--color-success) 16%, transparent); border-color: color-mix(in srgb, var(--color-success) 35%, transparent); }
+.source-badge__mono--warning { color: var(--color-warning); background: color-mix(in srgb, var(--color-warning) 16%, transparent); border-color: color-mix(in srgb, var(--color-warning) 35%, transparent); }
+.source-badge__mono--danger { color: var(--color-danger); background: color-mix(in srgb, var(--color-danger) 16%, transparent); border-color: color-mix(in srgb, var(--color-danger) 35%, transparent); }
+.source-badge__mono--neutral { color: var(--color-text-muted); background: var(--color-surface); border-color: var(--color-border-strong); }
+
+.source-badge__name { font-size: var(--font-size-13); color: inherit; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

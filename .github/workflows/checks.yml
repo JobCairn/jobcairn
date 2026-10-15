@@ -1,0 +1,86 @@
+name: checks
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Cache Electron binary
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/electron
+            ~/Library/Caches/electron
+          # Keyed on package-lock.json so a bumped Electron pin (or any other dependency change)
+          # invalidates the cache automatically, rather than drifting from a hard-coded version string.
+          key: ${{ runner.os }}-electron-${{ hashFiles('package-lock.json') }}
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - name: Brand visual snapshots (pinned Playwright image)
+        # First CI run creates the baselines; download the brand-snapshots artifact
+        # (below) and commit the PNGs. --update-snapshots=missing only writes
+        # baselines that don't exist yet; existing baselines are still compared
+        # strictly, so this never hides a real pixel diff once a baseline exists.
+        if: runner.os == 'Linux'
+        run: |
+          docker run --rm -v "$PWD:/work" -v careeros-linux-modules:/work/node_modules -w /work -e ELECTRON_SKIP_BINARY_DOWNLOAD=1 mcr.microsoft.com/playwright:v1.64.0-noble \
+            bash -c "npm ci && npm run guide:build -w @careeros/brand && npx playwright test -c packages/brand/playwright.config.ts --update-snapshots=missing"
+      - name: Upload brand snapshots
+        if: always() && runner.os == 'Linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: brand-snapshots
+          path: docs/assets/brand-snapshots/*.png
+      - name: Desktop app end-to-end (Electron)
+        run: |
+          if [ "$RUNNER_OS" = "Linux" ]; then
+            # Ubuntu 24.04 blocks the unprivileged user namespaces Chromium's sandbox needs; allow them rather than turning the sandbox off.
+            sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+            xvfb-run -a npm run e2e -w @careeros/app-electron
+          else
+            npm run e2e -w @careeros/app-electron
+          fi
+      - name: Upload e2e failure artifacts (traces, screenshots)
+        # Only ever fictional data (samples/alex-example copies in a temp dir) can end up here - never a
+        # real workspace or home-dir path.
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-results-${{ matrix.os }}
+          path: packages/app-electron/test-results/**
+          retention-days: 7
+      - name: Personal-data scan (whole history, generic rules)
+        run: node scripts/privacy/scan.mjs --history
+      - name: Sample workspace is valid
+        run: npm run careeros -- validate --ws samples/alex-example
+      - name: Secret scan (gitleaks)
+        if: runner.os == 'Linux'
+        run: |
+          if [ -f .gitleaks.toml ]; then
+            docker run --rm -v "$PWD:/repo" -w /repo zricethezav/gitleaks:v8.30.1 git /repo --redact --no-banner --log-opts="--all" --config /repo/.gitleaks.toml
+          else
+            docker run --rm -v "$PWD:/repo" -w /repo zricethezav/gitleaks:v8.30.1 git /repo --redact --no-banner --log-opts="--all"
+          fi
+      - name: Dependency audit (osv-scanner)
+        if: runner.os == 'Linux'
+        run: docker run --rm -v "$PWD:/src" ghcr.io/google/osv-scanner:v2.6.0 scan source -r /src
+        continue-on-error: true

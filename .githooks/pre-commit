@@ -1,0 +1,15 @@
+#!/bin/sh
+# Blocks commits that contain personal data.
+# Runs the in-repo scan plus the interim out-of-repo guard (if installed); both must pass.
+GUARD="$HOME/.config/careeros/hooks/guard.sh"
+
+node scripts/privacy/scan.mjs --staged
+status=$?
+
+if [ -x "$GUARD" ]; then
+  "$GUARD" staged
+  guard_status=$?
+  [ "$guard_status" -ne 0 ] && status=$guard_status
+fi
+
+exit $status

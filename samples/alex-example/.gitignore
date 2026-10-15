@@ -1,0 +1,8 @@
+# Local-only history. Never add a remote unless you mean to.
+.env
+settings/.env
+me/identity/
+me/employment/
+me/resumes/
+.index/
+.backup/

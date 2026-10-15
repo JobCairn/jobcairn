@@ -1,0 +1,9 @@
+{
+  "domains": [
+    "seek.com.au", "linkedin.com", "indeed.com", "glassdoor.com", "jora.com", "adzuna.com.au", "careerone.com.au", "ethicaljobs.com.au",
+    "greenhouse.io", "lever.co", "workable.com", "ashbyhq.com", "smartrecruiters.com", "myworkday.com", "myworkdayjobs.com", "icims.com",
+    "jobvite.com", "bamboohr.com", "teamtailor.com", "recruitee.com", "jobadder.com", "pageuppeople.com", "successfactors.com", "taleo.net",
+    "applytojob.com", "breezy.hr", "personio.de", "livehire.com", "employmenthero.com", "hire.jobvite.com"
+  ],
+  "words": ["application", "interview", "role", "position", "recruiter", "offer"]
+}

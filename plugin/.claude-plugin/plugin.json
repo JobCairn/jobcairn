@@ -1,0 +1,9 @@
+{
+  "name": "careeros",
+  "version": "0.1.0",
+  "description": "JobCairn job-hunt skills: career scoring and tailoring, video lessons, voice",
+  "author": {
+    "name": "JobCairn"
+  },
+  "license": "proprietary"
+}

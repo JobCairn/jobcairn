@@ -1,0 +1,2 @@
+{ "id": "hyperframes", "name": "HyperFrames renderer", "order": 70, "required": true, "why": "Turns lesson scripts into videos on your Mac (local render only).", "docs": "https://hyperframes.heygen.com",
+  "platforms": { "darwin": { "check": "command -v hyperframes >/dev/null && hyperframes --version | grep -Eqx 'v?0\\.8\\.140'", "install": ["npm install -g hyperframes@0.8.140", "hyperframes telemetry disable"] } } }

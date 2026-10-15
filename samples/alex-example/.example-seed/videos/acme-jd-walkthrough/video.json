@@ -1,0 +1,202 @@
+{
+  "schema": 1,
+  "type": "jd-walkthrough",
+  "type_version": 2,
+  "subject": {
+    "kind": "job",
+    "company_slug": "acme-corp",
+    "id": "2026-01-12-ai-engineer"
+  },
+  "options": {
+    "length_s": 50,
+    "review": "if_problems"
+  },
+  "created_at": "2026-10-11T11:44:18.697Z",
+  "updated_at": "2026-10-11T11:45:35.955Z",
+  "captions": {
+    "style": "rail",
+    "estimated": false,
+    "srt": "captions.srt",
+    "vtt": "captions.vtt"
+  },
+  "locked_facts": [],
+  "title": "Acme Corp: what the role asks",
+  "status": "done",
+  "voice": {
+    "engine": "supertonic",
+    "voice": "F4",
+    "fell_back": false
+  },
+  "length_s": 44.92,
+  "renders": {
+    "draft": null,
+    "final": {
+      "path": "renders/final.mp4",
+      "at": "2026-10-11T11:45:34.194Z",
+      "duration_s": 44.933333,
+      "quality": "final"
+    }
+  },
+  "stages": {
+    "request": {
+      "status": "done",
+      "hash": "",
+      "at": "2026-10-11T11:44:18.701Z",
+      "ms": 1,
+      "message": "Saved"
+    },
+    "sources": {
+      "status": "done",
+      "hash": "",
+      "at": "2026-10-11T11:44:18.707Z",
+      "ms": 0,
+      "message": "4 files"
+    },
+    "write": {
+      "status": "done",
+      "hash": "",
+      "at": "2026-10-11T11:44:18.709Z",
+      "ms": 1,
+      "message": "Written"
+    },
+    "check": {
+      "status": "done",
+      "hash": "",
+      "at": "2026-10-11T11:44:18.735Z",
+      "ms": 25,
+      "message": "No problems left"
+    },
+    "review": {
+      "status": "skipped",
+      "hash": "",
+      "at": "2026-10-11T11:44:18.736Z",
+      "ms": 0,
+      "message": "The script passed its checks, so it went straight on to the video"
+    },
+    "narrate": {
+      "status": "done",
+      "hash": "a2033bbf73f1ff7f6910263254606b3638c9fc89562ac095df2555f06798fbd7",
+      "at": "2026-10-11T11:44:36.838Z",
+      "ms": 18128,
+      "message": "Narrated with supertonic while the script was checked",
+      "parts": [
+        {
+          "name": "Narrated 6 paragraphs, while the script was checked",
+          "ms": 18128
+        }
+      ]
+    },
+    "captions": {
+      "status": "done",
+      "hash": "cbdeb365ed5f07352ef73746d473f196329bf8f124789f6b652e9c5551e0ffae",
+      "at": "2026-10-11T11:44:41.745Z",
+      "ms": 4906,
+      "message": "35 caption lines"
+    },
+    "media": {
+      "status": "done",
+      "hash": "",
+      "at": "2026-10-11T11:44:44.429Z",
+      "ms": 2682,
+      "message": "Using the Greenhouse mark. 21 sound effects",
+      "parts": [
+        {
+          "name": "Pictures and sound",
+          "ms": 2682
+        }
+      ]
+    },
+    "expand": {
+      "status": "done",
+      "hash": "937a90e114839198af985c3ac57d5c11c9fcbd0fb0418476f596bdeef501c19d",
+      "at": "2026-10-11T11:44:44.444Z",
+      "ms": 14,
+      "message": "6 scenes, 45 seconds"
+    },
+    "lint": {
+      "status": "done",
+      "hash": "937a90e114839198af985c3ac57d5c11c9fcbd0fb0418476f596bdeef501c19d",
+      "at": "2026-10-11T11:44:54.658Z",
+      "ms": 10213,
+      "message": "9 warnings",
+      "parts": [
+        {
+          "name": "Quick lint and layout check",
+          "ms": 10212
+        }
+      ]
+    },
+    "draft": {
+      "status": "skipped",
+      "hash": "",
+      "at": "2026-10-11T11:44:54.659Z",
+      "ms": 0,
+      "message": "Not needed for the final video"
+    },
+    "final": {
+      "status": "done",
+      "hash": "937a90e114839198af985c3ac57d5c11c9fcbd0fb0418476f596bdeef501c19d",
+      "at": "2026-10-11T11:45:35.953Z",
+      "ms": 41292,
+      "message": "45 seconds, 15 QA stills",
+      "parts": [
+        {
+          "name": "Render",
+          "ms": 39423
+        },
+        {
+          "name": "Label the file",
+          "ms": 69
+        },
+        {
+          "name": "Check the file",
+          "ms": 41
+        },
+        {
+          "name": "Contact sheet",
+          "ms": 555
+        },
+        {
+          "name": "QA stills",
+          "ms": 1097
+        },
+        {
+          "name": "Caption sync",
+          "ms": 105
+        }
+      ]
+    },
+    "save": {
+      "status": "done",
+      "hash": "",
+      "at": "2026-10-11T11:45:35.954Z",
+      "ms": 0,
+      "message": "Saved"
+    }
+  },
+  "issues": {
+    "errors": 0,
+    "warnings": 0
+  },
+  "sources": [
+    "companies/acme-corp/jobs/2026-01-12-ai-engineer/jd.md",
+    "companies/acme-corp/jobs/2026-01-12-ai-engineer/job.json",
+    "companies/acme-corp/jobs/2026-01-12-ai-engineer/score.md",
+    "me/history/roles.md"
+  ],
+  "error": "",
+  "custom": {},
+  "autofix": {
+    "repairs": [],
+    "claude_passes": 0,
+    "claude_fixed": 0,
+    "at": "2026-10-11T11:44:18.732Z"
+  },
+  "check_notes": [],
+  "last_run": {
+    "phase": "final",
+    "status": "done",
+    "started_at": "2026-10-11T11:44:18.699Z",
+    "total_ms": 77256
+  }
+}

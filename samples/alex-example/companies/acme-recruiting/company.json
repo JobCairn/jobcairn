@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "name": "Acme Recruiting",
+  "slug": "acme-recruiting",
+  "aliases": [],
+  "website": "",
+  "size": "",
+  "type": "unknown",
+  "big_tech": false,
+  "email_match": [],
+  "recruiter": {
+    "name": "",
+    "email": ""
+  },
+  "sponsor": {
+    "status": "unknown",
+    "evidence": [],
+    "last_checked": ""
+  },
+  "custom": {}
+}

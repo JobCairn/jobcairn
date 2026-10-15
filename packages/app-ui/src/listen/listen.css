@@ -1,0 +1,58 @@
+/* Read aloud: the player bar and the paragraph highlight. Tokens only (Graphite and Paper). */
+.listen-bar {
+  position: fixed; left: calc(var(--size-rail) + var(--space-6)); right: var(--space-6); bottom: var(--space-4); z-index: 40;
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-4);
+  padding: var(--space-2) var(--space-3) var(--space-2) var(--space-4);
+  background: var(--color-bg-raised); border: var(--size-border) solid var(--color-border-strong); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-pop);
+  animation: brand-rise var(--motion-duration-fast) var(--motion-easing-out) both;
+}
+.listen-bar__what { display: flex; align-items: center; gap: var(--space-3); min-width: 0; flex: 1; }
+.listen-bar__glyph { color: var(--color-accent); flex: none; }
+.listen-bar__text { min-width: 0; display: flex; flex-direction: column; }
+.listen-bar__error { color: var(--color-danger); }
+.listen-bar__note { color: var(--color-text-muted); }
+.listen-bar__controls { display: flex; align-items: center; gap: var(--space-1); flex: none; }
+.listen-bar__speed { display: inline-flex; }
+.listen-bar__select { height: var(--button-height-sm); padding-block: 0; min-width: 4.5rem; }
+.listen-bar__spinner {
+  display: inline-block; vertical-align: -2px; margin-right: var(--space-1);
+  width: var(--size-icon-sm); height: var(--size-icon-sm); border-radius: var(--radius-full);
+  border: 2px solid var(--color-border-strong); border-top-color: var(--color-accent); animation: listen-spin 0.8s linear infinite;
+}
+@keyframes listen-spin { to { transform: rotate(360deg); } }
+@media (max-width: 1100px) { .listen-bar { left: calc(var(--size-rail) + var(--space-3)); right: var(--space-3); } }
+
+/* Leave room so the last paragraph can scroll above the bar. */
+:root[data-listening] .app__main { padding-bottom: calc(var(--space-12) + var(--space-12)); }
+
+/* The paragraph being read: a soft accent wash and a left rule, never a layout shift. */
+.listen-active {
+  background: var(--color-accent-soft); border-radius: var(--radius-sm);
+  box-shadow: calc(-1 * var(--space-2)) 0 0 0 var(--color-accent-soft), inset 3px 0 0 0 var(--color-accent);
+  transition: background var(--motion-duration-fast) var(--motion-easing-out);
+}
+.listen-button--on { border-color: color-mix(in srgb, var(--color-accent) 45%, transparent); color: var(--color-accent); }
+
+.voice-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); gap: var(--space-2); }
+.voice-list__item {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-2);
+  padding: var(--space-2) var(--space-3); border: var(--size-border) solid var(--color-border); border-radius: var(--radius-md);
+}
+.voice-list__item:has(input:checked) { border-color: var(--color-accent); background: var(--color-accent-soft); }
+.voice-list__item:hover { border-color: var(--color-border-strong); }
+.voice-list__item label { cursor: pointer; display: flex; align-items: center; gap: var(--space-2); min-width: 0; }
+.voice-list input[type="radio"] { accent-color: var(--color-accent); flex: none; }
+.voice-list__info { display: flex; flex-direction: column; gap: 0; min-width: 0; }
+.voice-list__name-row { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-1) var(--space-2); }
+.voice-list__name-row .pill { flex: none; }
+.voice-list__info .t-body-sm { white-space: nowrap; }
+.voice-cache { display: flex; flex-direction: column; gap: var(--space-2); padding-top: var(--space-3); border-top: var(--size-border) solid var(--color-border); }
+.voice-status { display: flex; align-items: flex-start; gap: var(--space-3); }
+/* The engine pill keeps its words on one line; the sentence beside it wraps instead (narrow windows). */
+.voice-status > .pill { flex: none; white-space: nowrap; }
+
+@media (prefers-reduced-motion: reduce) {
+  .listen-bar, .listen-active { animation: none; transition: none; }
+  .listen-bar__spinner { animation-duration: 2.4s; }
+}

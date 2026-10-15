@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "careeros/video",
+  "type": "object",
+  "required": ["schema", "type", "subject", "created_at"],
+  "$defs": {
+    "slug": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$", "maxLength": 120 },
+    "subject": {
+      "type": "object", "additionalProperties": false, "required": ["kind"],
+      "properties": {
+        "kind": { "enum": ["job", "company", "topic", "week"] },
+        "company_slug": { "$ref": "#/$defs/slug" },
+        "id": { "$ref": "#/$defs/slug" },
+        "topic": { "type": "string", "minLength": 1, "maxLength": 80, "pattern": "^[^\\u0000-\\u001f\\u007f]+$" },
+        "week": { "type": "string", "pattern": "^\\d{4}-W(0[1-9]|[1-4]\\d|5[0-3])$" }
+      }
+    },
+    "render": {
+      "type": "object", "required": ["path", "at"],
+      "properties": {
+        "path": { "type": "string" }, "at": { "type": "string" },
+        "duration_s": { "type": ["number", "null"], "default": null },
+        "quality": { "enum": ["draft", "final"] }
+      }
+    },
+    "stage": {
+      "type": "object",
+      "properties": {
+        "status": { "enum": ["pending", "running", "done", "failed", "skipped", "cancelled"], "default": "pending" },
+        "hash": { "type": "string", "default": "" },
+        "at": { "type": "string", "default": "" },
+        "ms": { "type": "integer", "minimum": 0, "default": 0 },
+        "message": { "type": "string", "default": "" }
+      }
+    }
+  },
+  "properties": {
+    "schema": { "type": "integer", "minimum": 1 },
+    "type": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$", "maxLength": 40 },
+    "type_version": { "type": "integer", "minimum": 1, "default": 1 },
+    "subject": { "$ref": "#/$defs/subject" },
+    "title": { "type": "string", "default": "" },
+    "status": { "enum": ["writing", "checking", "review", "narrating", "rendering", "preview", "done", "failed", "cancelled"], "default": "writing" },
+    "created_at": { "type": "string" },
+    "updated_at": { "type": "string", "default": "" },
+    "options": { "type": "object", "default": {} },
+    "voice": {
+      "type": "object", "default": {},
+      "properties": { "engine": { "type": "string", "default": "" }, "voice": { "type": "string", "default": "" }, "fell_back": { "type": "boolean", "default": false } }
+    },
+    "length_s": { "type": ["number", "null"], "default": null },
+    "captions": {
+      "type": "object", "default": {},
+      "properties": {
+        "style": { "enum": ["rail", "pill", "highlight", "none"], "default": "rail" },
+        "estimated": { "type": "boolean", "default": false },
+        "srt": { "type": "string", "default": "" },
+        "vtt": { "type": "string", "default": "" }
+      }
+    },
+    "renders": {
+      "type": "object", "default": {},
+      "properties": {
+        "draft": { "default": null, "anyOf": [{ "type": "null" }, { "$ref": "#/$defs/render" }] },
+        "final": { "default": null, "anyOf": [{ "type": "null" }, { "$ref": "#/$defs/render" }] }
+      }
+    },
+    "stages": { "type": "object", "default": {}, "additionalProperties": { "$ref": "#/$defs/stage" } },
+    "locked_facts": {
+      "type": "array", "default": [],
+      "items": { "type": "object", "required": ["folder", "granted_at"], "properties": { "folder": { "enum": ["me/identity", "me/employment"] }, "granted_at": { "type": "string" } } }
+    },
+    "issues": {
+      "type": "object", "default": {},
+      "properties": { "errors": { "type": "integer", "minimum": 0, "default": 0 }, "warnings": { "type": "integer", "minimum": 0, "default": 0 } }
+    },
+    "sources": { "type": "array", "default": [], "items": { "type": "string" } },
+    "error": { "type": "string", "default": "" },
+    "autofix": {
+      "type": "object", "additionalProperties": false, "required": ["repairs", "claude_passes", "claude_fixed", "at"],
+      "properties": {
+        "repairs": { "type": "array", "maxItems": 20, "items": { "type": "string", "maxLength": 300 } },
+        "claude_passes": { "type": "integer", "minimum": 0, "maximum": 5 },
+        "claude_fixed": { "type": "integer", "minimum": 0 },
+        "at": { "type": "string" }
+      }
+    },
+    "qa": {
+      "type": "object", "additionalProperties": false, "required": ["status", "open_issues"],
+      "properties": {
+        "status": { "enum": ["passed", "open_issues"] },
+        "open_issues": {
+          "type": "array", "maxItems": 50,
+          "items": {
+            "type": "object", "additionalProperties": false, "required": ["scene", "from_s", "to_s", "description", "tried"],
+            "properties": {
+              "scene": { "type": "integer", "minimum": 0 },
+              "from_s": { "type": "number", "minimum": 0 },
+              "to_s": { "type": "number", "minimum": 0 },
+              "description": { "type": "string", "minLength": 1, "maxLength": 300 },
+              "tried": { "type": "string", "maxLength": 300 }
+            }
+          }
+        }
+      },
+      "if": { "properties": { "status": { "const": "passed" } } },
+      "then": { "properties": { "open_issues": { "maxItems": 0 } } },
+      "else": { "properties": { "open_issues": { "minItems": 1 } } }
+    },
+    "custom": { "type": "object", "default": {} }
+  }
+}

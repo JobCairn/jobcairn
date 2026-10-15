@@ -1,0 +1,78 @@
+/* Guided tours: spotlight, card and the sidebar help button. Tokens only, so Graphite and Paper both work. */
+.tour-layer { position: fixed; inset: 0; z-index: 60; pointer-events: none; }
+.tour-block { position: fixed; pointer-events: auto; background: transparent; }
+.tour-scrim { inset: 0; background: var(--dialog-scrim); }
+
+.tour-hole {
+  position: fixed; pointer-events: none; border-radius: var(--radius-md);
+  box-shadow: 0 0 0 2px var(--color-accent), 0 0 0 200vmax var(--dialog-scrim);
+  transition: top var(--motion-duration-base) var(--motion-easing-out), left var(--motion-duration-base) var(--motion-easing-out),
+    width var(--motion-duration-base) var(--motion-easing-out), height var(--motion-duration-base) var(--motion-easing-out);
+}
+
+.tour-card {
+  position: fixed; pointer-events: auto; width: min(22rem, calc(100vw - var(--space-6)));
+  display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-4) var(--space-4) var(--space-3);
+  background: var(--color-bg-raised); color: var(--color-text);
+  border: var(--size-border) solid var(--color-border-strong); border-radius: var(--radius-lg); box-shadow: var(--shadow-pop);
+  transition: top var(--motion-duration-base) var(--motion-easing-out), left var(--motion-duration-base) var(--motion-easing-out);
+  animation: tour-in var(--motion-duration-base) var(--motion-easing-out);
+}
+.tour-card:focus { outline: none; }
+.tour-card:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+.tour-card__count { margin: 0; font-size: var(--font-size-12); color: var(--color-text-muted); font-variant-numeric: tabular-nums; }
+.tour-card__title { margin: 0; }
+.tour-card__body { margin: 0; font-size: var(--font-size-14); line-height: 1.5; color: var(--color-text); }
+.tour-card__actions { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); margin-top: var(--space-2); }
+.tour-card__nav { display: flex; align-items: center; gap: var(--space-2); }
+.tour-card__skip {
+  padding: var(--space-1) 0; border: 0; background: transparent; cursor: pointer;
+  font: inherit; font-size: var(--font-size-13); color: var(--color-text-muted); text-decoration: underline; text-underline-offset: 3px;
+}
+.tour-card__offer { margin-top: calc(var(--space-1) * -1); }
+.tour-card__offer .btn { padding-left: 0; }
+.tour-card__soon { font-size: var(--font-size-12); color: var(--color-text-muted); }
+.tour-card__skip:hover { color: var(--color-text); }
+.tour-card__skip:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; border-radius: var(--radius-sm); }
+
+@keyframes tour-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+/* Guide videos: the welcome row, the Settings list and the player. */
+.journeys__row { list-style: none; margin: var(--space-2) 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: var(--space-3); }
+.journey-card {
+  display: flex; flex-direction: column; gap: var(--space-2); width: 100%; padding: var(--space-2); text-align: left;
+  border: var(--size-border) solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface); color: var(--color-text);
+  font: inherit;
+}
+button.journey-card { cursor: pointer; }
+button.journey-card:hover { border-color: var(--color-border-strong); }
+button.journey-card:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+.journey-card__text { display: flex; flex-direction: column; gap: 2px; padding: 0 var(--space-1) var(--space-1); }
+.journey-card__title { font-size: var(--font-size-14); font-weight: var(--font-weight-medium); }
+.journey-card__meta { font-size: var(--font-size-12); color: var(--color-text-muted); }
+.journey-poster {
+  position: relative; display: block; aspect-ratio: 16 / 9; width: 100%; overflow: hidden; border-radius: var(--radius-md);
+  background: linear-gradient(135deg, var(--color-accent-soft), var(--color-bg-raised));
+}
+.journey-poster__img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.journey-poster__drawn { position: absolute; inset: 0; display: grid; place-items: center; color: var(--color-accent); opacity: 0.8; }
+.journey-poster__play {
+  position: absolute; left: var(--space-2); bottom: var(--space-2); display: grid; place-items: center; width: var(--space-8); height: var(--space-8);
+  border-radius: var(--radius-full); background: var(--color-bg-raised); color: var(--color-text); box-shadow: var(--shadow-card);
+}
+.journeys__list { display: flex; flex-direction: column; gap: var(--space-3); }
+.journeys__item { display: flex; align-items: center; gap: var(--space-3); }
+.journeys__item > .journey-poster { width: 7rem; flex: 0 0 7rem; }
+.dialog:has(.journey-player) { width: min(48rem, calc(100vw - var(--space-8))); }
+.journey-player { display: flex; flex-direction: column; gap: var(--space-3); }
+.journey-player__video { display: block; width: 100%; aspect-ratio: 16 / 9; border-radius: var(--radius-md); background: var(--color-bg); }
+.journey-player__soon { display: flex; flex-direction: column; gap: var(--space-3); }
+
+/* Settings row. */
+.tour-setting__actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.tour-help-section { margin-top: var(--space-6); }
+
+@media (prefers-reduced-motion: reduce) {
+  .tour-hole, .tour-card { transition: none; animation: none; }
+}
+/* "Show me around" and the version live in the sidebar footer (app.css, .rail-foot). */

@@ -1,0 +1,15 @@
+{
+  "id": "744000012345678",
+  "name": "Conversational AI Developer",
+  "releasedDate": "2026-01-13T05:00:00.000Z",
+  "company": { "identifier": "AcmeCorp", "name": "Acme Corp" },
+  "location": { "city": "Sampletown", "region": "NSW", "country": "au", "remote": true },
+  "typeOfEmployment": { "label": "Full-time" },
+  "applyUrl": "https://jobs.smartrecruiters.com/AcmeCorp/744000012345678-conversational-ai-developer?oga=true",
+  "jobAd": { "sections": {
+    "companyDescription": { "title": "Company Description", "text": "<p>Acme Corp makes example things.</p>" },
+    "jobDescription": { "title": "Job Description", "text": "<p>Build voice agents.</p>" },
+    "qualifications": { "title": "Qualifications", "text": "<ul><li>Node.js</li></ul>" },
+    "additionalInformation": { "title": "Additional Information", "text": "<p>We are an equal opportunity employer regardless of citizenship.</p>" }
+  } }
+}

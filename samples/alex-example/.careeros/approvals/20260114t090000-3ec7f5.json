@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "id": "20260114t090000-3ec7f5",
+  "action": "status_change",
+  "title": "Move Example Labs to Interview",
+  "summary": "Claude found an interview invite in your notes.",
+  "steps": [
+    "Set the job status to Interview",
+    "Add a timeline event \"Status: Interview\""
+  ],
+  "payload": {
+    "company_slug": "example-labs",
+    "id": "2026-01-12-backend-engineer-llm",
+    "status": "Interview",
+    "note": "Invite for Thursday"
+  },
+  "created_at": "2026-01-14T09:00:00.000Z",
+  "created_by": "claude",
+  "status": "pending",
+  "decided_at": "",
+  "result_note": "",
+  "custom": {}
+}

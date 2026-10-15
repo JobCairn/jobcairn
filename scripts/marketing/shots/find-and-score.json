@@ -1,0 +1,166 @@
+{
+  "slug": "find-and-score",
+  "title": "Find and score jobs with JobCairn",
+  "resolution": "720p",
+  "layoutWidth": 1280,
+  "theme": "dark",
+  "clock": "2026-01-15T23:00:00Z",
+  "maxMB": 5.5,
+  "replace": [
+    [
+      "CareerOS",
+      "JobCairn"
+    ],
+    [
+      "10 Oct 2026",
+      "14 Jan 2026"
+    ]
+  ],
+  "cards": {
+    "title": {
+      "heading": "Find and score jobs",
+      "sub": "Search the job boards, then see which jobs are worth your time."
+    },
+    "end": {
+      "heading": "Find the jobs worth your time.",
+      "sub": "JobCairn. Your job search, in one place."
+    },
+    "disclaimer": "An example job search. Every person and company shown is made up."
+  },
+  "poster": {
+    "beat": "pinned",
+    "at": 1.0
+  },
+  "beats": [
+    {
+      "id": "title",
+      "card": "title",
+      "voice": "Here is how JobCairn finds and scores jobs.",
+      "lead": 1.3,
+      "tail": 1.0
+    },
+    {
+      "id": "search",
+      "params": "chrome=on",
+      "route": "#/jobs",
+      "voice": "Claude searches the job boards in your own Chrome, and logs every search with a report.",
+      "steps": [
+        {
+          "at": 0.1,
+          "role": "button",
+          "name": "Choose how: Find jobs"
+        },
+        {
+          "at": 1.6,
+          "scrollTo": "Where Claude searches",
+          "offset": 260
+        },
+        {
+          "at": 4.0,
+          "press": "Escape"
+        },
+        {
+          "at": 4.2,
+          "hash": "#/searches"
+        }
+      ],
+      "lead": 0.3,
+      "tail": 1.2
+    },
+    {
+      "id": "pinned",
+      "params": "score",
+      "route": "#/jobs",
+      "voice": "Jobs land in one table. Ads that offer sponsorship are pinned to the top.",
+      "steps": [
+        {
+          "at": 1.6,
+          "zoomSelector": "tbody tr.is-pinned:nth-child(3)",
+          "scale": 1.2,
+          "ms": 1400
+        }
+      ],
+      "lead": 0.3,
+      "tail": 0.8
+    },
+    {
+      "id": "fit-sponsor",
+      "params": "score",
+      "route": "#/jobs",
+      "voice": "Each job gets a fit score and a sponsor score, so the best bets stand out.",
+      "steps": [
+        {
+          "at": 0.2,
+          "zoomSelector": "thead th:nth-child(6)",
+          "scale": 1.7,
+          "ms": 1100
+        }
+      ],
+      "lead": 0.3,
+      "tail": 0.9
+    },
+    {
+      "id": "ad",
+      "params": "score",
+      "route": "#/jobs",
+      "voice": "Open one to read the whole ad. The sponsorship line is quoted from it.",
+      "steps": [
+        {
+          "at": 0.1,
+          "click": "Acme Corp",
+          "exact": true
+        },
+        {
+          "at": 2.2,
+          "scrollTo": "Visa sponsorship available",
+          "offset": 330
+        },
+        {
+          "at": 3.4,
+          "zoom": "Visa sponsorship available",
+          "scale": 1.4,
+          "ms": 900
+        }
+      ],
+      "lead": 0.3,
+      "tail": 1.0
+    },
+    {
+      "id": "score",
+      "params": "score",
+      "route": "#/job/acme-corp/2026-01-12-ai-engineer?tab=score",
+      "voice": "The score checks each must-have against your history, and the gaps become a study plan.",
+      "steps": [
+        {
+          "at": 0.2,
+          "zoom": "Kubernetes in production",
+          "scale": 1.2,
+          "ms": 1000
+        },
+        {
+          "at": 3.0,
+          "unzoom": true,
+          "ms": 600
+        },
+        {
+          "at": 3.5,
+          "role": "tab",
+          "name": "Gaps 2"
+        },
+        {
+          "at": 5.0,
+          "hover": "Study"
+        }
+      ],
+      "lead": 0.3,
+      "tail": 1.0
+    },
+    {
+      "id": "end",
+      "card": "end",
+      "voice": "JobCairn. Find the jobs worth your time.",
+      "lead": 0.8,
+      "tail": 1.6
+    }
+  ]
+}

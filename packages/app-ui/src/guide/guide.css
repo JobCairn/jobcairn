@@ -1,0 +1,55 @@
+/* Getting started checklist and the shared NextStep empty state (Lane F). Tokens only. */
+.guide { display: flex; flex-direction: column; gap: var(--space-4); margin-bottom: var(--space-6); }
+.learn-empty .guide { margin-bottom: 0; }
+.guide__head { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--space-4); }
+.guide__title { display: flex; flex-direction: column; gap: var(--space-1); }
+.guide__title p { margin: 0; }
+.guide__meta { display: flex; align-items: center; gap: var(--space-2); }
+.guide__count { font-size: var(--font-size-14); color: var(--color-text-muted); white-space: nowrap; }
+.guide__count .t-numeric { font-size: var(--font-size-20); color: var(--color-accent); }
+.guide__meter { height: var(--space-1); border-radius: var(--radius-full); background: var(--color-surface-hover); overflow: hidden; }
+.guide__meter span { display: block; height: 100%; border-radius: var(--radius-full); background: var(--color-accent); transition: width var(--motion-duration-slow) var(--motion-easing-out); }
+.guide__steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.guide-step {
+  display: grid; grid-template-columns: var(--space-8) minmax(0, 1fr) auto; gap: var(--space-3); align-items: center;
+  padding: var(--space-3) var(--space-2); border-top: var(--size-border) solid var(--color-border);
+  border-left: var(--size-focus-ring) solid transparent;
+}
+.guide-step[data-state="next"] { border-left-color: var(--color-accent); background: var(--color-accent-soft); }
+.guide-step__mark {
+  width: var(--space-8); height: var(--space-8); display: grid; place-items: center; border-radius: var(--radius-full);
+  border: var(--size-border) solid var(--color-border-strong); color: var(--color-text-muted);
+}
+.guide-step[data-state="done"] .guide-step__mark { background: var(--color-success-soft); border-color: var(--color-success); color: var(--color-success); }
+.guide-step[data-state="next"] .guide-step__mark { border-color: var(--color-accent); color: var(--color-accent); }
+.guide-step[data-state="done"] .guide-step__text .t-strong { color: var(--color-text-muted); }
+.guide-step__text { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+.guide-step__text p { margin: 0; }
+.guide-step__action { display: flex; justify-content: flex-end; align-items: center; flex-wrap: wrap; gap: var(--space-2); }
+/* Set up JobCairn: a skipped optional step reads as set aside, like a done one. */
+.guide-step[data-state="skipped"] .guide-step__text .t-strong { color: var(--color-text-muted); }
+.guide-step__blocked { display: flex; flex-direction: column; align-items: flex-end; gap: var(--space-1); text-align: right; }
+/* Compact (Home): about 220px tall collapsed: header, meter, the next step and a "Show all" toggle. */
+.guide--compact { gap: var(--space-2); }
+.guide--compact .guide__head .t-heading-2 { font-size: var(--font-size-20); }
+.guide--compact .guide-step { padding: var(--space-2); }
+.guide--compact .guide__steps .guide-step:first-child { border-top: 0; }
+.guide__more { display: flex; justify-content: flex-start; }
+@media (max-width: 1100px) {
+  .guide-step { grid-template-columns: var(--space-8) minmax(0, 1fr); }
+  .guide-step__action { grid-column: 2; justify-content: flex-start; }
+  .guide-step__blocked { align-items: flex-start; text-align: left; }
+}
+
+.next-step { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-4); align-items: start; }
+.next-step__icon {
+  width: var(--space-12); height: var(--space-12); display: grid; place-items: center; border-radius: var(--radius-lg);
+  background: var(--color-accent-soft); color: var(--color-accent);
+}
+.next-step__text { display: flex; flex-direction: column; gap: var(--space-2); grid-column: 2; }
+.next-step__text p { margin: 0; max-width: 60ch; }
+.next-step__actions { grid-column: 2; display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+.next-step:not(:has(.next-step__icon)) { grid-template-columns: minmax(0, 1fr); }
+.next-step:not(:has(.next-step__icon)) > * { grid-column: 1; }
+@media (prefers-reduced-motion: reduce) { .guide__meter span { transition: none; } }
+.guide-setting { margin-top: var(--space-4); }

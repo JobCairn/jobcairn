@@ -1,0 +1,135 @@
+<!doctype html>
+<!--
+  JobCairn interview drill template: question + think timer, model answer build, strong vs weak.
+  Adapted from HyperFrames (Apache-2.0): hyperframes-core composition contract,
+  motion doctrine (stillness before the key moment, sequenced UI life). See NOTICE.md.
+
+  HOW TO FILL (manual fallback when the spec expander is not available):
+  1. Copy to <video dir>/index.html with theme.css and kit.js beside it.
+  2. Replace every {{SLOT}}. Keep ids, classes and data-* names.
+  3. Narration: paragraph 1 = the question, then a line "[pause 6]" (silent think time),
+     paragraph 2 = the model answer, paragraph 3 = strong vs weak + "your turn".
+     narrate.py turns that into narration.wav and narration.timing.json ("scenes", "total").
+  4. THINK must equal the pause seconds. The timer drains during the silence.
+  5. Run `npx hyperframes transcribe narration.wav` to fill TRANSCRIPT (local Whisper).
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>{{QUESTION SHORT}}</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <link rel="stylesheet" href="theme.css" />
+    <style>
+      .q { font-weight: 700; font-size: 76px; line-height: 1.12; letter-spacing: -0.03em; max-width: 1500px; margin-top: 36px; }
+      .timer { margin-top: 64px; width: 900px; }
+      .track { display: block; width: 900px; height: 14px; border-radius: 7px; background: #202830; overflow: hidden; }
+      .fill { display: block; width: 900px; height: 14px; background: #f2b441; transform-origin: left center; }
+      .beats { margin-top: 48px; display: flex; flex-direction: column; gap: 22px; }
+      .beat { display: flex; gap: 36px; align-items: baseline; padding: 26px 36px; }
+      .beat .kicker { min-width: 230px; }
+      .cols { margin-top: 52px; display: flex; gap: 44px; }
+      .col { flex: 1; display: flex; flex-direction: column; gap: 20px; min-height: 360px; }
+      .col.good { border-color: #6cc49a; }
+      .col.bad { border-color: #ec7a6c; }
+      .good .kicker { color: #6cc49a; }
+      .bad .kicker { color: #ec7a6c; }
+      .turn { margin-top: 44px; font-weight: 700; font-size: 48px; }
+      .center { justify-content: center; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-width="1920" data-height="1080" data-duration="{{TOTAL}}">
+      <div id="bg" class="bg"><div class="bg-glow"></div><div class="bg-grid"></div></div>
+
+      <!-- Q1 QUESTION: exactly as an interviewer would ask it, then silent think time -->
+      <section id="q1" class="clip scene" data-start="0" data-duration="{{Q1_DUR}}" data-track-index="1">
+        <div id="q1-stage" class="stage center">
+          <p id="q1-kicker" class="kicker">{{TYPE e.g. "Behavioural question"}} · {{COMPANY OR ROLE}}</p>
+          <p id="q1-q" class="q">{{THE QUESTION}}</p>
+          <div id="q1-timer" class="timer">
+            <p id="q1-hint" class="label" style="margin-bottom: 18px">Pause the video or answer out loud. {{THINK}} seconds.</p>
+            <span class="track"><span id="q1-fill" class="fill"></span></span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Q2 MODEL ANSWER: four beats (STAR for behavioural; for technical use
+           Clarify / Approach / Trade-off / Result). One short phrase each. -->
+      <section id="q2" class="clip scene" data-start="{{Q2_START}}" data-duration="{{Q2_DUR}}" data-track-index="1">
+        <div id="q2-stage" class="stage">
+          <p class="step">A strong answer</p>
+          <h2 class="h2" style="margin-top: 20px">{{ANSWER HEADLINE: the one thing to show}}</h2>
+          <div class="beats">
+            <div id="q2-b1" class="card beat"><p class="kicker">{{BEAT 1 e.g. Situation}}</p><p class="body">{{PHRASE 1}}</p></div>
+            <div id="q2-b2" class="card beat"><p class="kicker">{{BEAT 2 e.g. Task}}</p><p class="body">{{PHRASE 2}}</p></div>
+            <div id="q2-b3" class="card beat"><p class="kicker">{{BEAT 3 e.g. Action}}</p><p class="body">{{PHRASE 3}}</p></div>
+            <div id="q2-b4" class="card beat"><p class="kicker">{{BEAT 4 e.g. Result}}</p><p class="body">{{PHRASE 4 with a number if the user has one}}</p></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Q3 STRONG VS WEAK, then the practice prompt -->
+      <section id="q3" class="clip scene" data-start="{{Q3_START}}" data-duration="{{Q3_DUR}}" data-track-index="1">
+        <div id="q3-stage" class="stage">
+          <p class="step">What they listen for</p>
+          <div class="cols">
+            <div id="q3-good" class="card col good"><p class="kicker">Lands well</p><p class="body">{{STRONG 1}}</p><p class="body">{{STRONG 2}}</p></div>
+            <div id="q3-bad" class="card col bad"><p class="kicker">Falls flat</p><p class="body">{{WEAK 1}}</p><p class="body">{{WEAK 2}}</p></div>
+          </div>
+          <p id="q3-turn" class="turn">Your turn: {{PRACTICE PROMPT}}</p>
+        </div>
+      </section>
+
+      <audio id="narration" src="narration.wav" data-start="0" data-track-index="10"></audio>
+      <div id="captions" class="caption-band"></div>
+      <div id="fade" class="fade"></div>
+    </div>
+
+    <script>
+      // Filled by `npx hyperframes transcribe narration.wav`. Keep this exact line shape.
+      const TRANSCRIPT = [];
+    </script>
+    <script src="kit.js"></script>
+    <script>
+      const K = window.CareerKit;
+      const W = K.clean(TRANSCRIPT);
+      const S = K.starts(["q1", "q2", "q3"]);
+      const END = parseFloat(document.getElementById("root").getAttribute("data-duration"));
+      const SEAM = 0.6;
+      const THINK = {{THINK}}; // seconds of silence after the question
+      const at = (phrase, after, fallback) => K.cue(W, phrase, after, fallback);
+      const tl = gsap.timeline({ paused: true });
+
+      // Q1: the question lands, then the timer appears and drains through the silence.
+      K.reveal(tl, "#q1-kicker", 0.2, { y: 0, x: -30 }, 0.5);
+      K.reveal(tl, "#q1-q", 0.4, { y: 40 }, 0.8);
+      const t0 = S.q2 - THINK;
+      K.reveal(tl, "#q1-timer", t0 - 0.4, { y: 16 }, 0.4);
+      tl.fromTo("#q1-fill", { scaleX: 1 }, { scaleX: 0, duration: THINK, ease: "none" }, t0);
+
+      // Q2: each beat arrives as the voice reaches it.
+      K.seam(tl, "#q1-stage", "#q2-stage", S.q2, "left", SEAM);
+      const b1 = at("{{Q2 CUE 1}}", S.q2, S.q2 + 1.2);
+      const b2 = at("{{Q2 CUE 2}}", b1, S.q2 + 3.4);
+      const b3 = at("{{Q2 CUE 3}}", b2, S.q2 + 5.6);
+      const b4 = at("{{Q2 CUE 4}}", b3, S.q2 + 8.0);
+      K.reveal(tl, "#q2-b1", b1, { x: -40, y: 0 });
+      K.reveal(tl, "#q2-b2", b2, { x: -40, y: 0 });
+      K.reveal(tl, "#q2-b3", b3, { x: -40, y: 0 });
+      K.reveal(tl, "#q2-b4", b4 + 0.3, { x: -40, y: 0 }); // short stillness before the result
+
+      // Q3: strong side first, weak side second, then the prompt rises.
+      K.seam(tl, "#q2-stage", "#q3-stage", S.q3, "left", SEAM);
+      const g = at("{{Q3 CUE STRONG}}", S.q3, S.q3 + 1.0);
+      const w = at("{{Q3 CUE WEAK}}", g, S.q3 + 4.0);
+      K.reveal(tl, "#q3-good", g, { x: -40, y: 0 });
+      K.reveal(tl, "#q3-bad", w, { x: 40, y: 0 });
+      K.reveal(tl, "#q3-turn", Math.min(at("{{Q3 CUE TURN}}", w, w + 3.0) + 0.4, END - 2.0), { y: 24 });
+
+      K.captions(tl, W, { until: END - 0.7 });
+      tl.to("#fade", { opacity: 1, duration: 0.6, ease: "power2.in" }, END - 0.7);
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>

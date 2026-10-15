@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "careeros/workspace",
+  "type": "object",
+  "required": ["schema"],
+  "properties": {
+    "schema": { "type": "integer", "minimum": 1 },
+    "data_version": { "type": "integer", "minimum": 0, "default": 0 },
+    "product_version": { "type": "string", "default": "" },
+    "created_at": { "type": "string", "default": "" },
+    "workspace_id": { "type": "string", "default": "", "description": "A stable random id the app gives each workspace (secrets are kept per workspace under it). Empty until first opened." },
+    "is_sample": { "type": "boolean", "default": false, "description": "Made by Explore with an example: fictional data the app may reset." },
+    "privacy": {
+      "type": "object", "default": {},
+      "properties": {
+        "locked": { "type": "array", "uniqueItems": true, "items": { "enum": ["me/identity", "me/employment"] }, "default": ["me/identity", "me/employment"] },
+        "grants": {
+          "type": "array", "default": [],
+          "items": {
+            "type": "object", "required": ["folder", "until"],
+            "properties": {
+              "folder": { "enum": ["me/identity", "me/employment"] },
+              "until": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,3})?Z$" },
+              "request_id": { "type": "string", "default": "" },
+              "granted_at": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,3})?Z$", "default": "" }
+            }
+          }
+        }
+      }
+    },
+    "claude": {
+      "type": "object", "default": {},
+      "description": "How Claude works in this workspace (written into .claude/settings.json by the app).",
+      "properties": {
+        "auto_mode": { "type": "boolean", "default": true, "description": "Claude Code's auto mode for this workspace. Off: dontAsk with a short allow list. Deny rules apply either way." }
+      }
+    },
+    "custom": { "type": "object", "default": {} }
+  }
+}

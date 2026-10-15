@@ -1,0 +1,67 @@
+/* Search in my Chrome (lane S). Uses the brand's tokens only; no brand CSS is changed. */
+.cboards { display: flex; flex-direction: column; gap: var(--space-2); }
+.cboards__list { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.cboard {
+  display: inline-flex; align-items: center; gap: var(--space-2); padding: var(--space-1) var(--space-3) var(--space-1) var(--space-1);
+  border-radius: var(--radius-full); border: var(--size-border) solid var(--color-border-strong); background: var(--color-surface);
+  color: var(--color-text-muted); font: inherit; font-size: var(--font-size-14); cursor: pointer;
+}
+.cboard[data-on] { border-color: var(--color-accent); color: var(--color-text); }
+.cboard:disabled { cursor: not-allowed; opacity: 0.6; }
+.cboard:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+.cboard__mark { flex: none; padding-left: var(--space-1); }
+.cboard:not([data-on]) .cboard__mark { opacity: 0.7; }
+.cboards__status { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+.cboards__status .grow { flex: 1; }
+.chrome-setup__tos { padding: var(--space-3); border-radius: var(--radius-md); border: var(--size-border) solid var(--color-border); }
+.chrome-setup__problem { color: var(--color-danger); }
+
+/* The live strip during a search */
+.crunstrip {
+  display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md); border: var(--size-border) solid var(--color-border-strong); background: var(--color-surface);
+}
+.crunstrip__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.crunstrip__title { font-weight: var(--font-weight-medium); color: var(--color-text); }
+.crunstrip__boards { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-4); font-variant-numeric: tabular-nums; }
+.crunstrip__boards [data-state="paused"] { color: var(--color-warning); }
+.crunstrip__boards [data-state="skipped"], .crunstrip__boards [data-state="waiting"] { color: var(--color-text-muted); }
+.crunstrip__pause { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-3); border-radius: var(--radius-sm); border: var(--size-border) solid var(--color-warning); background: var(--color-warning-soft); }
+.crunstrip__after { margin: 0; }
+.callowhint { margin: 0; }
+
+/* Step 2: what the browser helper is, before installing it. */
+.csetup__about { display: flex; flex-direction: column; gap: var(--space-1); max-width: 62ch; }
+.csetup__about p { margin: 0; }
+.csetup__manual { margin: 0; padding-left: var(--space-5); display: flex; flex-direction: column; gap: var(--space-2); }
+.csetup__manual > li { display: flex; flex-direction: column; gap: var(--space-1); }
+
+/* "Why your Chrome?": the reason first, then what it can and never does, side by side. */
+.cwhy { display: flex; flex-direction: column; gap: var(--space-2); max-width: 72ch; }
+.cwhy p { margin: 0; }
+.cwhy__lists { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: var(--space-3) var(--space-6); margin-top: var(--space-1); }
+.cwhy__head { margin: 0 0 var(--space-1); font-weight: var(--font-weight-medium); color: var(--color-text); }
+.cwhy__list { margin: 0; padding-left: var(--space-5); display: flex; flex-direction: column; gap: var(--space-1); color: var(--color-text-muted); }
+.cwhy__list--can li::marker { color: var(--color-success); }
+.cwhy__list--never li::marker { color: var(--color-danger); }
+
+/* Step 5: one row per board. Name and status, then why (what the tab showed), then its actions. */
+.cboard-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: start; gap: var(--space-1) var(--space-3); padding: var(--space-2) 0; border-top: var(--size-border) solid var(--color-border); }
+.cboard-row:first-child { border-top: 0; }
+.cboard-row > :first-child { margin-top: 2px; }
+.cboard-row__text { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+.cboard-row__head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-2); }
+.cboard-row__name { font-weight: var(--font-weight-medium); color: var(--color-text); }
+.cboard-row__why { margin: 0; max-width: 60ch; overflow-wrap: anywhere; }
+.cboard-row[data-tone="warning"] .cboard-row__why { color: var(--color-text); }
+.cboard-row__details summary { cursor: pointer; width: fit-content; color: var(--color-text-muted); border-radius: var(--radius-sm); }
+.cboard-row__details summary:hover { color: var(--color-text); }
+.cboard-row__details summary:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+.cboard-row__details ul { margin: var(--space-1) 0 0; padding-left: var(--space-4); display: flex; flex-direction: column; gap: 2px; max-width: 60ch; overflow-wrap: anywhere; }
+.cboard-row__actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--space-2); }
+@media (max-width: 720px) { .cboard-row { grid-template-columns: auto minmax(0, 1fr); } .cboard-row__actions { grid-column: 2; justify-content: flex-start; } }
+
+/* Step 5: which Chrome profile the app's tabs open in, and one quiet line when the check probably read another. */
+.cprofile-pick { max-width: 40ch; }
+.cprofile-line { margin: 0; max-width: 72ch; color: var(--color-text); }
+.cprofile-line__title { font-weight: var(--font-weight-medium); }

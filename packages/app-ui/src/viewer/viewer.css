@@ -1,0 +1,34 @@
+/* The file viewer: a reading panel inside the brand Drawer (wide by default, full width on demand). */
+.viewer .drawer__body { gap: var(--space-4); }
+.viewer__body { display: flex; flex-direction: column; gap: var(--space-4); flex: 1; min-height: 0; }
+.viewer__actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.viewer__doc { max-width: 72ch; }
+.viewer.drawer--full .viewer__doc { margin-inline: auto; width: 100%; }
+.viewer__text {
+  margin: 0; padding: var(--space-4); border: var(--size-border) solid var(--color-border); border-radius: var(--radius-md);
+  background: var(--color-surface); font-size: var(--font-size-13);
+  line-height: var(--font-line-height-body); white-space: pre-wrap; overflow-wrap: anywhere;
+}
+.viewer__text:focus-visible { outline: var(--size-focus-ring) solid var(--color-accent); outline-offset: 2px; }
+/* The PDF fills the panel's remaining height; the built-in viewer scrolls inside it. */
+.viewer__pdf { flex: 1; min-height: 60vh; width: 100%; border: var(--size-border) solid var(--color-border); border-radius: var(--radius-md); background: var(--color-bg); }
+.viewer__media { display: flex; justify-content: center; }
+.viewer__media img, .viewer__media video { max-width: 100%; max-height: 75vh; border-radius: var(--radius-md); border: var(--size-border) solid var(--color-border); }
+.viewer__notice {
+  display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-2); padding: var(--space-5);
+  border: var(--size-border) dashed var(--color-border-strong); border-radius: var(--radius-md); max-width: 60ch;
+}
+.viewer__notice .row { margin-top: var(--space-2); }
+
+/* Rows that open the viewer: the whole row is the button. */
+.file-open {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-width: 0; width: 100%;
+  padding: var(--space-1) var(--space-2); margin: calc(var(--space-1) * -1) calc(var(--space-2) * -1);
+  border: 0; border-radius: var(--radius-sm); background: transparent; color: inherit; text-align: left; font: inherit; cursor: pointer;
+}
+.file-open:hover { background: var(--color-surface-hover); }
+.file-open:hover .file-open__title { text-decoration: underline; text-underline-offset: 3px; }
+.file-open:focus-visible { outline: var(--size-focus-ring) solid var(--color-accent); outline-offset: 2px; }
+.file-open__title { max-width: 100%; }
+.viewer__word { display: flex; flex-direction: column; gap: var(--space-3); line-height: var(--font-line-height-body); }
+.viewer__word p { margin: 0; overflow-wrap: break-word; }

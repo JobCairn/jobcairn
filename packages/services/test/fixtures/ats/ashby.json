@@ -1,0 +1,13 @@
+{
+  "apiVersion": "1",
+  "jobs": [
+    { "id": "11111111-2222-3333-4444-555555555555", "title": "Other role", "location": "Elsewhere", "descriptionPlain": "Not this one." },
+    {
+      "id": "0f1e2d3c-4b5a-6978-8a9b-0c1d2e3f4a5b", "title": "AI Platform Engineer", "location": "Remote (Australia)", "isRemote": true,
+      "employmentType": "FullTime", "publishedAt": "2026-01-12T00:00:00.000+00:00", "jobUrl": "https://jobs.ashbyhq.com/example-labs/0f1e2d3c-4b5a-6978-8a9b-0c1d2e3f4a5b",
+      "applyUrl": "https://jobs.ashbyhq.com/example-labs/0f1e2d3c-4b5a-6978-8a9b-0c1d2e3f4a5b/application",
+      "descriptionHtml": "<h2>The role</h2><p>Build the platform.</p>",
+      "compensation": { "compensationTierSummary": "$140K – $165K • Offers Equity" }
+    }
+  ]
+}

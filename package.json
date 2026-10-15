@@ -1,0 +1,31 @@
+{
+  "name": "careeros",
+  "private": true,
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "workspaces": ["packages/*"],
+  "engines": { "node": ">=22.13" },
+  "scripts": {
+    "prepare": "git config core.hooksPath .githooks || true",
+    "typecheck": "node scripts/typecheck.mjs",
+    "test": "vitest run",
+    "build": "npm run build -w @careeros/core",
+    "careeros": "tsx packages/core/src/cli.ts",
+    "samples": "tsx packages/core/scripts/make-samples.ts",
+    "scan": "node scripts/privacy/scan.mjs --all",
+    "tokens": "npm run tokens -w @careeros/brand",
+    "package:mac": "npm run package:mac -w @careeros/app-electron",
+    "release:verify": "npm run release:verify -w @careeros/app-electron --"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "vitest": "^3.0.0",
+    "jsdom": "26.1.0",
+    "@testing-library/react": "16.3.3",
+    "@testing-library/dom": "10.4.2",
+    "@testing-library/user-event": "14.6.7",
+    "@testing-library/jest-dom": "7.0.1"
+  }
+}

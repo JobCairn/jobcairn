@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "id": "20260114t090000-b197f7",
+  "folder": "me/identity",
+  "why": "Need your visa expiry date for the Acme Corp cover letter",
+  "field": "visa_expiry",
+  "who": "claude",
+  "minutes": 15,
+  "created_at": "2026-01-14T09:00:00.000Z",
+  "status": "pending",
+  "decided_at": "",
+  "expires_at": "",
+  "custom": {}
+}

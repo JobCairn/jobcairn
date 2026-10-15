@@ -1,0 +1,4 @@
+{ "id": "whisper", "name": "Captions model", "order": 75, "required": true, "why": "About 140 MB, one-time download. Times the on-screen words to the voice. Runs on this computer. Videos never download it themselves.", "docs": "https://hyperframes.heygen.com",
+  "platforms": { "darwin": { "check": "test -s \"$HOME/.cache/hyperframes/whisper/models/ggml-base.en.bin\" || test -s \"$HOME/.cache/hyperframes/whisper/models/ggml-small.en.bin\"", "install": [
+    "d=\"$(mktemp -d)\" && ffmpeg -loglevel error -f lavfi -i anullsrc=r=16000:cl=mono -t 2 \"$d/silence.wav\" && (cd \"$d\" && HYPERFRAMES_NO_TELEMETRY=1 hyperframes transcribe silence.wav --model base.en --language en >/dev/null 2>&1; rm -rf \"$d\"; true)"
+  ] } } }

@@ -1,0 +1,124 @@
+/* Request composer: one calm form. The header sentence and the file chips carry the weight; everything else is quiet. */
+.composer { display: flex; flex-direction: column; gap: var(--space-6); min-width: 0; }
+.composer h3 { margin: 0; }
+
+.composer__head { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-4); align-items: start; }
+.composer__mark {
+  display: grid; place-items: center; width: var(--space-10); height: var(--space-10); border-radius: var(--radius-lg);
+  color: var(--color-accent); background: var(--color-accent-soft); border: var(--size-border) solid color-mix(in srgb, var(--color-accent) 30%, transparent);
+}
+.composer__intro { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
+.composer__sentence { margin: 0; max-width: 60ch; text-wrap: pretty; overflow-wrap: anywhere; }
+.composer__files { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); }
+.composer__files-label { font-size: var(--font-size-13); color: var(--color-text-muted); }
+
+.file-chips { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.file-chip {
+  display: inline-flex; align-items: center; gap: var(--space-1); padding: var(--space-1) var(--space-3) var(--space-1) var(--space-2);
+  border-radius: var(--radius-md); border: var(--size-border) solid var(--color-border-strong); background: var(--color-surface);
+  font-size: var(--font-size-13); font-weight: var(--font-weight-medium); color: var(--color-text);
+}
+.file-chip .icon { color: var(--color-accent); }
+.file-chip[data-optional] { border-style: dashed; background: transparent; }
+.file-chip__tag { font-weight: var(--font-weight-regular); color: var(--color-text-muted); }
+
+.composer__section { display: flex; flex-direction: column; gap: var(--space-3); padding-top: var(--space-5); border-top: var(--size-border) solid var(--color-border); }
+.composer__label { font-size: var(--font-size-14); font-weight: var(--font-weight-semibold); color: var(--color-text); }
+
+/* Option rows: label and help on the left, the control on the right; stacked when narrow. */
+.composer__fields { display: flex; flex-direction: column; }
+.composer-field {
+  display: grid; grid-template-columns: minmax(0, 15rem) minmax(0, 1fr); gap: var(--space-2) var(--space-6); align-items: center;
+  padding: var(--space-3) 0; border-bottom: var(--size-border) solid var(--color-border);
+}
+.composer-field:last-child { border-bottom: 0; }
+.composer-field[data-kind="chips"] { align-items: start; }
+.composer-field__text { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+.composer-field__label { font-size: var(--font-size-14); font-weight: var(--font-weight-medium); color: var(--color-text); }
+.composer-field__help { font-size: var(--font-size-12); line-height: var(--font-line-height-snug); color: var(--color-text-muted); }
+.composer-field__control { min-width: 0; display: flex; align-items: center; }
+@media (max-width: 1100px) { .composer-field { grid-template-columns: minmax(0, 1fr); } }
+
+.segmented {
+  display: inline-flex; flex-wrap: wrap; padding: var(--space-1); gap: var(--space-1); border-radius: var(--radius-md);
+  background: var(--color-bg-raised); border: var(--size-border) solid var(--color-border);
+}
+.segmented__item {
+  position: relative; display: inline-flex; align-items: center; min-height: calc(var(--button-height-sm) - var(--space-1)); padding: 0 var(--space-3);
+  border-radius: var(--radius-sm); font-size: var(--font-size-13); color: var(--color-text-muted); cursor: pointer;
+  transition: background var(--motion-duration-fast) var(--motion-easing-out), color var(--motion-duration-fast) var(--motion-easing-out);
+}
+.segmented__item:hover { color: var(--color-text); background: var(--color-surface-hover); }
+.segmented__item.is-on { color: var(--color-text); background: var(--color-surface); box-shadow: var(--shadow-card); font-weight: var(--font-weight-medium); }
+.segmented__item:has(input:focus-visible) { outline: var(--size-focus-ring) solid var(--color-focus); outline-offset: 0; }
+
+.composer-range { display: flex; align-items: center; gap: var(--space-3); width: 100%; max-width: 22rem; }
+.composer-range input { flex: 1; accent-color: var(--color-accent); cursor: pointer; }
+.composer-range__value { min-width: 6rem; font-variant-numeric: tabular-nums; font-weight: var(--font-weight-medium); }
+.composer-range__value span { font-weight: var(--font-weight-regular); color: var(--color-text-muted); }
+
+.chip-picker { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.chip-toggle, .example-chip {
+  display: inline-flex; align-items: center; gap: var(--space-1); min-height: var(--button-height-sm); padding: 0 var(--space-3);
+  border-radius: var(--radius-full); border: var(--size-border) solid var(--color-border-strong); background: transparent;
+  font: inherit; font-size: var(--font-size-13); color: var(--color-text); cursor: pointer;
+  transition: background var(--motion-duration-fast) var(--motion-easing-out), border-color var(--motion-duration-fast) var(--motion-easing-out);
+}
+.chip-toggle:hover:not(:disabled), .example-chip:hover { background: var(--color-surface-hover); border-color: var(--color-text-muted); }
+.chip-toggle.is-on { background: var(--color-accent-soft); border-color: var(--color-accent); color: var(--color-text); }
+.chip-toggle.is-on .icon { color: var(--color-accent); }
+.chip-toggle:disabled { cursor: not-allowed; color: var(--color-text-disabled); }
+.example-chip { border-style: dashed; color: var(--color-text-muted); }
+.example-chip:hover { color: var(--color-text); }
+
+.composer__note .field__label { font-size: var(--font-size-14); font-weight: var(--font-weight-semibold); color: var(--color-text); }
+.composer__note .textarea { min-height: calc(var(--input-height) * 2.5); }
+.composer__note-foot { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--space-3); }
+.composer__examples { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.composer__count { flex: none; font-size: var(--font-size-12); font-variant-numeric: tabular-nums; color: var(--color-text-muted); padding-top: var(--space-1); }
+.composer__count[data-near] { color: var(--color-warning); }
+
+.always-on { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3) var(--space-6); }
+@media (max-width: 900px) { .always-on { grid-template-columns: minmax(0, 1fr); } }
+.always-on__item { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+.always-on__badge {
+  align-self: flex-start; display: inline-flex; align-items: center; gap: var(--space-1); padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm); background: var(--color-success-soft); color: var(--color-success);
+  font-size: var(--font-size-12); font-weight: var(--font-weight-semibold);
+}
+.always-on__text { font-size: var(--font-size-13); line-height: var(--font-line-height-snug); color: var(--color-text-muted); }
+
+.composer__foot { display: flex; flex-direction: column; gap: var(--space-3); }
+.composer__foot:empty { display: none; }
+.composer__go { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-3); padding-top: var(--space-5); border-top: var(--size-border) solid var(--color-border); }
+/* In the dialog, the main action sticks to the bottom of the scrolling body (minus its small padding, so nothing shows beneath it). */
+.dialog .composer__go {
+  position: sticky; bottom: calc(var(--space-1) * -1); z-index: 1; margin: 0 calc(var(--space-6) * -1); padding: var(--space-4) var(--space-6);
+  background: var(--color-bg-raised); border-top: var(--size-border) solid var(--color-border);
+}
+.composer__why { color: var(--color-text); }
+.run-panel {
+  display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4); border-radius: var(--radius-md);
+  border: var(--size-border) solid var(--color-border); background: var(--color-bg-raised);
+}
+
+.composer__prompt > summary {
+  cursor: pointer; width: fit-content; padding: var(--space-1) 0; font-size: var(--font-size-13); color: var(--color-text-muted);
+  list-style-position: inside;
+}
+.composer__prompt > summary:hover { color: var(--color-text); }
+.composer__prompt-body { display: flex; flex-direction: column; gap: var(--space-3); margin-top: var(--space-2); }
+.prompt-view {
+  margin: 0; max-height: 28rem; overflow-y: auto; overflow-x: hidden; padding: var(--space-4);
+  white-space: pre-wrap; overflow-wrap: anywhere; word-break: normal;
+  font-size: var(--font-size-12); line-height: var(--font-line-height-body);
+  color: var(--color-text); background: var(--color-bg-raised); border: var(--size-border) solid var(--color-border); border-radius: var(--radius-md);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .segmented__item, .chip-toggle, .example-chip { transition: none; }
+}
+
+/* In a dialog the composer needs more room than a confirm box; the brand Dialog scrolls its body. */
+.dialog:has(.composer) { width: min(calc(var(--dialog-width) * 1.6), calc(100vw - var(--space-8) * 2)); }
+.dialog .composer-field { grid-template-columns: minmax(0, 1fr); }

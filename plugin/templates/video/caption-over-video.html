@@ -1,0 +1,43 @@
+<!doctype html>
+<!--
+  JobCairn template: burn captions onto an existing recording (for example a mock interview answer).
+  Adapted from HyperFrames (Apache-2.0): hyperframes-core media rules, media-use caption authoring.
+
+  HOW TO FILL:
+  1. Copy to a new folder as index.html with theme.css and kit.js. Copy the recording in as input.mp4.
+  2. ffprobe the recording. Set {{W}} {{H}} to its size and {{DUR}} to its duration in seconds.
+     Portrait recordings (1080x1920): also set CAPTION_TOP below to 1240.
+  3. Run `npx hyperframes transcribe input.mp4` in the folder. It fills TRANSCRIPT here.
+  4. The footage is untouched. Only the caption rail is added.
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width={{W}}, height={{H}}" />
+    <title>Captioned recording</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <link rel="stylesheet" href="theme.css" />
+    <style>
+      html, body { width: {{W}}px; height: {{H}}px; background: #000; }
+      #src { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-width="{{W}}" data-height="{{H}}" data-duration="{{DUR}}">
+      <video id="src" src="input.mp4" data-start="0" data-duration="{{DUR}}" data-track-index="0" data-has-audio="true" playsinline></video>
+      <div id="captions" class="caption-band"></div>
+    </div>
+    <script>
+      // Filled by `npx hyperframes transcribe input.mp4`. Keep this exact line shape.
+      const TRANSCRIPT = [];
+    </script>
+    <script src="kit.js"></script>
+    <script>
+      const CAPTION_TOP = 896; // 1240 for portrait 1080x1920
+      document.getElementById("captions").style.top = CAPTION_TOP + "px";
+      const tl = gsap.timeline({ paused: true });
+      window.CareerKit.captions(tl, TRANSCRIPT, { maxWords: 5, maxChars: 38 });
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>

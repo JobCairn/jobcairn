@@ -1,0 +1,8 @@
+# gitleaks config: default rules plus narrow, reviewed exceptions.
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Vendored HyperFrames code-animation templates: 'key:' fields are syntax-highlight tokens, not secrets (reviewed 2026-10-08)"
+targetRules = ["generic-api-key"]
+paths = ['''^plugin/templates/video/components/code-(morph|diff|highlight|typing)\.html$''']

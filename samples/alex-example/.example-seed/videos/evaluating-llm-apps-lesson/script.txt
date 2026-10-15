@@ -1,0 +1,11 @@
+Here is how to evaluate an LLM app, in under a minute.
+
+Start with a fixed test set. Real questions, with the answers you expect.
+
+Then run the loop. Run the app. Score each answer. Fix the prompt or the retrieval. Then run it again.
+
+Score three things. Is the answer correct? Is it grounded in the sources? Does it follow the format?
+
+Then gate the release. If the score drops by two points, the release stops.
+
+So remember. A fixed test set, three scores, and a release gate. Write twenty questions today.

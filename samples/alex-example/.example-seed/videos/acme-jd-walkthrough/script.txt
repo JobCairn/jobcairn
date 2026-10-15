@@ -1,0 +1,11 @@
+Acme Corp wants an AI Engineer to build its clinic assistant. Here is what the role asks for.
+
+The must-haves. LLM agents. Retrieval with citations. Evaluation with test sets. And clear writing for people who aren't engineers.
+
+Here is how the assistant fits together. A staff question goes to the agent. The agent searches the clinic's policies. The answer comes back with its sources.
+
+Now your match. Retrieval is a match. Evaluation is a match. Agents are a match. Healthcare is a gap, but it's only a nice to have.
+
+And the best part. The ad says it plainly. Visa sponsorship available for the right candidate.
+
+So the plan. Lead with your evaluation suite, mention your agent, and apply this week.

@@ -1,0 +1,90 @@
+/* The email composer (DraftEditor): Write with Claude, address chips, Write | Preview, file chips, one footer. */
+.compose.draft-editor { max-width: 56rem; gap: var(--space-4); }
+
+/* Write with Claude: one quiet panel on the raised surface, so it reads as a helper above the email, not part of it. */
+.wwc { display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-3) var(--space-4); border-radius: var(--radius-md);
+  background: var(--color-bg-raised); border: var(--size-border) solid var(--color-border); }
+.wwc__head { display: flex; align-items: baseline; gap: var(--space-2); flex-wrap: wrap; }
+.wwc__head > .icon { align-self: center; color: var(--color-accent); }
+.wwc__title { margin: 0; color: var(--color-text); font-weight: var(--font-weight-medium); }
+.wwc__sub { margin-left: auto; }
+.wwc__purposes { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.wwc__ask { display: flex; gap: var(--space-2); align-items: center; }
+.wwc__note { flex: 1 1 auto; }
+.wwc__note .input { width: 100%; }
+.wwc__foot { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2) var(--space-4); flex-wrap: wrap; min-height: var(--button-height-sm); }
+.wwc__changes { display: flex; align-items: center; gap: var(--space-1); flex-wrap: wrap; }
+.wwc__label { font-size: var(--font-size-13); color: var(--color-text-muted); margin-right: var(--space-1); }
+.wwc__status { display: flex; align-items: center; min-width: 0; }
+.wwc__run, .wwc__done { display: inline-flex; align-items: center; gap: var(--space-2); font-size: var(--font-size-13); }
+.wwc__done { color: var(--color-text-muted); }
+.wwc__done > .icon { color: var(--color-accent); }
+.wwc__time { font-variant-numeric: tabular-nums; color: var(--color-text-muted); min-width: 3.5ch; }
+.wwc__link { border: 0; padding: 0 var(--space-1); background: none; color: var(--color-accent-text, var(--color-accent)); font: inherit; font-size: var(--font-size-13);
+  text-decoration: underline; text-underline-offset: 2px; cursor: pointer; border-radius: var(--radius-sm); }
+.wwc__link:hover { text-decoration-thickness: 2px; }
+.wwc__link:focus-visible { outline: var(--size-focus-ring) solid var(--color-focus); outline-offset: 2px; }
+.wwc__error { margin: 0; font-size: var(--font-size-13); color: var(--color-danger); }
+
+/* Fields */
+.compose__fields { display: flex; flex-direction: column; gap: var(--space-3); }
+.compose__to { display: flex; align-items: flex-end; gap: var(--space-3); }
+.compose__to > .addr-field { flex: 1 1 auto; }
+.compose__cc-link { height: var(--input-height); border: 0; padding: 0 var(--space-2); background: none; color: var(--color-text-muted); font: inherit; font-size: var(--font-size-13);
+  cursor: pointer; border-radius: var(--radius-sm); white-space: nowrap; }
+.compose__cc-link:hover { color: var(--color-text); background: var(--color-surface-hover); }
+.compose__cc-link:focus-visible { outline: var(--size-focus-ring) solid var(--color-focus); outline-offset: 2px; }
+
+.addr-field__box { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1); min-height: var(--input-height); padding: 3px var(--space-1);
+  border-radius: var(--input-radius); border: var(--size-border) solid var(--input-border); background: var(--input-bg); cursor: text; }
+.addr-field__box:focus-within { border-color: var(--input-border-focus); box-shadow: 0 0 0 var(--space-1) var(--input-ring); }
+.addr-field__input { flex: 1 1 10rem; min-width: 8rem; height: calc(var(--input-height) - 8px); border: 0; padding: 0 var(--space-1); background: transparent;
+  color: var(--color-text); font: inherit; font-size: var(--font-size-14); }
+.addr-field__input:focus { outline: none; }
+.addr-chip { display: inline-flex; align-items: center; gap: var(--space-1); max-width: 100%; height: calc(var(--input-height) - 10px); padding: 0 2px 0 var(--space-2);
+  border-radius: var(--radius-full); background: var(--color-surface-hover); border: var(--size-border) solid var(--color-border); font-size: var(--font-size-13); }
+.addr-chip__text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 20rem; }
+.addr-chip--bad { border-color: var(--color-warning); }
+.addr-chip--bad > .icon { color: var(--color-warning); }
+.addr-chip__remove { display: inline-grid; place-items: center; width: 20px; height: 20px; border: 0; border-radius: var(--radius-full); background: transparent;
+  color: var(--color-text-muted); cursor: pointer; }
+.addr-chip__remove:hover { color: var(--color-text); background: var(--color-surface); }
+.addr-chip__remove:focus-visible { outline: var(--size-focus-ring) solid var(--color-focus); outline-offset: 1px; }
+
+/* Message: Write | Preview */
+.compose__body { display: flex; flex-direction: column; gap: var(--space-2); }
+.compose__body .tabs__panel { padding-top: var(--space-2); }
+.compose__body .textarea { width: 100%; min-height: calc(var(--input-height) * 7); }
+.compose__preview { min-height: calc(var(--input-height) * 7); }
+.compose__sig { margin: 0; display: flex; align-items: baseline; gap: var(--space-1); flex-wrap: wrap; min-width: 0; }
+.compose__sig-text { font-size: var(--font-size-13); color: var(--color-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 36rem; }
+
+/* Attachments as file chips: click to attach or remove, the eye opens the file viewer. */
+.compose__files > legend { padding: 0; margin-bottom: var(--space-2); }
+.compose__files { border: 0; padding: 0; margin: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+.compose__file-list { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.file-chip { display: inline-flex; align-items: stretch; max-width: 100%; height: var(--button-height-sm); border-radius: var(--radius-full);
+  border: var(--size-border) solid var(--color-border-strong); background: var(--color-surface); overflow: hidden; }
+.file-chip.is-on { border-color: var(--color-accent); background: var(--color-accent-soft); }
+.file-chip__toggle, .file-chip__view { display: inline-flex; align-items: center; gap: var(--space-1); border: 0; background: transparent; color: var(--color-text); font: inherit;
+  font-size: var(--font-size-13); cursor: pointer; }
+.file-chip__toggle { padding: 0 var(--space-2) 0 var(--space-3); min-width: 0; }
+.file-chip__name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 22rem; }
+.file-chip .icon { color: var(--color-text-muted); }
+.file-chip.is-on .file-chip__toggle .icon { color: var(--color-accent); }
+.file-chip__view { padding: 0 var(--space-2); border-left: var(--size-border) solid var(--color-border); color: var(--color-text-muted); }
+.file-chip__toggle:hover, .file-chip__view:hover { background: var(--color-surface-hover); color: var(--color-text); }
+.file-chip.is-on .file-chip__toggle:hover, .file-chip.is-on .file-chip__view:hover { background: transparent; }
+.file-chip__toggle:focus-visible, .file-chip__view:focus-visible { outline: var(--size-focus-ring) solid var(--color-focus); outline-offset: -2px; }
+
+/* One footer: Save draft and Close on the left, the primary action on the right with its reason beside it. */
+.compose__foot { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap;
+  padding-top: var(--space-3); border-top: var(--size-border) solid var(--color-border); }
+.compose__foot-left, .compose__foot-right { display: flex; align-items: center; gap: var(--space-2); min-width: 0; }
+.compose__foot-right { margin-left: auto; }
+.compose__hint { font-size: var(--font-size-13); color: var(--color-text-muted); }
+.compose__send { display: inline-flex; }
+
+@media (max-width: 1100px) {
+  .wwc__sub { margin-left: 0; flex-basis: 100%; }
+}

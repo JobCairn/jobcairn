@@ -1,0 +1,92 @@
+1
+00:00:00,772 --> 00:00:01,572
+Here is your job hunt
+
+2
+00:00:01,612 --> 00:00:02,776
+for this week.
+
+3
+00:00:03,446 --> 00:00:04,817
+This week you found 6
+
+4
+00:00:04,857 --> 00:00:05,466
+new jobs.
+
+5
+00:00:06,368 --> 00:00:07,732
+You sent 2 applications this
+
+6
+00:00:07,772 --> 00:00:08,298
+week.
+
+7
+00:00:09,285 --> 00:00:10,409
+You had 6 replies and
+
+8
+00:00:10,449 --> 00:00:11,432
+1 interview.
+
+9
+00:00:12,333 --> 00:00:13,143
+Of the new jobs,
+
+10
+00:00:13,183 --> 00:00:14,303
+2 offer sponsorship,
+
+11
+00:00:14,343 --> 00:00:15,603
+3 don't say and 1
+
+12
+00:00:15,643 --> 00:00:17,977
+need citizens, residents or cleared
+
+13
+00:00:18,017 --> 00:00:18,645
+staff.
+
+14
+00:00:19,603 --> 00:00:21,021
+Next steps.
+
+15
+00:00:21,061 --> 00:00:22,251
+First, prepare for the Brightwater
+
+16
+00:00:22,291 --> 00:00:23,550
+Analytics interview.
+
+17
+00:00:23,681 --> 00:00:25,061
+Second, finish your application to
+
+18
+00:00:25,101 --> 00:00:26,481
+Kestrel Robotics.
+
+19
+00:00:26,521 --> 00:00:27,706
+Third, decide on the AI
+
+20
+00:00:27,746 --> 00:00:28,471
+Engineer,
+
+21
+00:00:28,511 --> 00:00:29,851
+Search Quality role at Example
+
+22
+00:00:29,891 --> 00:00:30,511
+Labs.
+
+23
+00:00:30,551 --> 00:00:31,581
+See you next week.
+

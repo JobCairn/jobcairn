@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "careeros/search",
+  "type": "object",
+  "required": ["schema"],
+  "properties": {
+    "schema": { "type": "integer", "minimum": 1 },
+    "filters": {
+      "type": "object", "default": {},
+      "properties": {
+        "related_titles": {
+          "type": "array", "maxItems": 20, "items": { "type": "string", "maxLength": 80 }, "default": [],
+          "x-ui": { "label": "Related job titles", "help": "Other titles for the same work, searched along with your target roles." }
+        },
+        "fallback_locations": {
+          "type": "array", "maxItems": 20, "items": { "type": "string", "maxLength": 80 }, "default": [],
+          "x-ui": { "label": "If there aren't enough jobs there, also search", "help": "Used only when your preferred locations give too few matches. Any place can be typed." }
+        },
+        "min_results": {
+          "type": ["integer", "null"], "minimum": 1, "maximum": 200, "default": null,
+          "x-ui": { "label": "Too few matches means fewer than", "help": "Below this many matches in your preferred locations, Claude also searches the fallback places above." }
+        },
+        "countries": {
+          "type": "array", "maxItems": 10, "items": { "type": "string", "maxLength": 60 }, "default": [],
+          "x-ui": { "label": "Countries jobs must be in", "help": "Jobs elsewhere are skipped unless they're remote and open to people here. Leave empty to use the country of your preferred locations." }
+        },
+        "posted_within_days": {
+          "type": ["integer", "null"], "minimum": 1, "maximum": 365, "default": null,
+          "x-ui": { "label": "Only ads posted in the last (days)", "help": "For example 7. Leave blank for any age. Ads that don't show a date are kept." }
+        },
+        "posted_this_week": {
+          "type": "boolean", "default": false,
+          "x-ui": { "label": "Only ads posted this week", "help": "Since Monday. Used instead of the number of days above." }
+        },
+        "exclude_keywords": {
+          "type": "array", "maxItems": 30, "items": { "type": "string", "maxLength": 80 }, "default": [],
+          "x-ui": { "label": "Skip ads that mention", "help": "For example: security clearance, unpaid." }
+        },
+        "salary_max": {
+          "type": ["number", "null"], "minimum": 0, "default": null,
+          "x-ui": { "label": "Top of your salary range (optional)", "help": "Leave blank for no top." }
+        },
+        "sponsor_only": {
+          "type": "boolean", "default": false,
+          "x-ui": { "label": "Only ads that offer sponsorship", "help": "Skips ads that say nothing about visa sponsorship." }
+        },
+        "sort": {
+          "enum": ["relevance", "recent"], "default": "relevance",
+          "x-ui": { "label": "Results order", "help": "Best match, or the newest ads first. Boards that have this choice use it.",
+            "options": { "relevance": "Best match", "recent": "Newest first" } }
+        },
+        "experience": {
+          "type": "array", "default": [], "items": { "enum": ["internship", "entry", "associate", "mid_senior", "director", "executive"] },
+          "x-ui": { "label": "Experience levels", "help": "Leave all off for any level. LinkedIn filters by these; on other boards Claude skips only ads clearly at another level." }
+        },
+        "easy_apply": {
+          "type": "boolean", "default": false,
+          "x-ui": { "label": "LinkedIn: Easy Apply jobs only", "help": "Only LinkedIn has this filter." }
+        },
+        "radius_km": {
+          "type": ["integer", "null"], "minimum": 1, "maximum": 500, "default": null,
+          "x-ui": { "label": "Distance around each place (km)", "help": "For example 25. Leave blank for each board's own default. LinkedIn and Indeed use it." }
+        },
+        "breadth": {
+          "enum": ["focused", "broad"], "default": "focused",
+          "x-ui": { "label": "Search breadth", "help": "How many searches Claude runs each time.",
+            "options": { "focused": "Focused: up to 5 searches on your closest roles", "broad": "Broad: up to 12 searches, with related titles" } }
+        },
+        "max_jobs": {
+          "type": ["integer", "null"], "minimum": 1, "maximum": 200, "default": null,
+          "x-ui": { "label": "Jobs to find each time", "help": "The most new jobs Claude adds in one search. 100 if left blank. Bigger searches take longer and use more of your Claude plan." }
+        }
+      }
+    },
+    "sources": { "type": "object", "default": { "ats": true, "adzuna": false, "browser": true, "pasted": true }, "additionalProperties": { "type": "boolean" } },
+    "schedule": {
+      "type": "object",
+      "properties": {
+        "mode": { "enum": ["off", "hours", "daily"] }, "every_hours": { "type": "integer", "minimum": 1, "maximum": 168 },
+        "times": { "type": ["integer", "null"], "minimum": 1, "maximum": 100 }, "at": { "type": "string", "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$" },
+        "days": { "type": "array", "maxItems": 7, "items": { "type": "integer", "minimum": 0, "maximum": 6 } },
+        "since": { "type": "string" }, "last_run_at": { "type": "string" }, "runs": { "type": "integer", "minimum": 0 },
+        "searched_at": { "type": "string" },
+        "history": { "type": "array", "maxItems": 10, "items": { "type": "object", "required": ["at", "text"], "properties": { "at": { "type": "string" }, "text": { "type": "string", "maxLength": 200 } } } }
+      }
+    },
+    "sweep": { "type": "object", "default": {}, "properties": { "every_hours": { "type": ["number", "null"], "default": null } } },
+    "views": {
+      "type": "array", "default": [],
+      "items": { "type": "object", "required": ["name", "query"], "properties": { "name": { "type": "string", "minLength": 1, "maxLength": 60 }, "query": { "type": "object" } } }
+    },
+    "search_deadline": {
+      "type": "string", "pattern": "^(\\d{4}-\\d{2}-\\d{2})?$", "default": "",
+      "x-ui": { "label": "Search deadline (YYYY-MM-DD)", "help": "The date you want an offer by. Home counts down to it. Leave blank for none." }
+    },
+    "weekly_goal": {
+      "type": ["integer", "null"], "minimum": 0, "maximum": 100, "default": null,
+      "x-ui": { "label": "Applications per week goal", "help": "Home draws this as a line on the weekly activity chart. Leave blank for none." }
+    },
+    "chrome": {
+      "type": "object", "additionalProperties": false, "required": ["enabled", "boards", "set_up_at"],
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "boards": { "type": "array", "maxItems": 7, "uniqueItems": true, "items": { "enum": ["linkedin", "seek", "indeed", "glassdoor", "jora", "careerone", "workforce"] } },
+        "set_up_at": { "type": "string", "pattern": "^(\\d{4}-\\d{2}-\\d{2}T[0-9:.]+Z)?$" },
+        "confirmed": {
+          "type": "object",
+          "propertyNames": { "enum": ["linkedin", "seek", "indeed", "glassdoor", "jora", "careerone", "workforce"] },
+          "additionalProperties": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}T[0-9:.]+Z$" }
+        },
+        "profile_dir": { "type": "string", "maxLength": 64, "pattern": "^([A-Za-z0-9_()][A-Za-z0-9 _.()-]{0,63})?$" }
+      }
+    },
+    "custom": { "type": "object", "default": {} }
+  }
+}

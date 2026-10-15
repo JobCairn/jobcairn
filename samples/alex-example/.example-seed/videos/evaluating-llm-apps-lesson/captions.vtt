@@ -1,0 +1,83 @@
+WEBVTT
+
+00:00:00.842 --> 00:00:02.142
+Here is how to evaluate
+
+00:00:02.182 --> 00:00:02.832
+an LLM app,
+
+00:00:02.872 --> 00:00:03.957
+in under a minute.
+
+00:00:04.977 --> 00:00:06.131
+Start with a fixed test
+
+00:00:06.171 --> 00:00:06.558
+set.
+
+00:00:06.598 --> 00:00:07.801
+Real questions, with the answers
+
+00:00:07.841 --> 00:00:08.261
+you
+
+00:00:08.301 --> 00:00:08.864
+expect.
+
+00:00:09.809 --> 00:00:10.789
+Then run the loop.
+
+00:00:10.829 --> 00:00:11.536
+Run the app.
+
+00:00:11.576 --> 00:00:12.982
+Score each answer.
+
+00:00:13.022 --> 00:00:13.816
+Fix the prompt or the
+
+00:00:13.856 --> 00:00:14.698
+retrieval.
+
+00:00:14.738 --> 00:00:15.988
+Then run it again.
+
+00:00:16.922 --> 00:00:17.727
+Score three things.
+
+00:00:17.767 --> 00:00:18.947
+Is the answer correct?
+
+00:00:18.987 --> 00:00:20.197
+Is it grounded in the
+
+00:00:20.237 --> 00:00:20.507
+sources?
+
+00:00:20.547 --> 00:00:22.023
+Does it follow the format?
+
+00:00:23.202 --> 00:00:24.323
+Then gate the release.
+
+00:00:24.363 --> 00:00:25.161
+If the score drops by
+
+00:00:25.201 --> 00:00:27.229
+two points, the release stops.
+
+00:00:28.177 --> 00:00:29.297
+So remember.
+
+00:00:29.337 --> 00:00:29.958
+A fixed test set,
+
+00:00:29.998 --> 00:00:31.418
+three scores, and a release
+
+00:00:31.498 --> 00:00:31.931
+gate.
+
+00:00:31.971 --> 00:00:33.700
+Write twenty questions today.
+

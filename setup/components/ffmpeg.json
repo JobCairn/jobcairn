@@ -1,0 +1,2 @@
+{ "id": "ffmpeg", "name": "ffmpeg", "order": 40, "required": true, "why": "Builds the learning videos and cleans up audio.", "docs": "https://ffmpeg.org",
+  "platforms": { "darwin": { "check": "ffmpeg -version && ffprobe -version", "install": ["brew install ffmpeg"] } } }

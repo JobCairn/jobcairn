@@ -1,0 +1,12 @@
+/* Back link above a detail screen's title: small, quiet, clearly a link. */
+.backlink { margin: calc(-1 * var(--space-3)) 0 var(--space-3); }
+.backlink__a {
+  display: inline-flex; align-items: center; gap: var(--space-1); max-width: 100%;
+  padding: var(--space-1) var(--space-2) var(--space-1) var(--space-1); margin-left: calc(-1 * var(--space-1));
+  border-radius: var(--radius-sm); color: var(--color-text-muted); text-decoration: none;
+  font-size: var(--font-size-14); line-height: var(--font-line-height-snug);
+}
+.backlink__a span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.backlink__a:hover { color: var(--color-text); background: var(--color-surface-hover); }
+.backlink__a:hover span { text-decoration: underline; text-underline-offset: 3px; }
+.backlink__a:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; color: var(--color-text); }

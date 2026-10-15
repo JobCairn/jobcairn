@@ -1,0 +1,34 @@
+{
+  "schema": 1,
+  "id": "interview-prep",
+  "label": "Interview prep",
+  "description": "Likely questions with think time and model answers built from your own history.",
+  "version": 2,
+  "entry_points": ["job.interview", "job"],
+  "subject": "job",
+  "writer": "claude",
+  "skill": "video-explainer",
+  "voice_type": "interview",
+  "length": { "min_s": 60, "target_s": 150, "max_s": 600 },
+  "scene_types": ["title", "quiz", "bullet-build", "recap-card", "checklist", "kinetic"],
+  "scene_counts": { "title": { "min": 1, "max": 1 }, "quiz": { "min": 3, "max": 6 }, "recap-card": { "min": 1, "max": 1 } },
+  "sources": [
+    { "resolver": "job.jd", "required": true },
+    { "resolver": "history", "required": true },
+    { "resolver": "job.score", "required": false },
+    { "resolver": "company.research", "required": false },
+    { "resolver": "interview.questions", "required": false }
+  ],
+  "brief_template": "This drill gets {name} ready for likely questions in an interview for {role} at {company}.",
+  "rules": [
+    "Write 3 to 6 quiz scenes, one question each, in the order an interviewer would ask them.",
+    "Behavioural questions use STAR beats. Technical questions use Clarify, Approach, Trade-off, Result.",
+    "Model answers use only the candidate's own history. Cite me/history for every claim about them.",
+    "Practice mode: after each question add a paragraph that is only [pause N] with N equal to think_seconds. Watch mode: no pauses and think_seconds 0."
+  ],
+  "facts": "teaching",
+  "extras": ["notes.md"],
+  "output": "companies/{slug}/jobs/{id}/interview/{n}/",
+  "media": "none",
+  "modes": ["practice", "watch"]
+}

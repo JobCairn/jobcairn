@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "careeros/email",
+  "type": "object",
+  "required": ["schema", "message_id", "direction", "subject", "date", "from"],
+  "properties": {
+    "schema": { "type": "integer", "minimum": 1 },
+    "message_id": { "type": "string", "minLength": 1, "maxLength": 998 },
+    "in_reply_to": { "type": "string", "maxLength": 998, "default": "" },
+    "references": { "type": "array", "items": { "type": "string", "maxLength": 998 }, "maxItems": 50, "default": [] },
+    "thread_key": { "type": "string", "maxLength": 300, "default": "" },
+    "direction": { "enum": ["in", "out"] },
+    "from": {
+      "type": "object", "required": ["address"],
+      "properties": { "name": { "type": "string", "maxLength": 300, "default": "" }, "address": { "type": "string", "minLength": 1, "maxLength": 320 } }
+    },
+    "to": {
+      "type": "array", "default": [],
+      "items": { "type": "object", "required": ["address"], "properties": { "name": { "type": "string", "maxLength": 300, "default": "" }, "address": { "type": "string", "minLength": 1, "maxLength": 320 } } }
+    },
+    "cc": {
+      "type": "array", "default": [],
+      "items": { "type": "object", "required": ["address"], "properties": { "name": { "type": "string", "maxLength": 300, "default": "" }, "address": { "type": "string", "minLength": 1, "maxLength": 320 } } }
+    },
+    "reply_to": {
+      "type": "array", "default": [],
+      "items": { "type": "object", "required": ["address"], "properties": { "name": { "type": "string", "maxLength": 300, "default": "" }, "address": { "type": "string", "minLength": 1, "maxLength": 320 } } }
+    },
+    "subject": { "type": "string", "maxLength": 2000 },
+    "date": { "type": "string", "maxLength": 40 },
+    "uid": { "type": ["integer", "null"], "default": null },
+    "mailbox": { "type": "string", "maxLength": 255, "default": "" },
+    "matched_by": { "enum": ["recruiter", "domain", "email_match", "subject", "user", "none"], "default": "none" },
+    "attachments": {
+      "type": "array", "default": [],
+      "items": {
+        "type": "object", "required": ["part", "name"],
+        "properties": {
+          "part": { "type": "string", "maxLength": 1024 }, "name": { "type": "string", "maxLength": 1024 },
+          "size": { "type": "integer", "minimum": 0, "default": 0 },
+          "type": { "type": "string", "default": "application/octet-stream" },
+          "cid": { "type": "string", "default": "" },
+          "inline": { "type": "boolean", "default": false },
+          "saved_as": { "type": "string", "default": "" }
+        }
+      }
+    },
+    "images_allowed": { "type": "boolean", "default": false },
+    "remote_images": { "type": "integer", "minimum": 0, "default": 0 },
+    "auth": { "enum": ["pass", "fail", "none"], "default": "none" },
+    "too_large": { "type": "boolean", "default": false },
+    "opened_at": { "type": "string", "maxLength": 64, "default": "" },
+    "custom": { "type": "object", "default": {} }
+  }
+}

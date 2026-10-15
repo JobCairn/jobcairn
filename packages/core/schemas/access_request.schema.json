@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "careeros/access_request",
+  "type": "object",
+  "required": ["schema", "id", "folder", "why"],
+  "properties": {
+    "schema": { "type": "integer", "minimum": 1 },
+    "id": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+    "folder": { "enum": ["me/identity", "me/employment"] },
+    "field": { "type": "string", "default": "" },
+    "why": { "type": "string", "minLength": 1, "maxLength": 500 },
+    "who": { "type": "string", "default": "claude" },
+    "minutes": { "type": "integer", "minimum": 1, "maximum": 240, "default": 15 },
+    "created_at": { "type": "string", "default": "" },
+    "status": { "enum": ["pending", "allowed", "denied", "expired"], "default": "pending" },
+    "decided_at": { "type": "string", "default": "" },
+    "expires_at": { "type": "string", "default": "" },
+    "custom": { "type": "object", "default": {} }
+  }
+}

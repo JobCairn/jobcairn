@@ -1,0 +1,19 @@
+title: "[Question] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Ask anything about JobCairn. This discussion is **public**, so please don't post your email, phone number, resume or any other personal details.
+  - type: textarea
+    id: question
+    attributes:
+      label: Your question
+    validations:
+      required: true
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy
+      options:
+        - label: I didn't include personal details (email, phone, resume or anything that identifies me).
+          required: true

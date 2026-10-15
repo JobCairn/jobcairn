@@ -1,0 +1,114 @@
+{
+  "version": 2,
+  "title": "My answer for Acme Corp",
+  "voice_type": "interview",
+  "scenes": [
+    {
+      "type": "title",
+      "cue": "Here is how",
+      "kicker": "Tell me about yourself",
+      "title": "My answer for Acme Corp",
+      "sources": [
+        {
+          "file": "companies/acme-corp/jobs/2026-01-12-ai-engineer/jd.md"
+        }
+      ]
+    },
+    {
+      "type": "bullet-build",
+      "cue": "Right now",
+      "headline": "What I do now",
+      "sources": [
+        {
+          "file": "me/history/roles.md"
+        }
+      ],
+      "items": [
+        {
+          "text": "Senior AI Engineer, Sampletown Software",
+          "cue": "Senior AI Engineer"
+        },
+        {
+          "text": "Lead the retrieval platform",
+          "cue": "lead the retrieval"
+        }
+      ]
+    },
+    {
+      "type": "kinetic",
+      "cue": "I built",
+      "lines": [
+        {
+          "text": "400 questions.",
+          "cue": "400"
+        },
+        {
+          "text": "Checked every night.",
+          "cue": "every night"
+        }
+      ],
+      "emphasis": "400",
+      "sources": [
+        {
+          "file": "me/history/roles.md",
+          "quote": "400 fixed questions"
+        }
+      ]
+    },
+    {
+      "type": "comparison",
+      "cue": "Acme Corp's assistant",
+      "headline": "Why I fit",
+      "left": {
+        "label": "Acme Corp needs",
+        "items": [
+          "Answers that cite policies"
+        ]
+      },
+      "right": {
+        "label": "I do today",
+        "items": [
+          "Answers checked against sources"
+        ]
+      },
+      "cue_left": "cite clinic policies",
+      "cue_right": "work I do today",
+      "sources": [
+        {
+          "file": "companies/acme-corp/jobs/2026-01-12-ai-engineer/jd.md"
+        },
+        {
+          "file": "me/history/roles.md"
+        }
+      ]
+    },
+    {
+      "type": "recap-card",
+      "cue": "So that's why",
+      "headline": "Why this job",
+      "sources": [
+        {
+          "file": "companies/acme-corp/jobs/2026-01-12-ai-engineer/jd.md"
+        },
+        {
+          "file": "me/history/roles.md"
+        }
+      ],
+      "closing": "Thanks for listening.",
+      "items": [
+        {
+          "text": "Retrieval that cites",
+          "cue": "applied"
+        },
+        {
+          "text": "Evaluation every night",
+          "cue": "build"
+        },
+        {
+          "text": "An assistant to trust",
+          "cue": "trust"
+        }
+      ]
+    }
+  ]
+}

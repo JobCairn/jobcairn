@@ -1,0 +1,11 @@
+{
+  "id": 4012345,
+  "title": "Applied AI Engineer",
+  "company_name": "Example Labs",
+  "absolute_url": "https://boards.greenhouse.io/examplelabs/jobs/4012345",
+  "location": { "name": "Sampletown, NSW" },
+  "updated_at": "2026-01-14T02:00:00-05:00",
+  "first_published": "2026-01-10T02:00:00-05:00",
+  "content": "&lt;p&gt;&lt;strong&gt;About us&lt;/strong&gt;&lt;/p&gt;&lt;p&gt;Example Labs builds writing tools.&lt;/p&gt;&lt;ul&gt;&lt;li&gt;Ship LLM features&lt;/li&gt;&lt;li&gt;Own evaluation&lt;/li&gt;&lt;/ul&gt;&lt;p&gt;Visa sponsorship is available for the right candidate.&lt;/p&gt;",
+  "pay_input_ranges": [{ "min_cents": 15000000, "max_cents": 17000000, "currency_type": "AUD", "title": "Annual salary" }]
+}

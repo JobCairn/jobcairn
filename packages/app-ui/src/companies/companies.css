@@ -1,0 +1,55 @@
+/* Companies list and company page. Reuses the Job page's head, panels and timeline; only company bits live here. */
+
+/* The company mark: initials on a soft tile tinted from the name. Text stays the body colour for contrast. */
+.company-mark {
+  --tint: var(--color-accent);
+  flex: none; display: inline-grid; place-items: center; border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--tint) 16%, var(--color-surface));
+  border: var(--size-border) solid color-mix(in srgb, var(--tint) 30%, transparent);
+  color: var(--color-text); font-weight: var(--font-weight-semibold); letter-spacing: 0.02em; line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.company-mark--sm { width: 2rem; height: 2rem; font-size: var(--font-size-12); }
+.company-mark--lg { width: 3.5rem; height: 3.5rem; font-size: var(--font-size-20); border-radius: var(--radius-lg); }
+.company-mark--t0 { --tint: var(--color-accent); }
+.company-mark--t1 { --tint: var(--color-info); }
+.company-mark--t2 { --tint: var(--color-success); }
+.company-mark--t3 { --tint: var(--color-warning); }
+.company-mark--t4 { --tint: var(--color-viz-visa); }
+.company-mark--t5 { --tint: var(--color-viz-found); }
+
+.company-cell { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
+.company-stage { display: inline-flex; align-items: center; gap: var(--space-2); }
+
+.company-head__main { flex: 1 1 28rem; min-width: 0; display: flex; align-items: flex-start; gap: var(--space-4); }
+
+/* A text link that opens something (the website, a job): underlined, with hover and focus like other links. */
+.company-link {
+  border: 0; padding: 0; background: transparent; font: inherit; color: var(--color-accent); cursor: pointer;
+  text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--color-accent) 45%, transparent); text-underline-offset: 0.2em;
+}
+.company-link:hover { text-decoration-color: currentColor; }
+.company-link:focus-visible { outline: var(--size-focus-ring) solid var(--color-focus); outline-offset: 2px; border-radius: var(--radius-sm); }
+.company-link--sm { font-size: var(--font-size-13); margin-top: var(--space-1); }
+
+.company-file {
+  flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-1);
+  border: 0; padding: var(--space-1) var(--space-2); margin-left: calc(var(--space-2) * -1); border-radius: var(--radius-md);
+  background: transparent; color: var(--color-text); font: inherit; text-align: left; cursor: pointer;
+}
+.company-file:hover { background: var(--color-surface-hover); }
+.company-file:focus-visible { outline: var(--size-focus-ring) solid var(--color-focus); outline-offset: 1px; }
+.company-file__name { overflow-wrap: anywhere; text-decoration: underline; text-decoration-color: var(--color-border-strong); text-underline-offset: 0.2em; }
+
+.company-sponsor { display: grid; grid-template-columns: minmax(0, 22rem) minmax(0, 1fr); gap: var(--space-6); align-items: start; }
+@media (max-width: 1100px) { .company-sponsor { grid-template-columns: minmax(0, 1fr); } }
+.company-facts { margin: 0; display: flex; flex-direction: column; gap: var(--space-3); }
+.company-facts > div { display: flex; flex-direction: column; gap: var(--space-1); }
+.company-facts dt { color: var(--color-text-muted); font-size: var(--font-size-13); }
+.company-facts dd { margin: 0; }
+.company-sub { margin: 0 0 var(--space-2); font-size: var(--font-size-14); font-weight: var(--font-weight-semibold); }
+
+/* Contacts tab: published careers links and emails. */
+.company-contacts__note { margin: 0; }
+.company-contact { align-items: center; gap: var(--space-2); }
+.company-contact__address { overflow-wrap: anywhere; }

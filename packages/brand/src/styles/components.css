@@ -1,0 +1,130 @@
+/* Icons */
+.icon { display: block; flex: 0 0 auto; stroke-width: var(--size-icon-stroke); }
+.icon--sm { width: var(--size-icon-sm); height: var(--size-icon-sm); }
+.icon--md { width: var(--size-icon-md); height: var(--size-icon-md); }
+
+/* Buttons */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--button-gap);
+  height: var(--button-height-md); padding: 0 var(--button-padding-md); border-radius: var(--button-radius);
+  border: var(--size-border) solid transparent; font-family: var(--font-family-sans); font-size: var(--button-font-size-md);
+  font-weight: var(--font-weight-medium); line-height: var(--font-line-height-tight); cursor: pointer; white-space: nowrap;
+  transition: background var(--motion-duration-fast) var(--motion-easing-out), border-color var(--motion-duration-fast) var(--motion-easing-out), transform var(--motion-duration-fast) var(--motion-easing-out);
+}
+.btn:active:not(:disabled) { transform: translateY(var(--size-border)); }
+.btn--primary { background: var(--button-primary-bg); color: var(--button-primary-fg); }
+.btn--primary:hover:not(:disabled) { background: var(--button-primary-bg-hover); }
+.btn--secondary { background: var(--button-secondary-bg); color: var(--button-secondary-fg); border-color: var(--button-secondary-border); }
+.btn--secondary:hover:not(:disabled) { background: var(--button-secondary-bg-hover); }
+.btn--ghost { background: transparent; color: var(--button-ghost-fg); }
+.btn--ghost:hover:not(:disabled) { color: var(--button-ghost-fg-hover); background: var(--button-ghost-bg-hover); }
+.btn--danger { background: var(--button-danger-bg); color: var(--button-danger-fg); border-color: color-mix(in srgb, var(--button-danger-fg) 35%, transparent); }
+.btn--sm { height: var(--button-height-sm); padding: 0 var(--button-padding-sm); font-size: var(--button-font-size-sm); border-radius: var(--radius-sm); }
+/* Disabled stays legible (text-disabled is ≥ 4.5:1 on every surface, see test/contrast): no opacity fade.
+   It reads as unavailable through no fill and quieter text, with a plain solid outline (a dashed one read as broken). */
+.btn:disabled, .btn:disabled:hover { cursor: not-allowed; background: transparent; color: var(--color-text-disabled); border-color: var(--color-border); border-style: solid; transform: none; }
+.btn--ghost:disabled, .btn--ghost:disabled:hover { border-color: transparent; }
+.btn[aria-busy="true"]:disabled { border-style: solid; color: var(--button-secondary-fg); }
+.btn__spinner {
+  width: var(--size-icon-sm); height: var(--size-icon-sm); border-radius: var(--radius-full);
+  border: var(--size-focus-ring) solid currentColor; border-right-color: transparent; animation: brand-spin var(--motion-duration-slow) linear infinite;
+}
+@keyframes brand-spin { to { transform: rotate(360deg); } }
+
+/* Pills, badges, keys */
+.pill {
+  display: inline-flex; align-items: center; gap: var(--space-1); height: var(--pill-height); padding: 0 var(--pill-padding-x);
+  border-radius: var(--pill-radius); border: var(--size-border) solid; font-family: var(--font-family-sans); font-size: var(--pill-font-size);
+  font-weight: var(--font-weight-medium); white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis;
+}
+.pill--success { color: var(--color-success); background: var(--color-success-soft); border-color: color-mix(in srgb, var(--color-success) 35%, transparent); }
+.pill--accent { color: var(--color-accent); background: var(--color-accent-soft); border-color: color-mix(in srgb, var(--color-accent) 35%, transparent); }
+.pill--warning { color: var(--color-warning); background: var(--color-warning-soft); border-color: color-mix(in srgb, var(--color-warning) 35%, transparent); }
+.pill--danger { color: var(--color-danger); background: var(--color-danger-soft); border-color: color-mix(in srgb, var(--color-danger) 35%, transparent); }
+.pill--neutral { color: var(--color-text-muted); border-color: var(--color-border-strong); }
+.badge {
+  display: inline-grid; place-items: center; min-width: var(--nav-item-badge-min-width); height: var(--nav-item-badge-height);
+  padding: 0 var(--space-1); border-radius: var(--radius-full); background: var(--color-accent-soft); color: var(--color-accent);
+  font-family: var(--font-family-sans); font-size: var(--font-size-12); font-variant-numeric: lining-nums tabular-nums;
+}
+.kbd {
+  font-family: var(--font-family-sans); font-size: var(--font-size-12); border: var(--size-border) solid var(--color-border-strong);
+  border-radius: var(--radius-sm); padding: 0 var(--space-1); color: var(--color-text-muted);
+}
+
+/* Avatars */
+.avatar {
+  display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto;
+  background: var(--avatar-bg); border: var(--size-border) solid var(--avatar-border); border-radius: var(--avatar-radius);
+  font-family: var(--font-family-sans); font-weight: var(--font-weight-semibold); color: var(--color-text);
+  line-height: 1; user-select: none;
+}
+.avatar--md { width: var(--avatar-size-md); height: var(--avatar-size-md); font-size: var(--font-size-13); }
+.avatar--sm { width: var(--avatar-size-sm); height: var(--avatar-size-sm); font-size: var(--font-size-11); }
+
+/* Cards and KPIs */
+.card {
+  background: var(--card-bg); border: var(--size-border) solid var(--card-border); border-radius: var(--card-radius);
+  padding: var(--card-padding); box-shadow: var(--card-shadow); min-width: 0;
+}
+.card--highlight {
+  border-color: color-mix(in srgb, var(--color-accent) 35%, transparent);
+  background: linear-gradient(180deg, var(--color-glow), transparent 70%), var(--card-bg);
+}
+.kpi__row { display: flex; align-items: last baseline; justify-content: space-between; gap: var(--space-2); margin-top: var(--space-2); }
+.kpi__value { font-family: var(--font-family-display); font-size: var(--kpi-value-size); line-height: var(--font-line-height-tight); font-variant-numeric: lining-nums tabular-nums; }
+.kpi__value--accent { color: var(--color-accent); }
+.kpi__spark { display: block; width: var(--kpi-spark-width); height: var(--kpi-spark-height); color: var(--color-text-muted); flex: 0 0 auto; }
+.kpi__delta { margin-top: var(--space-1); font-family: var(--font-family-sans); font-variant-numeric: lining-nums tabular-nums; font-size: var(--font-size-12); color: var(--color-success); }
+
+/* Navigation */
+.nav-item {
+  display: flex; align-items: center; gap: var(--nav-item-gap); width: 100%; height: var(--nav-item-height); padding: 0 var(--space-3);
+  border: 0; border-radius: var(--nav-item-radius); background: transparent; color: var(--color-text-muted); cursor: pointer; text-align: left;
+  font-family: var(--font-family-sans); font-size: var(--font-size-14); font-weight: var(--font-weight-medium);
+}
+.nav-item:hover { color: var(--color-text); background: var(--color-surface); }
+.nav-item[aria-current="page"] { color: var(--color-text); background: var(--color-surface); box-shadow: inset 0 0 0 var(--size-border) var(--color-border); }
+.nav-item__icon { display: flex; align-items: center; justify-content: center; width: var(--nav-item-icon-box); height: var(--nav-item-icon-box); flex: 0 0 var(--nav-item-icon-box); }
+.nav-item__label { flex: 1; }
+.nav-item__trailing { font-size: var(--font-size-12); color: var(--color-text-muted); }
+
+/* Form fields */
+.field { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+.field__label { font-size: var(--font-size-13); color: var(--color-text-muted); }
+.field__help { font-size: var(--font-size-12); color: var(--color-text-muted); }
+.field__error { font-size: var(--font-size-12); color: var(--color-danger); }
+.input {
+  height: var(--input-height); padding: 0 var(--input-padding-x); border-radius: var(--input-radius); border: var(--size-border) solid var(--input-border);
+  background: var(--input-bg); color: var(--color-text); font-family: var(--font-family-sans); font-size: var(--font-size-14); min-width: 0;
+}
+/* The ring shows for keyboard focus and typing (inputs always match :focus-visible), not after a mouse pick in a select. */
+.input:focus { outline: none; }
+.input:focus-visible { outline: none; border-color: var(--input-border-focus); box-shadow: 0 0 0 var(--space-1) var(--input-ring); }
+/* A select picked with the mouse shows no focus ring or orange border (Chrome treats it as focus-visible). */
+html[data-modality="pointer"] .select:focus-visible { box-shadow: none; border-color: var(--input-border); }
+.input[aria-invalid="true"] { border-color: var(--color-danger); }
+.textarea { height: auto; min-height: calc(var(--input-height) * 3); padding: var(--space-2) var(--input-padding-x); line-height: var(--font-line-height-body); resize: vertical; }
+.select-wrap { position: relative; display: flex; min-width: 0; }
+.select-wrap .select { appearance: none; -webkit-appearance: none; flex: 1; padding-right: calc(var(--input-padding-x) + var(--size-icon-sm) + var(--space-1)); cursor: pointer; }
+.select-wrap__chevron { position: absolute; right: var(--input-padding-x); top: 50%; transform: translateY(-50%); display: flex; pointer-events: none; color: var(--color-text-muted); }
+.checkbox { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-1) var(--space-2); }
+/* Help text goes on its own line under the label, lined up with the label text rather than the box. */
+.checkbox .field__help { flex-basis: 100%; padding-left: calc(var(--size-icon-sm) + var(--space-2)); }
+.checkbox input { width: var(--size-icon-sm); height: var(--size-icon-sm); accent-color: var(--color-accent); }
+
+/* Section title: one header pattern for cards and sections (icon, title, optional status on the right). */
+.section-title { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
+.section-title__icon {
+  flex: none; display: inline-grid; place-items: center; width: 32px; height: 32px; border-radius: var(--radius-md);
+  background: var(--color-surface); border: var(--size-border) solid var(--color-border); color: var(--color-text-muted);
+}
+.section-title__glyph { width: 20px; height: 20px; }
+.section-title__text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.section-title__heading { font-size: var(--font-size-20, 20px); line-height: var(--font-line-height-snug); }
+.section-title__sub { margin: 0; }
+.section-title__status { flex: none; display: inline-flex; align-items: center; gap: var(--space-2); }
+.section-title--compact { gap: var(--space-2); }
+.section-title--compact .section-title__icon { width: 24px; height: 24px; border: 0; background: transparent; }
+.section-title--compact .section-title__glyph { width: 18px; height: 18px; }
+.section-title--compact .section-title__heading { font-family: var(--font-family-sans, inherit); font-size: var(--font-size-16); font-weight: var(--font-weight-medium); letter-spacing: 0; }

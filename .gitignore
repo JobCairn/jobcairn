@@ -1,0 +1,73 @@
+.env
+.env.*
+!.env.example
+node_modules/
+.DS_Store
+*.sqlite
+.index/
+.backup/
+
+# --- Privacy: ignore anything that could hold personal data (only fictional samples/ are allowed) ---
+.superpowers/
+*.pdf
+*.doc
+*.docx
+*.heic
+*.jpg
+*.jpeg
+*.png
+*.xlsx
+*.csv
+*.wav
+*.mp3
+*.m4a
+*.mp4
+*.mov
+*.sqlite
+*.sqlite-*
+.env*
+!.env.example
+denylist.txt
+# signing keys and certificates (Developer ID .p12, App Store Connect .p8): keychain or env only, never the repo
+*.p12
+*.p8
+*.cer
+*.certSigningRequest
+*.provisionprofile
+# candidate workspace folders, if one is ever created inside the repo by mistake
+CareerOS/
+JobCairn/
+/me/
+/inbox/
+/companies/
+/learning/
+/knowledge/
+/settings/
+.index/
+.backup/
+.media/
+# fictional samples and public assets are the only exceptions
+!samples/**
+!public/**
+!docs/assets/**
+# build output; sample workspaces never commit their index or secrets (keep after the samples exception)
+dist/
+coverage/
+samples/*/.index/
+samples/*/settings/.env
+
+# committed generated brand tokens (drift-tested)
+!packages/brand/dist/
+!packages/brand/dist/**
+packages/*/dist-guide/
+packages/app-electron/schemas/
+# desktop dev bundle (scripts/dev-app.mjs), packaging stage and installers (scripts/package.mjs)
+packages/app-electron/.dev-app/
+packages/app-electron/.package/
+packages/app-electron/dist-release/
+test-results/
+playwright-report/
+packages/app-electron/tmp/
+
+# scratch (marketing video renders, local experiments)
+/tmp/

@@ -1,0 +1,179 @@
+/* Learn hub (Lane F). Tokens only. */
+.learn-section { display: flex; flex-direction: column; gap: var(--space-3); margin-bottom: var(--space-6); }
+.learn-section__head { display: flex; flex-direction: column; gap: var(--space-1); }
+.learn-section__head p { margin: 0; }
+.learn-section__head--row { flex-direction: row; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--space-3); }
+.learn-tools { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
+.learn-search { width: calc(var(--space-12) * 5); }
+.learn-search .field { margin: 0; }
+
+.learn-layout { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: var(--space-6); align-items: start; }
+.learn-side { display: flex; flex-direction: column; gap: var(--space-4); }
+.learn-empty { display: flex; flex-direction: column; gap: var(--space-4); max-width: calc(var(--dialog-width) * 1.6); }
+.learn-missing { margin-bottom: var(--space-6); border-left: var(--size-focus-ring) solid var(--color-accent); }
+@media (max-width: 1180px) { .learn-layout { grid-template-columns: minmax(0, 1fr); } }
+
+/* Type filter (its own class: the composer has a different .segmented) */
+.learn-filter { display: inline-flex; padding: var(--space-1); gap: var(--space-1); border-radius: var(--radius-full); border: var(--size-border) solid var(--color-border); background: var(--color-bg-raised); }
+.learn-filter__item {
+  display: inline-flex; align-items: center; gap: var(--space-2); padding: var(--space-1) var(--space-3); border: 0; border-radius: var(--radius-full);
+  background: transparent; color: var(--color-text-muted); font: inherit; font-size: var(--font-size-13); cursor: pointer;
+  transition: background var(--motion-duration-fast) var(--motion-easing-out), color var(--motion-duration-fast) var(--motion-easing-out);
+}
+.learn-filter__item:hover { color: var(--color-text); background: var(--color-surface-hover); }
+.learn-filter__item[aria-pressed="true"] { color: var(--color-text); background: var(--color-surface); box-shadow: var(--shadow-card); }
+.learn-filter__count { color: var(--color-text-muted); font-variant-numeric: tabular-nums; }
+.learn-filter__item:focus-visible { outline: var(--size-focus-ring) solid var(--color-focus); outline-offset: var(--size-border); }
+
+/* Suggested skill chips: name, how many jobs ask, a small share bar */
+.skill-chips { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(calc(var(--space-12) * 4), 1fr)); gap: var(--space-3); }
+.skill-chip {
+  width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "name name" "count pct" "bar bar" "cta cta";
+  gap: var(--space-1) var(--space-2); text-align: left; padding: var(--space-3) var(--space-4); cursor: pointer; font: inherit; color: var(--color-text);
+  border-radius: var(--radius-lg); border: var(--size-border) solid var(--color-border); background: var(--color-surface);
+  transition: border-color var(--motion-duration-fast) var(--motion-easing-out), background var(--motion-duration-fast) var(--motion-easing-out);
+  animation: brand-rise var(--motion-duration-slow) var(--motion-easing-out) both;
+}
+.skill-chips li:nth-child(2) .skill-chip { animation-delay: 30ms; }
+.skill-chips li:nth-child(3) .skill-chip { animation-delay: 60ms; }
+.skill-chips li:nth-child(4) .skill-chip { animation-delay: 90ms; }
+.skill-chips li:nth-child(n+5) .skill-chip { animation-delay: 120ms; }
+.skill-chip:hover { border-color: var(--color-accent); background: var(--color-surface-hover); }
+.skill-chip:focus-visible { outline: var(--size-focus-ring) solid var(--color-focus); outline-offset: var(--size-border); }
+/* Item titles are sans (as on Home and Jobs); the display serif stays for the screen and section titles. */
+.skill-chip__name { grid-area: name; font-size: var(--font-size-16); font-weight: var(--font-weight-semibold); line-height: var(--font-line-height-snug); overflow-wrap: anywhere; }
+.skill-chip__count { grid-area: count; color: var(--color-text-muted); }
+.skill-chip__pct { grid-area: pct; color: var(--color-text); font-variant-numeric: tabular-nums; }
+.skill-chip__cta { grid-area: cta; display: inline-flex; align-items: center; gap: var(--space-1); margin-top: var(--space-1); font-size: var(--font-size-13); font-weight: var(--font-weight-medium); color: var(--color-accent); }
+.skill-chip:hover .skill-chip__cta { text-decoration: underline; text-underline-offset: var(--space-1); }
+.skill-chip__bar { grid-area: bar; height: var(--space-1); border-radius: var(--radius-full); background: var(--color-surface-hover); overflow: hidden; }
+/* Never a zero-width speck: 1 job in 32 still shows a short stub. */
+.skill-chip__bar span { display: block; height: 100%; min-width: var(--space-1); background: var(--color-accent); border-radius: var(--radius-full); }
+
+/* Small pickable chips (dialog suggestions, job gaps) */
+.topic-chips, .job-learn__gaps { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.topic-chip {
+  padding: var(--space-1) var(--space-3); border-radius: var(--radius-full); border: var(--size-border) solid var(--color-border-strong);
+  background: var(--color-surface); color: var(--color-text); font: inherit; font-size: var(--font-size-13); cursor: pointer;
+  transition: border-color var(--motion-duration-fast) var(--motion-easing-out), color var(--motion-duration-fast) var(--motion-easing-out);
+}
+.topic-chip--sm { padding: 0 var(--space-2); font-size: var(--font-size-12); line-height: 1.6; }
+.topic-chip:hover, .topic-chip[aria-pressed="true"] { border-color: var(--color-accent); color: var(--color-accent); }
+.topic-chip:focus-visible { outline: var(--size-focus-ring) solid var(--color-focus); outline-offset: var(--size-border); }
+
+/* Library cards */
+.learn-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(calc(var(--space-12) * 5), 1fr)); gap: var(--space-3); }
+.learn-card {
+  position: relative; display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-4); border-radius: var(--card-radius);
+  background: var(--card-bg); border: var(--size-border) solid var(--card-border); border-top: var(--size-focus-ring) solid var(--color-border-strong);
+  transition: border-color var(--motion-duration-fast) var(--motion-easing-out), box-shadow var(--motion-duration-fast) var(--motion-easing-out);
+}
+.learn-card[data-progress="in_progress"] { border-top-color: var(--color-accent); }
+.learn-card[data-progress="done"] { border-top-color: var(--color-success); }
+.learn-card:hover { border-color: var(--color-border-strong); box-shadow: var(--shadow-card); }
+.learn-card:focus-within { border-color: var(--color-accent); }
+.learn-card__top { display: flex; justify-content: space-between; align-items: center; gap: var(--space-2); }
+.learn-card__type { display: inline-flex; align-items: center; gap: var(--space-1); }
+.learn-card__title { margin: 0; font-size: var(--font-size-16); font-weight: var(--font-weight-semibold); line-height: var(--font-line-height-snug); }
+/* The title button stretches over the card so the whole card opens it; other buttons sit above it. */
+.learn-card__open { all: unset; cursor: pointer; overflow-wrap: anywhere; }
+.learn-card__open::after { content: ""; position: absolute; inset: 0; border-radius: var(--card-radius); }
+.learn-card__open:hover { color: var(--color-accent); }
+.learn-card__open:focus-visible { outline: none; }
+.learn-card__open:focus-visible::after { outline: var(--size-focus-ring) solid var(--color-focus); outline-offset: var(--size-border); }
+.learn-card__meta { margin: 0; }
+/* Shown once, under the Learn header. */
+.learn-video-bar { margin-bottom: var(--space-4); }
+.learn-videos { margin-top: var(--space-4); }
+/* One "set up Claude" note for the whole screen. */
+.learn-claude { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; padding: var(--space-3) var(--space-4); margin-bottom: var(--space-6); border-radius: var(--radius-lg); background: var(--color-bg-raised); border: var(--size-border) solid var(--color-border); }
+.learn-claude p { margin: 0; }
+.learn-claude > .icon { color: var(--color-accent); }
+/* Suggested topics in one row line up: every chip as tall as the tallest. */
+.skill-chips li { display: flex; }
+.skill-chips .skill-chip { height: 100%; align-content: start; }
+
+/* Jobs panel and history */
+.link-button { all: unset; cursor: pointer; color: var(--color-text); text-decoration: underline; text-decoration-color: var(--color-border-strong); text-underline-offset: var(--space-1); overflow-wrap: anywhere; }
+.link-button:hover { color: var(--color-accent); text-decoration-color: var(--color-accent); }
+.link-button:focus-visible { outline: var(--size-focus-ring) solid var(--color-focus); outline-offset: var(--size-border); border-radius: var(--radius-sm); }
+.history__row { display: grid; grid-template-columns: calc(var(--space-12) * 2) minmax(0, 1fr) auto; gap: var(--space-3); align-items: baseline; padding: var(--space-2) 0; border-top: var(--size-border) solid var(--color-border); }
+.history__date { font-size: var(--font-size-12); }
+
+/* Reader */
+.reader-card { padding: var(--space-6) var(--space-8); }
+/* Diagrams step out of the 72ch text column (up to the card's width), so a mind map or sequence isn't shrunk to
+   unreadable labels to fit a column sized for prose. */
+.reader-card { container-type: inline-size; }
+.reader__body .markdown .diagram { --diagram-w: min(52rem, calc(100cqi - 2 * var(--space-8))); width: var(--diagram-w); max-width: none; margin-inline: calc((100% - var(--diagram-w)) / 2); }
+.reader { max-width: 72ch; margin: 0 auto; display: flex; flex-direction: column; gap: var(--space-5); }
+.reader__bar { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
+.reader__actions { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; margin-left: auto; }
+.reader__head { display: flex; flex-direction: column; gap: var(--space-2); padding-bottom: var(--space-4); border-bottom: var(--size-border) solid var(--color-border); }
+.reader__head p { margin: 0; }
+.reader__body .markdown { font-size: var(--font-size-16); }
+.reader__body .markdown h1 { display: none; }
+.reader__body .markdown h2 { font-size: var(--font-size-20); font-weight: var(--font-weight-semibold); margin: var(--space-6) 0 var(--space-2); }
+.reader__body .markdown h3 { font-size: var(--font-size-16); font-weight: var(--font-weight-semibold); margin: var(--space-5) 0 var(--space-2); }
+.reader__body .markdown a { color: var(--color-accent); }
+.reader__body .markdown li + li { margin-top: var(--space-1); }
+.reader__foot { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--space-4); flex-wrap: wrap; padding-top: var(--space-4); border-top: var(--size-border) solid var(--color-border); }
+
+@media (prefers-reduced-motion: reduce) {
+  .skill-chip, .learn-filter__item, .topic-chip, .learn-card { animation: none; transition: none; }
+  .skill-chip:hover { transform: none; }
+}
+
+/* Claude runs started from Learn and the checklist: the button, then the run panel under it. */
+.learn-run { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-2); min-width: 0; }
+.learn-run > .crun { align-self: stretch; }
+.learn-runs { display: flex; flex-direction: column; gap: var(--space-2); margin-bottom: var(--space-4); }
+.learn-runs__row { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
+.learn-runs__topic { font-size: var(--font-size-13); color: var(--color-text); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* From your jobs: one compact row per job (logo, title and company, trailing ring or Score), like a list row
+   with a leading visual and trailing content. The title button stretches over the row, so the whole row opens
+   the job; the trailing controls and gap chips sit above that layer. */
+.job-learn__row {
+  position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: var(--space-1) var(--space-3);
+  padding: var(--space-2) var(--space-2); margin: 0 calc(var(--space-2) * -1); border-top: var(--size-border) solid var(--color-border); border-radius: var(--radius-sm);
+  transition: background var(--motion-duration-fast) var(--motion-easing-out);
+}
+.job-learn__row:first-child { border-top-color: transparent; }
+.job-learn__row:hover { background: var(--color-surface-hover); }
+.job-learn__row:hover .cell-action { border-color: var(--color-border-strong); color: var(--color-text); }
+.job-learn__lead { display: inline-flex; align-self: start; padding-top: 2px; min-width: var(--space-4); }
+.job-learn__main { min-width: 0; display: flex; flex-direction: column; gap: var(--space-1); }
+.job-learn__open {
+  all: unset; cursor: pointer; min-width: 0; display: flex; flex-direction: column; text-align: left;
+}
+.job-learn__open::after { content: ""; position: absolute; inset: 0; border-radius: var(--radius-sm); }
+.job-learn__open:focus-visible { outline: none; }
+.job-learn__open:focus-visible::after { outline: var(--size-focus-ring) solid var(--color-focus); outline-offset: calc(var(--size-border) * -1); }
+.job-learn__title { font-weight: var(--font-weight-medium); line-height: var(--font-line-height-snug); overflow-wrap: anywhere; }
+.job-learn__company { font-size: var(--font-size-13); color: var(--color-text-muted); overflow-wrap: anywhere; }
+.job-learn__row:hover .job-learn__title { color: var(--color-accent); }
+.job-learn__gaps { position: relative; z-index: 1; display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1); width: fit-content; max-width: 100%; }
+.job-learn__end { position: relative; z-index: 1; justify-self: end; display: inline-flex; align-items: center; min-width: 0; }
+.job-learn__lead .source-badge--link { position: relative; z-index: 1; }
+/* The ring is information, not a control: clicks pass through to the row. */
+.job-learn__ring { pointer-events: none; display: inline-flex; }
+.job-learn__end .learn-run { align-items: flex-end; }
+.job-learn__batch { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2) var(--space-3); flex-wrap: wrap; }
+.job-learn__batch .score-many { display: flex; flex-direction: column; align-items: flex-end; gap: var(--space-1); }
+.job-learn__foot { display: flex; justify-content: space-between; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
+.job-learn__row.is-fresh { animation: job-learn-fresh 2.4s ease-out 1; }
+@keyframes job-learn-fresh { 0%, 40% { background: var(--color-accent-soft); } 100% { background: transparent; } }
+@media (prefers-reduced-motion: reduce) { .job-learn__row.is-fresh { animation: none; background: var(--color-accent-soft); } .job-learn__row { transition: none; } }
+
+/* Study next: under a short topic list (and on an empty Learn), the next skills with a guide or a video. */
+.next-topics { display: flex; flex-direction: column; gap: var(--space-2); margin-top: var(--space-4); padding: var(--space-4); border-radius: var(--card-radius); border: var(--size-border) dashed var(--color-border-strong); }
+.next-topics__title { margin: 0; }
+.next-topics__row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-2) var(--space-3); padding: var(--space-2) 0; border-top: var(--size-border) solid var(--color-border); }
+.next-topics__row:first-child { border-top: 0; }
+.next-topics__what { display: flex; flex-direction: column; min-width: 0; }
+.next-topics__skill { font-weight: var(--font-weight-semibold); overflow-wrap: anywhere; }
+.next-topics__actions { display: inline-flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
+
+/* Narrow panes (the window's minimum is 960px, but the side column can be slim): date over title. */
+@media (max-width: 640px) { .history__row { grid-template-columns: minmax(0, 1fr) auto; } .history__date { grid-column: 1 / -1; } }

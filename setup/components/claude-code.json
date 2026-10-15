@@ -1,0 +1,2 @@
+{ "id": "claude-code", "name": "Claude Code", "order": 20, "required": true, "why": "The AI that does the work, on your own Claude plan.", "docs": "https://docs.claude.com/en/docs/claude-code/setup",
+  "platforms": { "darwin": { "check": "command -v claude >/dev/null && claude --version", "install": ["curl -fsSL https://claude.ai/install.sh | bash"] } } }

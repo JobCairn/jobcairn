@@ -1,0 +1,256 @@
+{
+ "pack": "architecture",
+ "source": "JobCairn, drawn with lucide icons (ISC)",
+ "license": "ISC",
+ "kinds": {
+  "service": {
+   "label": "Service",
+   "icon": "server-cog",
+   "tags": [
+    "service",
+    "api",
+    "backend",
+    "microservice"
+   ]
+  },
+  "queue": {
+   "label": "Queue",
+   "icon": "list-ordered",
+   "tags": [
+    "queue",
+    "kafka",
+    "sqs",
+    "pubsub",
+    "broker",
+    "stream"
+   ]
+  },
+  "database": {
+   "label": "Database",
+   "icon": "database",
+   "tags": [
+    "database",
+    "sql",
+    "postgres",
+    "mysql",
+    "store"
+   ]
+  },
+  "cache": {
+   "label": "Cache",
+   "icon": "zap",
+   "tags": [
+    "cache",
+    "redis",
+    "memcached"
+   ]
+  },
+  "load-balancer": {
+   "label": "Load balancer",
+   "icon": "split",
+   "tags": [
+    "load",
+    "balancer",
+    "lb",
+    "ingress",
+    "proxy",
+    "nginx"
+   ]
+  },
+  "gpu": {
+   "label": "GPU node",
+   "icon": "cpu",
+   "tags": [
+    "gpu",
+    "node",
+    "compute",
+    "training",
+    "inference"
+   ]
+  },
+  "storage": {
+   "label": "Storage",
+   "icon": "hard-drive",
+   "tags": [
+    "storage",
+    "bucket",
+    "s3",
+    "blob",
+    "object",
+    "checkpoint"
+   ]
+  },
+  "client": {
+   "label": "Client",
+   "icon": "monitor",
+   "tags": [
+    "client",
+    "browser",
+    "frontend",
+    "user"
+   ]
+  },
+  "peer": {
+   "label": "Peer",
+   "icon": "share-2",
+   "tags": [
+    "peer",
+    "node",
+    "p2p"
+   ]
+  },
+  "user": {
+   "label": "User",
+   "icon": "user",
+   "tags": [
+    "user",
+    "person"
+   ]
+  },
+  "api": {
+   "label": "API",
+   "icon": "plug",
+   "tags": [
+    "api",
+    "gateway",
+    "endpoint",
+    "rest",
+    "grpc"
+   ]
+  },
+  "model": {
+   "label": "Model",
+   "icon": "brain",
+   "tags": [
+    "model",
+    "llm",
+    "ml",
+    "inference"
+   ]
+  },
+  "vector-db": {
+   "label": "Vector DB",
+   "icon": "database-zap",
+   "tags": [
+    "vector",
+    "embeddings",
+    "index"
+   ]
+  },
+  "worker": {
+   "label": "Worker",
+   "icon": "cog",
+   "tags": [
+    "worker",
+    "job",
+    "consumer"
+   ]
+  },
+  "scheduler": {
+   "label": "Scheduler",
+   "icon": "calendar-clock",
+   "tags": [
+    "scheduler",
+    "cron",
+    "orchestrator"
+   ]
+  },
+  "monitoring": {
+   "label": "Monitoring",
+   "icon": "activity",
+   "tags": [
+    "monitoring",
+    "metrics",
+    "prometheus",
+    "grafana"
+   ]
+  },
+  "logs": {
+   "label": "Logs",
+   "icon": "scroll-text",
+   "tags": [
+    "logs",
+    "logging"
+   ]
+  },
+  "auth": {
+   "label": "Auth",
+   "icon": "shield-check",
+   "tags": [
+    "auth",
+    "identity",
+    "login"
+   ]
+  },
+  "cdn": {
+   "label": "CDN",
+   "icon": "globe",
+   "tags": [
+    "cdn",
+    "edge"
+   ]
+  },
+  "router": {
+   "label": "Router",
+   "icon": "router",
+   "tags": [
+    "router",
+    "nat",
+    "gateway",
+    "relay"
+   ]
+  },
+  "internet": {
+   "label": "Internet",
+   "icon": "earth",
+   "tags": [
+    "internet",
+    "wan"
+   ]
+  },
+  "container": {
+   "label": "Container",
+   "icon": "container",
+   "tags": [
+    "container",
+    "docker",
+    "pod"
+   ]
+  },
+  "cluster": {
+   "label": "Cluster",
+   "icon": "boxes",
+   "tags": [
+    "cluster",
+    "kubernetes",
+    "nodes"
+   ]
+  },
+  "function": {
+   "label": "Function",
+   "icon": "square-function",
+   "tags": [
+    "function",
+    "lambda",
+    "serverless"
+   ]
+  },
+  "mobile": {
+   "label": "Mobile",
+   "icon": "smartphone",
+   "tags": [
+    "mobile",
+    "app"
+   ]
+  },
+  "agent": {
+   "label": "Agent",
+   "icon": "bot",
+   "tags": [
+    "agent",
+    "llm",
+    "assistant"
+   ]
+  }
+ }
+}

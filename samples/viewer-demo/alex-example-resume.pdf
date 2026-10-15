@@ -1,0 +1,46 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 4 0 R /Resources << /Font << /F1 5 0 R /F2 6 0 R >> >> >>
+endobj
+4 0 obj
+<< /Length 871 >>
+stream
+BT /F2 22 Tf 64 740 Td (Alex Example) Tj ET
+BT /F1 11 Tf 64 708 Td (AI Engineer  |  alex@example.com  |  0491 570 006  |  Sampletown NSW) Tj ET
+BT /F2 13 Tf 64 666 Td (Experience) Tj ET
+BT /F2 11 Tf 64 643 Td (AI Engineer, Example Labs \(2023 to now\)) Tj ET
+BT /F1 11 Tf 64 622 Td (- Built a retrieval pipeline over 40,000 fictional support articles.) Tj ET
+BT /F1 11 Tf 64 601 Td (- Cut answer latency from 2.1 s to 0.8 s with caching and smaller prompts.) Tj ET
+BT /F1 11 Tf 64 580 Td (- Wrote evaluation sets and a weekly quality report for the team.) Tj ET
+BT /F2 11 Tf 64 538 Td (Software Engineer, Acme Corp \(2020 to 2023\)) Tj ET
+BT /F1 11 Tf 64 517 Td (- Shipped TypeScript and Python services for internal tools.) Tj ET
+BT /F2 13 Tf 64 475 Td (Skills) Tj ET
+BT /F1 11 Tf 64 452 Td (Python, TypeScript, LLM APIs, retrieval, evaluation, PostgreSQL, Docker) Tj ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+6 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+xref
+0 7
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000251 00000 n 
+0000001173 00000 n 
+0000001243 00000 n 
+trailer
+<< /Size 7 /Root 1 0 R >>
+startxref
+1318
+%%EOF

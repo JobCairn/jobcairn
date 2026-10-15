@@ -1,0 +1,71 @@
+{
+  "schema": 1,
+  "id": "2026-01-12-ai-engineer",
+  "company_slug": "acme-corp",
+  "client": null,
+  "title": "AI Engineer",
+  "source": "ats",
+  "source_site": "Greenhouse",
+  "url": "https://jobs.example.com/acme/1",
+  "apply_via": "",
+  "posted": "",
+  "found_at": "2026-01-12T09:00:00.000Z",
+  "location": "Sampletown NSW",
+  "work_mode": "Hybrid",
+  "job_type": "",
+  "salary": {
+    "text": "$140k-$160k + super",
+    "min": null,
+    "max": null,
+    "currency": "",
+    "period": ""
+  },
+  "timeline": [
+    {
+      "at": "2026-01-12T09:00:00.000Z",
+      "event": "Found",
+      "note": "Greenhouse"
+    },
+    {
+      "at": "2026-01-13T09:00:00.000Z",
+      "event": "Status: Applied",
+      "note": "Applied on the careers page"
+    }
+  ],
+  "work_rights": {
+    "label": "sponsorship_offered",
+    "quotes": [
+      "Visa sponsorship available for the right candidate."
+    ],
+    "decided_by": "scan"
+  },
+  "scores": {
+    "fit": {
+      "value": null,
+      "must_haves": [],
+      "nice_to_haves": []
+    },
+    "sponsor": {
+      "value": 95,
+      "tier": "Very high",
+      "reasons": [
+        "ad says sponsorship is available"
+      ]
+    },
+    "career": {
+      "match": null,
+      "odds": null,
+      "tier": "",
+      "scored_at": ""
+    }
+  },
+  "status": "Applied",
+  "files": [
+    {
+      "path": "jd.md",
+      "label": "Job description",
+      "at": "2026-01-12T09:00:00.000Z"
+    }
+  ],
+  "custom": {}
+}

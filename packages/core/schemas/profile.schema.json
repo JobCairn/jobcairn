@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "careeros/profile",
+  "type": "object",
+  "required": ["schema"],
+  "properties": {
+    "schema": { "type": "integer", "minimum": 1 },
+    "contact": {
+      "type": "object", "default": {},
+      "properties": {
+        "name": { "type": "string", "default": "", "x-ui": { "label": "Full name" } },
+        "email": { "type": "string", "default": "", "x-ui": { "label": "Email for applications" } },
+        "phone": { "type": "string", "default": "", "x-ui": { "label": "Phone" } },
+        "city": { "type": "string", "default": "", "x-ui": { "label": "City" } },
+        "links": { "type": "array", "items": { "type": "string" }, "default": [], "x-ui": { "label": "Links (LinkedIn, GitHub, portfolio)" } }
+      }
+    },
+    "work_rights": {
+      "type": "object", "default": {},
+      "properties": {
+        "status": {
+          "enum": ["citizen", "pr", "full_visa", "limited_visa", "needs_sponsorship", "unknown"], "default": "unknown",
+          "x-ui": { "label": "Work rights", "help": "Used to hide jobs you can't apply for and rank sponsors first.",
+            "options": { "citizen": "Citizen", "pr": "Permanent resident", "full_visa": "Visa with full work rights", "limited_visa": "Visa with limited work rights", "needs_sponsorship": "Need visa sponsorship", "unknown": "Not set" } }
+        },
+        "visa_subclass": { "type": "string", "default": "", "x-ui": { "label": "Visa subclass" } },
+        "visa_expiry": { "type": "string", "pattern": "^(\\d{4}-\\d{2}-\\d{2})?$", "default": "", "x-ui": { "label": "Visa expiry (YYYY-MM-DD)" } },
+        "notes": { "type": "string", "default": "", "x-ui": { "label": "Notes" } }
+      }
+    },
+    "targets": {
+      "type": "object", "default": {},
+      "properties": {
+        "roles": { "type": "array", "items": { "type": "string" }, "default": [], "x-ui": { "label": "Target roles" } },
+        "keywords": { "type": "array", "items": { "type": "string" }, "default": [], "x-ui": { "label": "Keywords" } },
+        "seniority": { "type": "string", "default": "", "x-ui": { "label": "Seniority" } },
+        "job_types": {
+          "type": "array", "default": ["full_time"],
+          "items": { "enum": ["full_time", "contract", "part_time", "casual", "internship"] },
+          "x-ui": { "label": "Job types" }
+        }
+      }
+    },
+    "locations": {
+      "type": "array", "default": [],
+      "x-ui": { "label": "Preferred locations", "help": "Most preferred first: Claude searches them in this order. Drag a place, or use its arrows, to change the order." },
+      "items": {
+        "type": "object", "required": ["place"],
+        "properties": {
+          "place": { "type": "string", "minLength": 1, "x-ui": { "label": "Place" } },
+          "modes": { "type": "array", "items": { "enum": ["onsite", "hybrid", "remote"] }, "default": ["onsite", "hybrid", "remote"], "x-ui": { "label": "Work modes", "options": { "onsite": "On site", "hybrid": "Hybrid", "remote": "Remote" } } },
+          "will_relocate": { "type": "boolean", "default": false, "x-ui": { "label": "Willing to relocate" } }
+        }
+      }
+    },
+    "salary": {
+      "type": "object", "default": {},
+      "properties": {
+        "min": { "type": ["number", "null"], "minimum": 0, "default": null, "x-ui": { "label": "Minimum salary" } },
+        "currency": { "type": "string", "default": "AUD", "x-ui": { "label": "Currency" } },
+        "includes_super": { "type": "boolean", "default": true, "x-ui": { "label": "Includes super" } }
+      }
+    },
+    "industries": {
+      "type": "object", "default": {},
+      "properties": {
+        "include": { "type": "array", "items": { "type": "string" }, "default": [], "x-ui": { "label": "Industries to include" } },
+        "exclude": { "type": "array", "items": { "type": "string" }, "default": [], "x-ui": { "label": "Industries to exclude" } }
+      }
+    },
+    "skip_companies": { "type": "array", "items": { "type": "string" }, "default": [], "x-ui": { "label": "Companies to skip" } },
+    "skip_big_tech": { "type": "boolean", "default": false, "x-ui": { "label": "Skip big tech" } },
+    "custom": { "type": "object", "default": {} }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "jobPostingInfo": {
+    "title": "GenAI Engineer",
+    "location": "Sampletown",
+    "timeType": "Full time",
+    "startDate": "2026-01-09",
+    "remoteType": "Hybrid",
+    "externalUrl": "https://acme.wd3.myworkdayjobs.com/Careers/job/Sampletown/GenAI-Engineer_R-1234",
+    "jobDescription": "<p>Design GenAI services. A Baseline security clearance is required.</p>"
+  },
+  "hiringOrganization": { "name": "Acme Corp" }
+}

@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "filters": {},
+  "sources": {
+    "ats": true,
+    "adzuna": false,
+    "browser": true,
+    "pasted": true
+  },
+  "sweep": {
+    "every_hours": null
+  },
+  "views": [],
+  "custom": {}
+}

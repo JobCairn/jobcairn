@@ -1,0 +1,21 @@
+name: Release
+
+# A version tag creates a draft release with the notes in .github/release-notes/<tag>.md.
+# The signed dmgs and SHA256SUMS.txt are attached before the draft is published.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  draft:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: gh release create "$TAG" --draft --verify-tag --title "JobCairn ${TAG#v}" --notes-file ".github/release-notes/$TAG.md"

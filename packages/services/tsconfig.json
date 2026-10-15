@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "target": "ES2023", "module": "NodeNext", "moduleResolution": "NodeNext", "strict": true, "noEmit": true,
+    "skipLibCheck": true, "lib": ["ES2023"], "types": ["node"], "allowImportingTsExtensions": true, "resolveJsonModule": true,
+    "baseUrl": ".", "paths": { "@careeros/core": ["../core/src/index.ts"], "@careeros/contract": ["../contract/src/index.ts"],
+      "@careeros/mail": ["../mail/src/index.ts"],
+      "@careeros/video": ["../video/src/index.ts"],
+      "@careeros/brand/tokens": ["../brand/dist/tokens.ts"], "@careeros/brand/identity": ["../brand/identity.ts"],
+      "@careeros/brand/identity.json": ["../brand/identity.json"]
+    }
+  },
+  "include": ["src", "test"]
+}

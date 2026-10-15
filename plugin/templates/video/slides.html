@@ -1,0 +1,155 @@
+<!doctype html>
+<!--
+  JobCairn slide recap template: title, stat, two-column match, 3-step plan, closing claim.
+  Renders to a linear narrated MP4 (one root composition). Speaker notes go in notes.md.
+  Adapted from HyperFrames (Apache-2.0): slideshow slide-writing rules,
+  hyperframes-core composition contract, motion doctrine. See NOTICE.md.
+
+  HOW TO FILL (manual fallback when the spec expander is not available):
+  1. Copy to <video dir>/index.html with theme.css and kit.js beside it.
+  2. Replace every {{SLOT}}. Delete a whole <section> to drop a slide and its script block.
+  3. One narration paragraph per slide. Timing from narration.timing.json ("scenes", "total").
+  4. Every slide headline is a full-sentence claim, not a label.
+  5. Run `npx hyperframes transcribe narration.wav` to fill TRANSCRIPT (local Whisper).
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>{{DECK TITLE}}</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <link rel="stylesheet" href="theme.css" />
+    <style>
+      .foot { position: absolute; left: 140px; right: 140px; top: 832px; display: flex; justify-content: space-between; }
+      .big { font-weight: 900; font-size: 220px; line-height: 1; letter-spacing: -0.04em; color: #f2b441; margin-top: 40px; }
+      .cols { margin-top: 48px; display: flex; gap: 44px; }
+      .col { flex: 1; display: flex; flex-direction: column; gap: 22px; min-height: 380px; }
+      .row { display: flex; gap: 20px; align-items: baseline; }
+      .row .label { min-width: 40px; }
+      .steps { margin-top: 64px; display: flex; gap: 0; align-items: flex-start; }
+      .stp { width: 470px; display: flex; flex-direction: column; gap: 16px; }
+      .dot { display: block; width: 28px; height: 28px; border-radius: 14px; background: #f2b441; }
+      .link { display: block; width: 100px; height: 4px; margin-top: 12px; background: #2c353f; transform-origin: left center; }
+      .center { justify-content: center; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-width="1920" data-height="1080" data-duration="{{TOTAL}}">
+      <div id="bg" class="bg"><div class="bg-glow"></div><div class="bg-grid"></div></div>
+
+      <!-- P1 TITLE -->
+      <section id="p1" class="clip scene" data-start="0" data-duration="{{P1_DUR}}" data-track-index="1">
+        <div id="p1-stage" class="stage center">
+          <p id="p1-kicker" class="kicker">{{KICKER e.g. "Interview prep recap"}}</p>
+          <h1 id="p1-title" class="hero" style="margin-top: 28px">{{DECK TITLE as a claim}}</h1>
+          <p id="p1-sub" class="lede" style="margin-top: 32px">{{SUBTITLE}}</p>
+        </div>
+      </section>
+
+      <!-- P2 STAT: one number that carries the stakes. Authored text = start value. -->
+      <section id="p2" class="clip scene" data-start="{{P2_START}}" data-duration="{{P2_DUR}}" data-track-index="1">
+        <div id="p2-stage" class="stage">
+          <h2 class="h2">{{P2 HEADLINE claim}}</h2>
+          <p id="p2-num" class="big num">{{PREFIX}}0{{SUFFIX}}</p>
+          <p id="p2-note" class="lede" style="margin-top: 24px">{{SOURCE OR CONTEXT for the number}}</p>
+          <div class="foot"><p class="step">{{DECK SHORT}}</p><p class="step">02 / 05</p></div>
+        </div>
+      </section>
+
+      <!-- P3 MATCH: what the role asks for vs the candidate's evidence -->
+      <section id="p3" class="clip scene" data-start="{{P3_START}}" data-duration="{{P3_DUR}}" data-track-index="1">
+        <div id="p3-stage" class="stage">
+          <h2 class="h2">{{P3 HEADLINE claim}}</h2>
+          <div class="cols">
+            <div id="p3-a" class="card col"><p class="kicker">{{LEFT LABEL e.g. "The role asks"}}</p>
+              <div class="row"><span class="label">01</span><p class="body">{{ASK 1}}</p></div>
+              <div class="row"><span class="label">02</span><p class="body">{{ASK 2}}</p></div>
+              <div class="row"><span class="label">03</span><p class="body">{{ASK 3}}</p></div></div>
+            <div id="p3-b" class="card col"><p class="kicker">{{RIGHT LABEL e.g. "Your evidence"}}</p>
+              <div class="row"><span class="label">01</span><p class="body">{{EVIDENCE 1}}</p></div>
+              <div class="row"><span class="label">02</span><p class="body">{{EVIDENCE 2}}</p></div>
+              <div class="row"><span class="label">03</span><p class="body">{{EVIDENCE 3 or "Gap: plan below"}}</p></div></div>
+          </div>
+          <div class="foot"><p class="step">{{DECK SHORT}}</p><p class="step">03 / 05</p></div>
+        </div>
+      </section>
+
+      <!-- P4 PLAN: three steps on one line, each lands on its cue -->
+      <section id="p4" class="clip scene" data-start="{{P4_START}}" data-duration="{{P4_DUR}}" data-track-index="1">
+        <div id="p4-stage" class="stage">
+          <h2 class="h2">{{P4 HEADLINE claim}}</h2>
+          <div class="steps">
+            <div id="p4-s1" class="stp"><span class="dot"></span><p class="kicker">{{WHEN 1}}</p><p class="body">{{STEP 1}}</p></div>
+            <span id="p4-l1" class="link"></span>
+            <div id="p4-s2" class="stp"><span class="dot"></span><p class="kicker">{{WHEN 2}}</p><p class="body">{{STEP 2}}</p></div>
+            <span id="p4-l2" class="link"></span>
+            <div id="p4-s3" class="stp"><span class="dot"></span><p class="kicker">{{WHEN 3}}</p><p class="body">{{STEP 3}}</p></div>
+          </div>
+          <div class="foot"><p class="step">{{DECK SHORT}}</p><p class="step">04 / 05</p></div>
+        </div>
+      </section>
+
+      <!-- P5 CLOSE: one sentence to remember -->
+      <section id="p5" class="clip scene" data-start="{{P5_START}}" data-duration="{{P5_DUR}}" data-track-index="1">
+        <div id="p5-stage" class="stage center">
+          <p class="kicker">Remember</p>
+          <h2 id="p5-claim" class="hero" style="margin-top: 28px">{{CLOSING CLAIM}}</h2>
+        </div>
+      </section>
+
+      <audio id="narration" src="narration.wav" data-start="0" data-track-index="10"></audio>
+      <div id="captions" class="caption-band"></div>
+      <div id="fade" class="fade"></div>
+    </div>
+
+    <script>
+      // Filled by `npx hyperframes transcribe narration.wav`. Keep this exact line shape.
+      const TRANSCRIPT = [];
+    </script>
+    <script src="kit.js"></script>
+    <script>
+      const K = window.CareerKit;
+      const W = K.clean(TRANSCRIPT);
+      const S = K.starts(["p1", "p2", "p3", "p4", "p5"]);
+      const END = parseFloat(document.getElementById("root").getAttribute("data-duration"));
+      const SEAM = 0.6;
+      const at = (phrase, after, fallback) => K.cue(W, phrase, after, fallback);
+      const tl = gsap.timeline({ paused: true });
+
+      // P1
+      K.reveal(tl, "#p1-kicker", 0.2, { y: 0, x: -30 }, 0.5);
+      K.reveal(tl, "#p1-title", 0.4, { y: 44 }, 0.8);
+      K.reveal(tl, "#p1-sub", at("{{P1 CUE}}", 0.5, 2.0), { y: 20 });
+
+      // P2: the count lands on the word that names the number.
+      K.seam(tl, "#p1-stage", "#p2-stage", S.p2, "left", SEAM);
+      const n = at("{{P2 CUE NUMBER}}", S.p2, S.p2 + 1.2);
+      K.count(tl, "#p2-num", 0, {{NUMBER}}, n, 1.4, { prefix: "{{PREFIX}}", suffix: "{{SUFFIX}}", decimals: 0 });
+      K.reveal(tl, "#p2-note", n + 1.8, { y: 16 });
+
+      // P3: left column, then right column on its cue.
+      K.seam(tl, "#p2-stage", "#p3-stage", S.p3, "left", SEAM);
+      const a = at("{{P3 CUE LEFT}}", S.p3, S.p3 + 1.0);
+      K.reveal(tl, "#p3-a", a, { x: -40, y: 0 });
+      K.reveal(tl, "#p3-b", at("{{P3 CUE RIGHT}}", a, S.p3 + 4.0), { x: 40, y: 0 });
+
+      // P4: links draw just before each step lands.
+      K.seam(tl, "#p3-stage", "#p4-stage", S.p4, "left", SEAM);
+      const s1 = at("{{P4 CUE 1}}", S.p4, S.p4 + 1.0);
+      const s2 = at("{{P4 CUE 2}}", s1, S.p4 + 3.0);
+      const s3 = at("{{P4 CUE 3}}", s2, S.p4 + 5.0);
+      K.reveal(tl, "#p4-s1", s1, { y: 30 });
+      K.draw(tl, "#p4-l1", s2 - 0.3, 0.4);
+      K.reveal(tl, "#p4-s2", s2, { y: 30 });
+      K.draw(tl, "#p4-l2", s3 - 0.3, 0.4);
+      K.reveal(tl, "#p4-s3", s3, { y: 30 });
+
+      // P5: the conclusion rises and holds still.
+      K.seam(tl, "#p4-stage", "#p5-stage", S.p5, "up", SEAM);
+
+      K.captions(tl, W, { until: END - 0.7 });
+      tl.to("#fade", { opacity: 1, duration: 0.6, ease: "power2.in" }, END - 0.7);
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>

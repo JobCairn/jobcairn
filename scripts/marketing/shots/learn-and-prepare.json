@@ -1,0 +1,157 @@
+{
+  "slug": "learn-and-prepare",
+  "title": "Learn and prepare with JobCairn",
+  "resolution": "720p",
+  "layoutWidth": 1280,
+  "theme": "dark",
+  "clock": "2026-01-15T23:00:00Z",
+  "maxMB": 5.5,
+  "replace": [
+    [
+      "CareerOS",
+      "JobCairn"
+    ]
+  ],
+  "cards": {
+    "title": {
+      "heading": "Learn and prepare",
+      "sub": "Study guides, practice questions and short videos, built around the jobs you want."
+    },
+    "end": {
+      "heading": "Walk in prepared.",
+      "sub": "JobCairn. Your job search, in one place."
+    },
+    "disclaimer": "An example job search. Every person and company shown is made up."
+  },
+  "poster": {
+    "beat": "guide",
+    "at": 5.5
+  },
+  "beats": [
+    {
+      "id": "title",
+      "card": "title",
+      "voice": "Here is how JobCairn gets you ready for the interview.",
+      "lead": 1.3,
+      "tail": 1.0
+    },
+    {
+      "id": "guide",
+      "params": "learn",
+      "route": "#/learn",
+      "voice": "Learn turns the gaps across your saved jobs into short study guides, with diagrams and tips.",
+      "steps": [
+        {
+          "at": 0.2,
+          "zoom": "Suggested topics",
+          "scale": 1.2,
+          "ms": 900
+        },
+        {
+          "at": 1.0,
+          "hover": "In 8 of 32 jobs"
+        },
+        {
+          "at": 2.4,
+          "unzoom": true,
+          "ms": 400
+        },
+        {
+          "at": 2.6,
+          "hash": "#/learn?topic=prompt-engineering"
+        },
+        {
+          "at": 3.8,
+          "scrollTo": "What it is",
+          "offset": 60
+        },
+        {
+          "at": 5.0,
+          "hover": "Draft prompt"
+        }
+      ],
+      "lead": 0.3,
+      "tail": 1.4
+    },
+    {
+      "id": "interview",
+      "route": "#/job/acme-corp/2026-01-12-ai-engineer?tab=interview",
+      "voice": "Each interview gets practice questions written for that job.",
+      "steps": [
+        {
+          "at": 0.2,
+          "hover": "Interview questions ready",
+          "exact": true
+        },
+        {
+          "at": 1.4,
+          "role": "button",
+          "name": "View files: Interview prep"
+        },
+        {
+          "at": 3.0,
+          "hover": "Tell us about an agent you built."
+        }
+      ],
+      "lead": 0.3,
+      "tail": 1.2
+    },
+    {
+      "id": "videos",
+      "route": "#/job/acme-corp/2026-01-12-ai-engineer",
+      "voice": "Claude can also make short videos: a walkthrough of the ad, a lesson, or a practice pitch.",
+      "pre": [
+        {
+          "role": "button",
+          "name": "Make video"
+        },
+        {
+          "wait": 800
+        },
+        {
+          "role": "button",
+          "name": "Start"
+        },
+        {
+          "waitFor": "Review the script"
+        },
+        {
+          "hash": "#/videos"
+        },
+        {
+          "wait": 1200
+        }
+      ],
+      "steps": [
+        {
+          "at": 0.3,
+          "hover": "What Acme Corp asks for",
+          "exact": true
+        },
+        {
+          "at": 2.0,
+          "role": "button",
+          "name": "Open What Acme Corp asks for"
+        },
+        {
+          "at": 3.6,
+          "scrollTo": "Review the script",
+          "offset": 40
+        },
+        {
+          "at": 4.6,
+          "hover": "Agents are the heart of this role"
+        }
+      ],
+      "lead": 0.3,
+      "tail": 1.2
+    },
+    {
+      "id": "end",
+      "card": "end",
+      "voice": "JobCairn. Walk in prepared.",
+      "lead": 0.8,
+      "tail": 1.6
+    }
+  ]
+}

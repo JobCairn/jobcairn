@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "careeros/sponsors",
+  "type": "object",
+  "required": ["schema"],
+  "properties": {
+    "schema": { "type": "integer", "minimum": 1 },
+    "employers": { "type": "array", "items": { "type": "object", "required": ["name"] }, "default": [] },
+    "custom": { "type": "object", "default": {} }
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "id": "pitch",
+  "label": "Tell me about yourself",
+  "description": "A short answer to \"tell me about yourself\" for this job, from your history only, with a short practice script.",
+  "version": 2,
+  "entry_points": ["job", "job.interview"],
+  "subject": "job",
+  "writer": "claude",
+  "skill": "video-slides",
+  "voice_type": "interview",
+  "length": { "min_s": 30, "target_s": 60, "max_s": 180 },
+  "scene_types": ["title", "bullet-build", "comparison", "recap-card", "icon-grid", "logo-row", "timeline", "kinetic", "diagram", "match"],
+  "scene_counts": { "title": { "min": 1, "max": 1 }, "recap-card": { "min": 1, "max": 1 } },
+  "sources": [
+    { "resolver": "history", "required": true },
+    { "resolver": "job.jd", "required": true },
+    { "resolver": "profile", "required": false }
+  ],
+  "brief_template": "This pitch helps {name} answer \"tell me about yourself\" for the {role} role at {company}.",
+  "rules": [
+    "Write in the first person, as the candidate would say it.",
+    "Present, past, future: what I do now, what I have done that fits this job, why this job next.",
+    "Every claim about the candidate cites me/history or settings/profile.json.",
+    "Use only what my files show. Never claim people management, a title, a scope or a skill level my history doesn't show, or anything on a do-not-claim or cautions list in my files.",
+    "Also write pitch.md: the same pitch as plain paragraphs to practise without the video."
+  ],
+  "facts": "strict",
+  "extras": ["pitch.md"],
+  "output": "companies/{slug}/jobs/{id}/interview/pitch-{n}/",
+  "media": "none",
+  "modes": []
+}

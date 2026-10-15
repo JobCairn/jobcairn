@@ -1,0 +1,68 @@
+/* Workspace switcher: the top of the sidebar, below the brand. */
+.rail__header { margin: 0 var(--space-1) var(--space-3); min-width: 0; }
+.ws-switch { position: relative; min-width: 0; }
+.ws-switch__trigger {
+  width: 100%; display: flex; align-items: center; gap: var(--space-2); min-width: 0;
+  padding: var(--space-2); border-radius: var(--radius-md); border: var(--size-border) solid transparent;
+  background: transparent; color: var(--color-text); font: inherit; text-align: left; cursor: pointer;
+}
+.ws-switch__trigger:hover, .ws-switch__trigger.is-open { background: var(--color-surface-hover); border-color: var(--color-border); }
+.ws-switch__trigger:focus-visible { outline: var(--size-focus-ring) solid var(--color-focus); outline-offset: 2px; }
+.ws-switch__trigger:disabled { cursor: progress; }
+.ws-switch__text { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; }
+.ws-switch__sub { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--font-size-12); color: var(--color-text-muted); line-height: 1.5; }
+.ws-switch__name { max-width: 100%; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: var(--font-weight-semibold); }
+.ws-switch__chevron { flex: 0 0 auto; color: var(--color-text-muted); }
+.ws-switch__tag {
+  flex: 0 0 auto; padding: 0 var(--space-2); border-radius: var(--radius-full);
+  background: var(--color-accent-soft); color: var(--color-text); font-size: var(--font-size-11); font-weight: var(--font-weight-semibold); line-height: 1.6;
+}
+
+.ws-switch__menu {
+  position: fixed; z-index: 30; width: 17rem; max-width: calc(100vw - var(--space-6));
+  padding: var(--space-1); border-radius: var(--radius-lg); border: var(--size-border) solid var(--color-border-strong);
+  background: var(--color-bg-raised); box-shadow: var(--shadow-pop);
+  max-height: min(70vh, 32rem); overflow-y: auto;
+}
+.ws-switch__heading { padding: var(--space-1) var(--space-2); font-size: var(--font-size-11); color: var(--color-text-muted); }
+.ws-switch__item {
+  display: flex; align-items: center; gap: var(--space-2); padding: var(--space-1) var(--space-2); border-radius: var(--radius-md);
+  color: var(--color-text); cursor: pointer; min-width: 0; font-size: var(--font-size-13);
+}
+.ws-switch__item:hover, .ws-switch__item:focus-visible { background: var(--color-surface-hover); outline: none; }
+.ws-switch__item:focus-visible { box-shadow: inset 0 0 0 var(--size-focus-ring) var(--color-focus); }
+.ws-switch__item.is-current { background: var(--color-surface); }
+.ws-switch__item.is-missing { cursor: default; }
+.ws-switch__item.is-missing .ws-switch__item-name { color: var(--color-text-muted); }
+.ws-switch__item-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.ws-switch__item-name, .ws-switch__item-folder { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ws-switch__item-folder { font-size: var(--font-size-11); color: var(--color-text-muted); }
+.ws-switch__check { flex: 0 0 auto; color: var(--color-accent); }
+.ws-switch__action { gap: var(--space-2); color: var(--color-text); min-height: 1.875rem; }
+.ws-switch__action .icon { color: var(--color-text-muted); }
+.ws-switch__sep { height: var(--size-border); background: var(--color-border); margin: var(--space-1) 0; }
+
+/* "Remove from this list": every workspace, with only the actions that are safe for it. */
+.ws-manage { display: flex; flex-direction: column; margin-top: var(--space-3); }
+.ws-manage__row { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-3) 0; border-top: var(--size-border) solid var(--color-border); }
+.ws-manage__main { display: flex; align-items: center; gap: var(--space-3); min-width: 0; flex-wrap: wrap; }
+.ws-manage__main .ws-switch__item-text { flex: 1 1 12rem; }
+/* Room to read the whole line here: it wraps instead of being cut off. */
+.ws-manage__main .ws-switch__item-folder { white-space: normal; overflow-wrap: anywhere; }
+.ws-manage__actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1); margin-left: auto; flex-shrink: 0; }
+.ws-manage__current { font-size: var(--font-size-13); color: var(--color-text-muted); padding: 0 var(--space-2); }
+.ws-manage__note {
+  display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-3); border-radius: var(--radius-md);
+  border: var(--size-border) solid var(--color-border); background: var(--color-surface);
+}
+.ws-manage__note p { margin: 0; }
+.ws-manage__note-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+
+
+.settings-workspaces { display: flex; flex-direction: column; gap: var(--space-1); max-width: 40rem; padding-top: var(--space-5); border-top: var(--size-border) solid var(--color-border); }
+.settings-workspaces h3, .settings-workspaces p { margin: 0; }
+
+/* The icon rail: the switcher shows the avatar (its name stays in the label and tooltip). */
+.rail.is-collapsed .rail__header { margin: 0 0 var(--space-3); width: 100%; display: flex; justify-content: center; }
+.rail.is-collapsed .ws-switch__trigger { justify-content: center; padding: var(--space-1); }
+.rail.is-collapsed :is(.ws-switch__text, .ws-switch__chevron) { display: none; }

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Hardened-runtime entitlements for the Developer ID build (app and its helpers; used only when signing with a
+  real identity, see scripts/builder-config.mjs and docs/packaging.md).
+
+  allow-jit: V8 compiles JavaScript at run time, in the main process, the renderer and Electron-as-Node (the MCP
+  server, ELECTRON_RUN_AS_NODE). Electron's own defaults (@electron/osx-sign) give the app and helpers only this.
+
+  automation.apple-events: Search in my Chrome asks Google Chrome (over Apple Events, via osascript) to open its
+  remote-control page. The hardened runtime blocks Apple Events without it; macOS still asks the person once, with
+  NSAppleEventsUsageDescription (builder-config.mjs).
+
+  Left out on purpose:
+  - allow-unsigned-executable-memory: not needed by Electron 20+; osx-sign only grants it to the plugin helper.
+  - disable-library-validation: no third-party native module or dylib is loaded; everything is signed by us.
+  - device.audio-input / camera: the app never records (the renderer's permission handler grants fullscreen only).
+  - network.client: an App Sandbox key; the Developer ID build isn't sandboxed, so it would do nothing.
+-->
+<plist version="1.0">
+<dict>
+  <key>com.apple.security.cs.allow-jit</key>
+  <true/>
+  <key>com.apple.security.automation.apple-events</key>
+  <true/>
+</dict>
+</plist>

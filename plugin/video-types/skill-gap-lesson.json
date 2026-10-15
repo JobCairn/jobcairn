@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "id": "skill-gap-lesson",
+  "label": "Skill-gap lesson",
+  "description": "A short lesson that teaches one skill a job asks for, in plain words, and ends with what to practise next.",
+  "version": 2,
+  "entry_points": ["job.gaps", "learn.topic"],
+  "subject": "topic",
+  "writer": "claude",
+  "skill": "video-explainer",
+  "voice_type": "guide",
+  "length": { "min_s": 30, "target_s": 150, "max_s": 600 },
+  "scene_types": ["title", "bullet-build", "code-typing", "code-highlight", "code-morph", "code-diff", "flowchart", "sequence", "comparison", "stat", "recap-card", "icon-grid", "logo-row", "diagram", "timeline", "chart", "checklist", "kinetic", "matrix"],
+  "scene_counts": { "title": { "min": 1, "max": 1 }, "recap-card": { "min": 1, "max": 1 } },
+  "sources": [
+    { "resolver": "gap", "required": true },
+    { "resolver": "job.jd", "required": false },
+    { "resolver": "job.score", "required": false },
+    { "resolver": "learning.guide", "required": false }
+  ],
+  "brief_template": "This video teaches {name} {gap} so they can talk about it with confidence in an interview for {role}.",
+  "rules": [
+    "Teach one idea per scene, from the basics up.",
+    "Name the skill exactly as the job ad does.",
+    "Technical content must be correct. If you are not sure of a detail, leave it out.",
+    "End with a recap-card whose closing line says what to practise next."
+  ],
+  "facts": "teaching",
+  "extras": [],
+  "output": "learning/{topic}/videos/{n}/",
+  "media": "none",
+  "modes": []
+}

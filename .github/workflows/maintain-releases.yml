@@ -1,0 +1,59 @@
+name: Maintain releases
+
+# Keeps published releases in step with this repo, using the workflow's own token:
+# - each release's notes match .github/release-notes/<tag>.md;
+# - every release file is uploaded by this workflow. Files uploaded any other way are
+#   downloaded and uploaded again unchanged (same bytes, so SHA256SUMS.txt still matches).
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/release-notes/**"
+      - ".github/workflows/maintain-releases.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: maintain-releases
+  cancel-in-progress: false
+
+jobs:
+  maintain:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Update release notes
+        run: |
+          for f in .github/release-notes/v*.md; do
+            tag="$(basename "$f" .md)"
+            if gh release view "$tag" >/dev/null 2>&1; then
+              gh release edit "$tag" --notes-file "$f"
+              echo "notes updated: $tag"
+            fi
+          done
+
+      - name: Upload release files with the workflow token
+        run: |
+          set -euo pipefail
+          for tag in $(gh release list --limit 100 --json tagName --jq '.[].tagName'); do
+            names="$(gh api "repos/$GH_REPO/releases/tags/$tag" \
+              --jq '.assets[] | select(.uploader.login != "github-actions[bot]") | .name')"
+            [ -z "$names" ] && continue
+            dir="$(mktemp -d)"
+            while IFS= read -r name; do
+              gh release download "$tag" --pattern "$name" --dir "$dir"
+            done <<< "$names"
+            if [ -f "$dir/SHA256SUMS.txt" ]; then
+              (cd "$dir" && sha256sum -c SHA256SUMS.txt --ignore-missing)
+            fi
+            while IFS= read -r name; do
+              gh release upload "$tag" "$dir/$name" --clobber
+              echo "re-uploaded: $tag/$name"
+            done <<< "$names"
+            rm -rf "$dir"
+          done

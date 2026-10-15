@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "careeros/approval",
+  "type": "object",
+  "required": ["schema", "id", "action", "title"],
+  "properties": {
+    "schema": { "type": "integer", "minimum": 1 },
+    "id": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+    "action": { "enum": ["apply_handoff", "status_change", "email_send"] },
+    "title": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "summary": { "type": "string", "default": "" },
+    "steps": { "type": "array", "items": { "type": "string" }, "default": [] },
+    "payload": { "type": "object", "default": {} },
+    "created_at": { "type": "string", "default": "" },
+    "created_by": { "enum": ["app", "claude", "cli"], "default": "cli" },
+    "status": { "enum": ["pending", "approved", "declined", "done", "failed"], "default": "pending" },
+    "decided_at": { "type": "string", "default": "" },
+    "result_note": { "type": "string", "default": "" },
+    "custom": { "type": "object", "default": {} }
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "id": "company-briefing",
+  "label": "Company briefing",
+  "description": "What the company does, its products, tech stack, recent news, sponsorship evidence and culture, each fact with its source.",
+  "version": 2,
+  "entry_points": ["company", "job"],
+  "subject": "company",
+  "writer": "claude",
+  "skill": "video-slides",
+  "voice_type": "slides",
+  "length": { "min_s": 30, "target_s": 150, "max_s": 600 },
+  "scene_types": ["title", "bullet-build", "stat", "comparison", "flowchart", "recap-card", "sequence", "icon-grid", "logo-row", "diagram", "match", "checklist", "timeline", "chart", "quote", "company-card", "map-pin", "kinetic", "matrix"],
+  "scene_counts": { "title": { "min": 1, "max": 1 }, "recap-card": { "min": 0, "max": 1 } },
+  "sources": [
+    { "resolver": "company.research", "required": true },
+    { "resolver": "company.record", "required": false },
+    { "resolver": "job.jd", "required": false }
+  ],
+  "brief_template": "This recap briefs {name} on {company} before a first call: what they do, how they build, and whether they sponsor.",
+  "rules": [
+    "Every scene cites a research file and the URL inside it.",
+    "Cover what they do, products, tech stack, recent news, sponsorship evidence and culture, but only what the research supports.",
+    "Open with a company-card. Show the tech stack as a logo-row, how they build as a diagram, the office on a map-pin, growth as a chart or timeline.",
+    "Say how old a news item is.",
+    "Write notes.md with one section per slide, with the source of each fact."
+  ],
+  "facts": "strict",
+  "extras": ["notes.md"],
+  "output": "companies/{slug}/videos/briefing-{n}/",
+  "media": "offline",
+  "modes": []
+}

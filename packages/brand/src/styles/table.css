@@ -1,0 +1,180 @@
+/* Table and Drawer (lane B). Loaded by Table.tsx and Drawer.tsx, after components.css. */
+
+/* Table */
+.table { width: 100%; border-collapse: separate; border-spacing: 0; table-layout: fixed; }
+.table th {
+  position: sticky; top: 0; z-index: 1; background: var(--color-bg);
+  text-align: left; vertical-align: bottom; padding: var(--space-2) var(--space-3);
+  border-bottom: var(--size-border) solid var(--color-border-strong); font-weight: var(--font-weight-regular); white-space: normal;
+}
+.table th.is-end { text-align: right; }
+.table th.is-center, .table td.is-center { text-align: center; }
+.table td {
+  font-variant-numeric: tabular-nums;
+  height: var(--table-row-height); padding: var(--space-2) var(--space-3); vertical-align: middle;
+  border-bottom: var(--size-border) solid var(--color-border);
+  max-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.table td.is-wrap { white-space: normal; }
+.table__clamp { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; }
+
+.table__sort {
+  display: inline-flex; align-items: center; gap: var(--space-1); max-width: 100%;
+  margin: 0 calc(var(--space-1) * -1); padding: var(--space-1); border: 0; border-radius: var(--radius-sm);
+  background: transparent; color: inherit; font: inherit; letter-spacing: inherit; text-transform: inherit; cursor: pointer;
+}
+/* Header text may wrap to two lines, then ends in an ellipsis; the sort icon always follows the text. */
+.table__sort > span { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; text-align: inherit; }
+.table th.is-end .table__sort { justify-content: flex-end; }
+.table th.is-center .table__sort { justify-content: center; }
+/* Row heights: one scale for every table. */
+.table--comfortable td { height: 48px; }
+.table--compact td { height: 32px; padding-top: 2px; padding-bottom: 2px; }
+.table--compact .table__clamp { -webkit-line-clamp: 1; line-clamp: 1; }
+
+/* Toolbar above a table: count and filters on the left, Density and Columns on the right. */
+.table-toolbar { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; margin-bottom: var(--space-2); }
+.table-toolbar__start { flex: 1; min-width: 0; display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
+.table-settings { position: relative; display: inline-flex; align-items: center; gap: var(--space-2); }
+.table-settings__btn, .table-density__btn, .table-settings__reset {
+  display: inline-flex; align-items: center; gap: var(--space-1); height: var(--button-height-sm); padding: 0 var(--space-3);
+  border: var(--size-border) solid var(--color-border); border-radius: var(--radius-sm); background: transparent; color: var(--color-text-muted);
+  font: inherit; font-size: var(--font-size-13); cursor: pointer;
+}
+.table-settings__btn:hover, .table-density__btn:hover, .table-settings__reset:hover { color: var(--color-text); background: var(--color-surface-hover); }
+.table-settings__btn:focus-visible, .table-density__btn:focus-visible, .table-settings__reset:focus-visible { outline: var(--size-focus-ring) solid var(--color-focus); outline-offset: 1px; }
+.table-density { display: inline-flex; }
+.table-density__btn { border-radius: 0; }
+.table-density__btn:first-child { border-radius: var(--radius-sm) 0 0 var(--radius-sm); }
+.table-density__btn:last-child { border-radius: 0 var(--radius-sm) var(--radius-sm) 0; margin-left: calc(var(--size-border) * -1); }
+.table-density__btn[aria-pressed="true"] { color: var(--color-text); background: var(--color-surface); border-color: var(--color-border-strong); }
+.table-settings__menu {
+  position: absolute; right: 0; top: calc(100% + var(--space-1)); z-index: 6; min-width: 14rem; display: flex; flex-direction: column; gap: var(--space-2);
+  padding: var(--space-3); border: var(--size-border) solid var(--color-border-strong); border-radius: var(--radius-md); background: var(--color-bg-raised); box-shadow: var(--shadow-pop);
+}
+.table-settings__item { font-size: var(--font-size-13); }
+.table-settings__reset { align-self: flex-start; margin-top: var(--space-1); }
+.table__sort:hover { color: var(--color-text); background: var(--color-surface-hover); }
+.table__sort.is-active { color: var(--color-text); }
+.table__sort-icon { opacity: 0.35; transition: opacity var(--motion-duration-fast) var(--motion-easing-out); }
+.table__sort:hover .table__sort-icon, .table__sort.is-active .table__sort-icon { opacity: 1; }
+
+.table__row--clickable { cursor: pointer; transition: background var(--motion-duration-fast) var(--motion-easing-out); }
+.table__row--clickable:hover { background: var(--color-surface-hover); }
+.table__row:focus-visible { outline: var(--size-focus-ring) solid var(--color-focus); outline-offset: calc(var(--size-focus-ring) * -1); }
+.table__row.is-open { background: var(--color-surface-hover); box-shadow: inset var(--size-focus-ring) 0 0 var(--color-accent); }
+
+/* Drawer */
+.drawer-scrim { position: fixed; inset: 0; z-index: 10; background: var(--dialog-scrim); display: flex; justify-content: flex-end; }
+.drawer {
+  width: min(calc(var(--space-12) * 10), calc(100vw - var(--space-8))); height: 100%;
+  display: flex; flex-direction: column; overflow: hidden;
+  background: var(--color-bg-raised); border-left: var(--size-border) solid var(--color-border-strong); box-shadow: var(--shadow-pop);
+  animation: drawer-in var(--motion-duration-base) var(--motion-easing-out) both;
+}
+.drawer:focus { outline: none; }
+.drawer--wide { width: min(calc(var(--space-12) * 16), calc(100vw - var(--space-8))); }
+.drawer--full { width: calc(100vw - var(--space-8)); }
+.drawer__tools { display: flex; align-items: center; gap: var(--space-1); flex-wrap: wrap; justify-content: flex-end; }
+.drawer__head {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-2);
+  padding: var(--space-3) var(--space-4); border-bottom: var(--size-border) solid var(--color-border);
+}
+.drawer__stepper { display: flex; align-items: center; gap: var(--space-1); }
+.drawer__position { margin-left: var(--space-2); font-variant-numeric: tabular-nums; }
+.drawer__icon-btn {
+  display: inline-grid; place-items: center; width: var(--button-height-sm); height: var(--button-height-sm);
+  border: var(--size-border) solid var(--color-border); border-radius: var(--radius-sm); background: transparent; color: var(--color-text); cursor: pointer;
+}
+.drawer__icon-btn:hover:not(:disabled) { background: var(--color-surface-hover); border-color: var(--color-border-strong); }
+.drawer__icon-btn:disabled { color: var(--color-text-muted); border-style: solid; cursor: not-allowed; }
+.drawer__title { padding: var(--space-5) var(--space-6) var(--space-3); display: flex; flex-direction: column; gap: var(--space-1); }
+.drawer__title h2 { overflow-wrap: anywhere; }
+.drawer__body { flex: 1; overflow-y: auto; padding: 0 var(--space-6) var(--space-6); display: flex; flex-direction: column; gap: var(--space-5); }
+.drawer__actions { display: flex; justify-content: flex-end; gap: var(--space-2); padding: var(--space-3) var(--space-6); border-top: var(--size-border) solid var(--color-border); }
+@keyframes drawer-in { from { transform: translateX(var(--space-8)); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* Label/value list */
+.details { margin: 0; display: flex; flex-direction: column; }
+.details__row {
+  display: grid; grid-template-columns: minmax(0, 9rem) minmax(0, 1fr); gap: var(--space-3);
+  padding: var(--space-2) 0; border-bottom: var(--size-border) solid var(--color-border);
+}
+.details__row:last-child { border-bottom: 0; }
+.details__row--wide { grid-template-columns: minmax(0, 1fr); gap: var(--space-1); }
+.details__label { margin: 0; padding-top: var(--space-1); }
+.details__value { margin: 0; min-width: 0; overflow-wrap: anywhere; white-space: pre-wrap; }
+
+@media (prefers-reduced-motion: reduce) {
+  .drawer { animation: none; }
+}
+
+/* Narrow windows: low-priority columns step aside (their values stay in the drawer); anything
+   still too wide scrolls sideways instead of crushing the text. */
+.table-scroll { width: 100%; overflow-x: auto; }
+/* In a sticky frame the wrapper must not be a scroll box: that would trap the sticky headers. When the window is
+   narrower than the table's minimum width (is-wide, measured), the frame takes that width and the screen itself
+   scrolls sideways; the headers move with their columns, and the filters, toolbar and pager stay at the window's
+   width, stuck to its left edge. */
+.table-frame--sticky .table-scroll { overflow: visible; }
+.table-frame { --table-min-now: var(--table-min, 0px); }
+.table-frame--sticky.is-wide { width: max(calc(var(--space-12) * 14), var(--table-min-now)); }
+.table-frame--sticky.is-wide .table-top--sticky, .table-frame--sticky.is-wide .table-pager { position: sticky; left: 0; width: var(--table-view-width, auto); }
+.table-frame--sticky.is-wide .table-pager { z-index: 2; background: var(--color-bg); }
+/* A column with a minimum (Column.minWidth, such as Jobs' Role) raises the table's minimum to fit it: the table
+   scrolls sideways before that column is crushed. */
+.table-scroll .table { min-width: max(calc(var(--space-12) * 14), var(--table-min-now)); }
+@media (max-width: 1180px) {
+  .table .is-low { display: none; }
+  .table-frame { --table-min-now: var(--table-min-narrow, 0px); }
+}
+
+/* Sticky filters, toolbar and column headers. The block's negative top cancels the scroll container's top padding
+   (like the sticky Tabs), so it sits flush with the window's top; the headers stick right under it, at the block's
+   measured height (--table-head-top, set by Table.tsx). Both get the screen's background, and a hairline and a
+   soft shadow once stuck, so rows read as sliding under them. */
+.table-frame { width: 100%; min-width: 0; }
+.table-frame__sentinel { height: 1px; margin-bottom: -1px; }
+.table-top { display: flow-root; }
+.table-top--sticky {
+  position: sticky; top: calc(var(--tabs-sticky-offset, 0px) * -1); z-index: 4; background: var(--color-bg);
+  padding-top: var(--space-3); margin-top: calc(var(--space-3) * -1);
+}
+/* The block's background reaches over the screen's side padding, so rows scrolled sideways don't show beside it. */
+.table-top--sticky::before { content: ""; position: absolute; inset: 0 calc(var(--space-10) * -1); z-index: -1; background: var(--color-bg); }
+.table-top__filters { display: flow-root; }
+.table-top__filters > .filters, .table-top__filters > .jobs-filters { margin-bottom: var(--space-3); }
+.table-frame--sticky .table th { top: var(--table-head-top, 0px); z-index: 3; }
+.table-frame--sticky.is-stuck .table th { box-shadow: 0 1px 0 var(--color-border-strong), 0 8px 12px -12px var(--dialog-scrim); transition: box-shadow var(--motion-duration-base) var(--motion-easing-out); }
+
+/* Windowed rows (All, long lists): one line per row so every row has the same height. */
+.table--windowed td.is-wrap { white-space: nowrap; }
+.table--windowed .table__clamp { -webkit-line-clamp: 1; line-clamp: 1; }
+.table .table__spacer td { padding: 0; border: 0; }
+
+/* Pager: range on the left, rows per page, then Previous, page numbers and Next on the right. */
+.table-pager { display: flex; align-items: center; gap: var(--space-4); flex-wrap: wrap; padding: var(--space-3) 0 var(--space-2); }
+.table-pager__range { color: var(--color-text); font-variant-numeric: tabular-nums; }
+.table-pager__size { display: inline-flex; align-items: center; gap: var(--space-2); }
+.table-pager__select {
+  height: var(--button-height-sm); padding: 0 var(--space-2); border: var(--size-border) solid var(--color-border); border-radius: var(--radius-sm);
+  background: var(--color-bg); color: var(--color-text); font: inherit; font-size: var(--font-size-13); cursor: pointer;
+}
+.table-pager__pages { margin-left: auto; display: inline-flex; align-items: center; gap: var(--space-1); flex-wrap: wrap; }
+.table-pager__btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--space-1); min-width: var(--button-height-sm); height: var(--button-height-sm);
+  padding: 0 var(--space-2); border: var(--size-border) solid var(--color-border); border-radius: var(--radius-sm); background: transparent;
+  color: var(--color-text-muted); font: inherit; font-size: var(--font-size-13); font-variant-numeric: tabular-nums; cursor: pointer;
+}
+.table-pager__btn:hover:not(:disabled) { color: var(--color-text); background: var(--color-surface-hover); }
+.table-pager__btn[aria-current="page"] { color: var(--color-text); background: var(--color-surface); border-color: var(--color-border-strong); font-weight: var(--font-weight-medium); }
+.table-pager__btn:disabled { cursor: not-allowed; border-style: dashed; }
+.table-pager__btn:focus-visible, .table-pager__select:focus-visible { outline: var(--size-focus-ring) solid var(--color-focus); outline-offset: 1px; }
+.table-pager__gap { padding: 0 var(--space-1); color: var(--color-text-muted); }
+@media (max-width: 900px) {
+  .table-pager__word { display: none; }
+  .table-pager__pages { margin-left: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .table-frame--sticky.is-stuck .table th { transition: none; }
+}

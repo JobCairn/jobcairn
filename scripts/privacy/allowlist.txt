@@ -1,0 +1,4 @@
+# Privacy-scan allowlist. One entry per line: "<repo path> <rule>  # reason".
+# "#" starts a comment (whole line or trailing). Paths must match exactly (no globs).
+# The "denylist" rule can never be allowlisted; scan.mjs ignores and warns on such entries.
+docs/superpowers/plans/2026-10-08-workspace-core.md id-number  # fictional test digits in plan code samples

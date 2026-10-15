@@ -1,0 +1,177 @@
+{
+  "version": 3,
+  "title": "Acme Corp: what the role asks",
+  "voice_type": "slides",
+  "captions": "rail",
+  "scenes": [
+    {
+      "type": "title",
+      "cue": "Acme Corp wants",
+      "kicker": "JD walkthrough",
+      "title": "An AI Engineer for the clinic assistant",
+      "underline": "assistant",
+      "sources": [
+        {
+          "file": "companies/acme-corp/jobs/2026-01-12-ai-engineer/jd.md"
+        }
+      ]
+    },
+    {
+      "type": "icon-grid",
+      "cue": "The must-haves",
+      "headline": "What the role asks for",
+      "sources": [
+        {
+          "file": "companies/acme-corp/jobs/2026-01-12-ai-engineer/jd.md"
+        }
+      ],
+      "items": [
+        {
+          "label": "LLM agents",
+          "icon": "bot",
+          "cue": "LLM agents"
+        },
+        {
+          "label": "Retrieval with citations",
+          "icon": "search",
+          "cue": "Retrieval"
+        },
+        {
+          "label": "Evaluation with tests",
+          "icon": "list-checks",
+          "cue": "Evaluation"
+        },
+        {
+          "label": "Clear writing",
+          "icon": "pen-line",
+          "cue": "clear writing"
+        }
+      ]
+    },
+    {
+      "type": "flowchart",
+      "cue": "Here is how",
+      "headline": "How it fits together",
+      "direction": "lr",
+      "sources": [
+        {
+          "file": "companies/acme-corp/jobs/2026-01-12-ai-engineer/jd.md"
+        }
+      ],
+      "nodes": [
+        {
+          "id": "q",
+          "label": "Staff question",
+          "cue": "staff question"
+        },
+        {
+          "id": "agent",
+          "label": "Agent",
+          "cue": "goes to the agent"
+        },
+        {
+          "id": "docs",
+          "label": "Clinic policies",
+          "cue": "searches"
+        },
+        {
+          "id": "answer",
+          "label": "Answer with sources",
+          "cue": "comes back"
+        }
+      ],
+      "edges": [
+        [
+          "q",
+          "agent"
+        ],
+        [
+          "agent",
+          "docs"
+        ],
+        [
+          "docs",
+          "answer"
+        ]
+      ]
+    },
+    {
+      "type": "match",
+      "cue": "Now your match",
+      "headline": "Your evidence",
+      "sources": [
+        {
+          "file": "me/history/roles.md"
+        },
+        {
+          "file": "companies/acme-corp/jobs/2026-01-12-ai-engineer/jd.md"
+        }
+      ],
+      "rows": [
+        {
+          "ask": "Retrieval",
+          "status": "match",
+          "icon": "search",
+          "cue": "Retrieval is"
+        },
+        {
+          "ask": "Evaluation",
+          "status": "match",
+          "icon": "list-checks",
+          "cue": "Evaluation is"
+        },
+        {
+          "ask": "LLM agents",
+          "status": "match",
+          "icon": "bot",
+          "cue": "Agents are"
+        },
+        {
+          "ask": "Healthcare",
+          "status": "gap",
+          "icon": "shield",
+          "cue": "Healthcare is"
+        }
+      ]
+    },
+    {
+      "type": "quote",
+      "cue": "And the best part",
+      "text": "Visa sponsorship available for the right candidate.",
+      "by": "From the job ad",
+      "sources": [
+        {
+          "file": "companies/acme-corp/jobs/2026-01-12-ai-engineer/jd.md",
+          "quote": "Visa sponsorship available for the right candidate."
+        }
+      ]
+    },
+    {
+      "type": "checklist",
+      "cue": "So the plan",
+      "headline": "Before you apply",
+      "sources": [
+        {
+          "file": "me/history/roles.md"
+        }
+      ],
+      "items": [
+        {
+          "text": "Lead with evaluation",
+          "state": "yes",
+          "cue": "Lead"
+        },
+        {
+          "text": "Mention your agent",
+          "state": "yes",
+          "cue": "mention"
+        },
+        {
+          "text": "Apply this week",
+          "state": "yes",
+          "cue": "apply"
+        }
+      ]
+    }
+  ]
+}

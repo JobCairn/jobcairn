@@ -1,0 +1,13 @@
+{
+  "id": "0f1e2d3c-4b5a-6978-8a9b-0c1d2e3f4a5b",
+  "text": "Senior AI Engineer",
+  "hostedUrl": "https://jobs.lever.co/acme/0f1e2d3c-4b5a-6978-8a9b-0c1d2e3f4a5b",
+  "applyUrl": "https://jobs.lever.co/acme/0f1e2d3c-4b5a-6978-8a9b-0c1d2e3f4a5b/apply",
+  "createdAt": 1768435200000,
+  "workplaceType": "hybrid",
+  "categories": { "commitment": "Full-time", "location": "Sampletown", "team": "AI" },
+  "descriptionPlain": "Acme Corp is hiring an engineer to build agents.",
+  "lists": [{ "text": "What you'll do", "content": "<li>Build agents</li><li>Write evals</li>" }],
+  "additionalPlain": "Applicants must have full working rights in Australia.",
+  "salaryRange": { "min": 160000, "max": 180000, "currency": "AUD", "interval": "per-year-salary" }
+}

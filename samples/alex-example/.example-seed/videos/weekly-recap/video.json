@@ -1,0 +1,198 @@
+{
+  "schema": 1,
+  "type": "weekly-recap",
+  "type_version": 1,
+  "subject": {
+    "kind": "week",
+    "week": "2026-W41"
+  },
+  "options": {
+    "length_s": 50,
+    "review": "if_problems"
+  },
+  "created_at": "2026-10-11T11:47:44.727Z",
+  "updated_at": "2026-10-11T11:48:37.597Z",
+  "captions": {
+    "style": "rail",
+    "estimated": false,
+    "srt": "captions.srt",
+    "vtt": "captions.vtt"
+  },
+  "locked_facts": [],
+  "title": "Your week",
+  "status": "done",
+  "voice": {
+    "engine": "supertonic",
+    "voice": "F4",
+    "fell_back": false
+  },
+  "length_s": 32.73,
+  "renders": {
+    "draft": null,
+    "final": {
+      "path": "renders/final.mp4",
+      "at": "2026-10-11T11:48:35.891Z",
+      "duration_s": 32.733333,
+      "quality": "final"
+    }
+  },
+  "stages": {
+    "request": {
+      "status": "done",
+      "hash": "",
+      "at": "2026-10-11T11:47:44.728Z",
+      "ms": 0,
+      "message": "Saved"
+    },
+    "sources": {
+      "status": "done",
+      "hash": "",
+      "at": "2026-10-11T11:47:44.737Z",
+      "ms": 1,
+      "message": "1 file"
+    },
+    "write": {
+      "status": "done",
+      "hash": "",
+      "at": "2026-10-11T11:47:44.739Z",
+      "ms": 2,
+      "message": "Written from your numbers"
+    },
+    "check": {
+      "status": "done",
+      "hash": "",
+      "at": "2026-10-11T11:47:44.747Z",
+      "ms": 7,
+      "message": "No problems left"
+    },
+    "review": {
+      "status": "skipped",
+      "hash": "",
+      "at": "2026-10-11T11:47:44.748Z",
+      "ms": 0,
+      "message": "The script passed its checks, so it went straight on to the video"
+    },
+    "narrate": {
+      "status": "done",
+      "hash": "91cf70c849451c0b938f978ea71fe82b859655aebc47ee13aa580a75f2a58bdd",
+      "at": "2026-10-11T11:47:57.656Z",
+      "ms": 12916,
+      "message": "Narrated with supertonic while the script was checked",
+      "parts": [
+        {
+          "name": "Narrated 6 paragraphs, while the script was checked",
+          "ms": 12916
+        }
+      ]
+    },
+    "captions": {
+      "status": "done",
+      "hash": "595da5f89206aba23c531075bbe6d74c0a8fae33cf7cd17cfb3e5241525d5d56",
+      "at": "2026-10-11T11:48:00.771Z",
+      "ms": 3114,
+      "message": "23 caption lines"
+    },
+    "media": {
+      "status": "done",
+      "hash": "",
+      "at": "2026-10-11T11:48:02.793Z",
+      "ms": 2021,
+      "message": "14 sound effects",
+      "parts": [
+        {
+          "name": "Pictures and sound",
+          "ms": 2021
+        }
+      ]
+    },
+    "expand": {
+      "status": "done",
+      "hash": "c87a2fc360e9977fe8dee44cb04bb494aebda0ea65a06aaef3cb0d451ca7db9d",
+      "at": "2026-10-11T11:48:02.801Z",
+      "ms": 7,
+      "message": "6 scenes, 33 seconds"
+    },
+    "lint": {
+      "status": "done",
+      "hash": "c87a2fc360e9977fe8dee44cb04bb494aebda0ea65a06aaef3cb0d451ca7db9d",
+      "at": "2026-10-11T11:48:11.114Z",
+      "ms": 8311,
+      "message": "8 warnings",
+      "parts": [
+        {
+          "name": "Quick lint and layout check",
+          "ms": 8310
+        }
+      ]
+    },
+    "draft": {
+      "status": "skipped",
+      "hash": "",
+      "at": "2026-10-11T11:48:11.114Z",
+      "ms": 0,
+      "message": "Not needed for the final video"
+    },
+    "final": {
+      "status": "done",
+      "hash": "c87a2fc360e9977fe8dee44cb04bb494aebda0ea65a06aaef3cb0d451ca7db9d",
+      "at": "2026-10-11T11:48:37.595Z",
+      "ms": 26480,
+      "message": "33 seconds, 15 QA stills",
+      "parts": [
+        {
+          "name": "Render",
+          "ms": 24668
+        },
+        {
+          "name": "Label the file",
+          "ms": 65
+        },
+        {
+          "name": "Check the file",
+          "ms": 42
+        },
+        {
+          "name": "Contact sheet",
+          "ms": 523
+        },
+        {
+          "name": "QA stills",
+          "ms": 1079
+        },
+        {
+          "name": "Caption sync",
+          "ms": 101
+        }
+      ]
+    },
+    "save": {
+      "status": "done",
+      "hash": "",
+      "at": "2026-10-11T11:48:37.597Z",
+      "ms": 0,
+      "message": "Saved"
+    }
+  },
+  "issues": {
+    "errors": 0,
+    "warnings": 0
+  },
+  "sources": [
+    "recaps/2026-W41/stats.json"
+  ],
+  "error": "",
+  "custom": {},
+  "autofix": {
+    "repairs": [],
+    "claude_passes": 0,
+    "claude_fixed": 0,
+    "at": "2026-10-11T11:47:44.745Z"
+  },
+  "check_notes": [],
+  "last_run": {
+    "phase": "final",
+    "status": "done",
+    "started_at": "2026-10-11T11:47:44.727Z",
+    "total_ms": 52870
+  }
+}

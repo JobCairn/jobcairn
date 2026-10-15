@@ -1,0 +1,111 @@
+{
+  "version": 2,
+  "title": "Your week",
+  "voice_type": "slides",
+  "scenes": [
+    {
+      "type": "title",
+      "cue": "Here is",
+      "kicker": "Weekly recap",
+      "title": "Your week",
+      "sources": [
+        {
+          "file": "recaps/2026-W41/stats.json"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "cue": "This week",
+      "value": 6,
+      "label": "New jobs found",
+      "source": "Your job records for this week",
+      "sources": [
+        {
+          "file": "recaps/2026-W41/stats.json"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "cue": "You sent",
+      "value": 2,
+      "label": "Applications sent",
+      "source": "Your job timelines for this week",
+      "sources": [
+        {
+          "file": "recaps/2026-W41/stats.json"
+        }
+      ]
+    },
+    {
+      "type": "bullet-build",
+      "cue": "You had",
+      "headline": "Replies and interviews",
+      "sources": [
+        {
+          "file": "recaps/2026-W41/stats.json"
+        }
+      ],
+      "items": [
+        {
+          "text": "6 replies",
+          "cue": "replies"
+        },
+        {
+          "text": "1 interview",
+          "cue": "interview"
+        }
+      ]
+    },
+    {
+      "type": "bullet-build",
+      "cue": "Of the new",
+      "headline": "The sponsorship mix",
+      "sources": [
+        {
+          "file": "recaps/2026-W41/stats.json"
+        }
+      ],
+      "items": [
+        {
+          "text": "2 offer sponsorship",
+          "cue": "offer"
+        },
+        {
+          "text": "3 don't say",
+          "cue": "say"
+        },
+        {
+          "text": "1 need citizens, residents or cleared staff",
+          "cue": "citizens"
+        }
+      ]
+    },
+    {
+      "type": "recap-card",
+      "cue": "Next steps",
+      "headline": "Next steps",
+      "sources": [
+        {
+          "file": "recaps/2026-W41/stats.json"
+        }
+      ],
+      "closing": "See you next week.",
+      "items": [
+        {
+          "text": "Prepare for the interview: Brightwater Analytics",
+          "cue": "First"
+        },
+        {
+          "text": "Finish the application: Kestrel Robotics",
+          "cue": "Second"
+        },
+        {
+          "text": "Decide whether to apply: Example Labs",
+          "cue": "Third"
+        }
+      ]
+    }
+  ]
+}

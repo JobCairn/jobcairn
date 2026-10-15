@@ -1,0 +1,64 @@
+{
+  "schema": 1,
+  "contact": {
+    "name": "Alex Example",
+    "email": "alex@example.com",
+    "phone": "0491 570 006",
+    "city": "Sampletown NSW",
+    "links": [
+      "https://example.com/alex"
+    ]
+  },
+  "work_rights": {
+    "status": "needs_sponsorship",
+    "visa_subclass": "485",
+    "visa_expiry": "2028-06-30",
+    "notes": ""
+  },
+  "targets": {
+    "roles": [
+      "AI Engineer",
+      "Software Engineer (LLM)"
+    ],
+    "keywords": [
+      "agents",
+      "RAG",
+      "TypeScript"
+    ],
+    "seniority": "Senior",
+    "job_types": [
+      "full_time",
+      "contract"
+    ]
+  },
+  "locations": [
+    {
+      "place": "Sampletown NSW",
+      "modes": [
+        "onsite",
+        "hybrid",
+        "remote"
+      ],
+      "will_relocate": false
+    },
+    {
+      "place": "Remote Australia",
+      "modes": [
+        "remote"
+      ],
+      "will_relocate": false
+    }
+  ],
+  "salary": {
+    "min": 100000,
+    "currency": "AUD",
+    "includes_super": true
+  },
+  "industries": {
+    "include": [],
+    "exclude": []
+  },
+  "skip_companies": [],
+  "skip_big_tech": true,
+  "custom": {}
+}

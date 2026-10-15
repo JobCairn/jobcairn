@@ -1,0 +1,22 @@
+/* Install rows inside a setup card (ToolInstall). Same rhythm as the csetup steps: hairline between items, no new surface. */
+.tinstall { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
+.tinstall__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.tinstall__item { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-2) 0; min-width: 0; }
+.tinstall__item + .tinstall__item { border-top: var(--size-border) solid var(--color-border); }
+.tinstall__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); flex-wrap: wrap; }
+.tinstall__runs code { font-size: var(--font-size-12); overflow-wrap: anywhere; }
+.tinstall__progress { display: flex; align-items: center; gap: var(--space-2); min-width: 0; }
+.tinstall__line { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--font-size-12); }
+.tinstall__dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--color-accent); animation: tinstall-pulse 1.2s ease-in-out infinite; }
+@keyframes tinstall-pulse { 50% { opacity: 0.35; } }
+@media (prefers-reduced-motion: reduce) { .tinstall__dot { animation: none; } }
+.tinstall__error { color: var(--color-danger); }
+.tinstall__ok { color: var(--color-success); }
+.tinstall__brew { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-3); border-radius: var(--radius-md); background: var(--color-surface); border: var(--size-border) solid var(--color-border); }
+.tinstall__cmd { overflow-x: auto; white-space: pre; }
+.tinstall + .tinstall__list > .tinstall__item:first-child { border-top: var(--size-border) solid var(--color-border); }
+/* "Run it in Terminal" after a failed install (TerminalFix.tsx): one block per way, lines kept as typed. */
+.tinstall__option { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+.tinstall__option + .tinstall__option { padding-top: var(--space-2); border-top: var(--size-border) solid var(--color-border); }
+.tinstall__lines { display: block; }
+.tinstall__elapsed { flex: none; font-size: var(--font-size-12); font-variant-numeric: tabular-nums; }

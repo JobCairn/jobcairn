@@ -1,0 +1,14 @@
+{
+  "name": "@careeros/mail",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "dependencies": {
+    "@careeros/brand": "0.1.0", "@careeros/core": "0.1.0",
+    "imapflow": "2.2.11",
+    "mailparser": "3.9.36",
+    "nodemailer": "10.0.14",
+    "sanitize-html": "2.18.0"
+  }
+}

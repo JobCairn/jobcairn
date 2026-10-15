@@ -1,0 +1,9 @@
+{
+  "name": "@careeros/contract",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "dependencies": { "@careeros/brand": "0.1.0" },
+  "devDependencies": { "@careeros/mail": "0.1.0" }
+}

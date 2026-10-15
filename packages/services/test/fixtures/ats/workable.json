@@ -1,0 +1,12 @@
+{
+  "shortcode": "AB12CD34EF",
+  "title": "Machine Learning Engineer",
+  "remote": false,
+  "workplace": "on_site",
+  "type": "full",
+  "published": "2026-01-11T00:00:00.000Z",
+  "location": { "city": "Sampletown", "region": "New South Wales", "country": "Australia", "countryCode": "AU" },
+  "description": "<p>Join Acme Corp's ML team.</p>",
+  "requirements": "<ul><li>Python</li><li>PyTorch</li></ul>",
+  "benefits": "<p>Hybrid Fridays.</p>"
+}

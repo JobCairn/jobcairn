@@ -1,0 +1,155 @@
+/* Video review: calm, specific problem lists (not a red alarm box), a status line, and hints for empty fields. */
+.video-head__sub { gap: var(--space-2); flex-wrap: wrap; align-items: center; }
+.video-status { font-weight: var(--font-weight-medium); }
+
+.video-problems { border-color: var(--color-border-strong); border-left: 3px solid var(--color-warning); }
+.video-problems__title { margin: 0; font-weight: var(--font-weight-medium); }
+.video-problems__list { gap: var(--space-2); }
+.video-problem { display: flex; align-items: flex-start; gap: var(--space-2); }
+.video-problem > svg, .video-problem > .icon { flex: none; margin-top: 3px; }
+.video-problem--error > svg, .video-problem--error > .icon { color: var(--color-warning); }
+.video-problem--warning > svg, .video-problem--warning > .icon { color: var(--color-text-muted); }
+.video-problem--format > svg, .video-problem--format > .icon { color: var(--color-accent); }
+
+.video-scene[data-problem] { border-left: 3px solid var(--color-warning); }
+.video-scene__issues { display: flex; flex-direction: column; gap: var(--space-1); }
+
+.video-tech summary { cursor: pointer; color: var(--color-text-muted); width: fit-content; border-radius: var(--radius-sm); }
+.video-tech summary:hover { color: var(--color-text); }
+.video-tech summary:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+.video-tech[open] { display: flex; flex-direction: column; gap: var(--space-2); }
+.video-tech__list { margin: 0; padding-left: var(--space-6); max-height: 16rem; overflow: auto; }
+.video-tech__list code { font-size: var(--font-size-12); color: var(--color-text-muted); overflow-wrap: anywhere; white-space: pre-wrap; }
+
+.video-field-hint {
+  display: flex; flex-direction: column; gap: var(--space-1); padding: var(--space-2) var(--space-3);
+  border: 1px dashed var(--color-border-strong); border-radius: var(--radius-md);
+}
+
+/* Making the video stopped: says so first, with the way forward. Calm, not an alarm box. */
+.video-stopped { display: flex; flex-direction: column; gap: var(--space-3); border-color: var(--color-border-strong); border-left: 3px solid var(--color-danger); }
+.video-stopped__head { display: flex; align-items: flex-start; gap: var(--space-3); }
+.video-stopped__head > svg, .video-stopped__head > .icon { flex: none; margin-top: 6px; color: var(--color-danger); }
+.video-stopped__text { gap: var(--space-1); min-width: 0; }
+.video-stopped__text h2 { margin: 0; }
+.video-stopped__actions { gap: var(--space-2); flex-wrap: wrap; padding-left: calc(var(--space-3) + 16px); }
+.video-stopped__details { padding-left: calc(var(--space-3) + 16px); }
+.video-stopped__facts { display: grid; grid-template-columns: max-content 1fr; gap: var(--space-1) var(--space-4); margin: var(--space-2) 0 0; }
+.video-stopped__facts dt { color: var(--color-text-muted); }
+.video-stopped__facts dd { margin: 0; overflow-wrap: anywhere; }
+.video-script-later > summary { cursor: pointer; width: fit-content; }
+.video-details summary:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; border-radius: var(--radius-sm); }
+
+/* One progress panel: Claude's steps sit under the step they belong to; all steps as a compact list. */
+.video-run__left { flex: none; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.vrun-sub { margin-left: calc(8px + var(--space-3)); padding-left: var(--space-3); border-left: 1px solid var(--color-border-strong); }
+.vrun-sub__steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.vrun-sub__step { display: flex; align-items: center; gap: var(--space-2); font-size: var(--font-size-13); color: var(--color-text-muted); min-width: 0; }
+.vrun-sub__step > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vrun-sub__step--active { color: var(--color-text); }
+.vstep { list-style: none; margin: var(--space-2) 0 0; padding: 0; display: flex; flex-direction: column; gap: 2px; max-width: 32rem; }
+.vstep__row { display: grid; grid-template-columns: 16px 1fr auto; column-gap: var(--space-3); font-size: var(--font-size-13); }
+.vstep__mark { display: inline-grid; place-items: center; height: 22px; }
+.vstep__label, .vstep__time { line-height: 22px; }
+.vstep__time { color: var(--color-text-muted); font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+.vstep__row--next .vstep__label { color: var(--color-text-muted); }
+.vstep__row--current .vstep__label { font-weight: var(--font-weight-medium); }
+.vstep__row--stopped .vstep__label { color: var(--color-danger); }
+.vstep__dot { width: 8px; height: 8px; border-radius: var(--radius-full); border: 1.5px solid var(--color-border-strong); }
+.video-run__steps summary:hover { color: var(--color-text); }
+.video-run__steps summary:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; border-radius: var(--radius-sm); }
+
+/* "Delivered with N notes": honest about what the check found, without stopping the video. */
+.video-notes { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-1) var(--space-3); }
+.video-notes__more { flex: 1 1 100%; }
+.video-notes__more[open] { display: flex; flex-direction: column; gap: var(--space-2); }
+.video-notes__more summary { width: fit-content; }
+.video-notes__list { margin: 0; padding-left: var(--space-5); display: flex; flex-direction: column; gap: var(--space-1); }
+
+/* Script review: a readable script. Each scene is its narration as text beside a small picture of its slide;
+   click a scene to edit it in place. One sticky bar holds the actions. */
+.vreview { gap: var(--space-4); }
+.vreview__head { gap: var(--space-1); }
+.vreview__head h2 { margin: 0; }
+.vscenes { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; border-top: var(--size-border) solid var(--color-border); }
+.vscene {
+  display: grid; grid-template-columns: 2rem minmax(0, 1fr) 13rem; gap: var(--space-4); align-items: start;
+  padding: var(--space-4) 0; border-bottom: var(--size-border) solid var(--color-border);
+}
+.vscene[data-problem] .vscene__num { color: var(--color-warning); border-color: var(--color-warning); }
+.vscene__num {
+  display: inline-grid; place-items: center; width: 1.75rem; height: 1.75rem; border-radius: var(--radius-full);
+  border: var(--size-border) solid var(--color-border-strong); color: var(--color-text-muted);
+  font-size: var(--font-size-12); font-variant-numeric: tabular-nums;
+}
+.vscene__body { gap: var(--space-2); min-width: 0; }
+.vscene__read {
+  position: relative; display: block; width: 100%; text-align: left; font: inherit; color: inherit; cursor: text;
+  background: none; border: var(--size-border) solid transparent; border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3); margin: calc(-1 * var(--space-2)) calc(-1 * var(--space-3));
+  width: calc(100% + 2 * var(--space-3));
+}
+.vscene__read:hover { background: var(--color-surface-hover); border-color: var(--color-border); }
+.vscene__read:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+.vscene__script { display: block; max-width: 68ch; line-height: var(--font-line-height-body); white-space: pre-wrap; overflow-wrap: anywhere; }
+.vscene__hint {
+  position: absolute; top: var(--space-2); right: var(--space-2); display: inline-flex; align-items: center; gap: var(--space-1);
+  font-size: var(--font-size-12); color: var(--color-text-muted); opacity: 0; transition: opacity 150ms ease;
+}
+.vscene__read:hover .vscene__hint, .vscene__read:focus-visible .vscene__hint { opacity: 1; }
+.vscene__edit { gap: var(--space-2); }
+.vscene__edit textarea { min-height: 6rem; }
+.vscene__onscreen { margin-top: var(--space-1); }
+.vscene__fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); gap: var(--space-2) var(--space-3); }
+.vscene__sources summary { width: fit-content; }
+.vscene__sources .video-sources { margin-top: var(--space-1); }
+
+/* The slide: always the dark Graphite palette (the element carries data-theme="graphite"), as the video is dark
+   whatever the app theme. Video type ramp scaled down: small caps kicker, heavy title, muted subtitle, points. */
+.vslide {
+  aspect-ratio: 16 / 9; width: 100%; box-sizing: border-box; overflow: hidden;
+  display: flex; flex-direction: column; justify-content: center; gap: 4px; padding: 10px 14px;
+  background: var(--color-bg); border: var(--size-border) solid var(--color-border); border-radius: var(--radius-md); color: var(--color-text);
+}
+.vslide__kicker { font-size: var(--font-size-11); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-accent); }
+.vslide__title { font-weight: 800; font-size: var(--font-size-14); line-height: 1.15; letter-spacing: -0.01em; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.vslide__sub { font-size: var(--font-size-11); line-height: 1.35; color: var(--color-text-muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.vslide__points { display: flex; flex-direction: column; gap: 2px; margin-top: 2px; }
+.vslide__point { font-size: var(--font-size-11); line-height: 1.3; padding-left: 8px; position: relative; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vslide__point::before { content: ""; position: absolute; left: 0; top: 0.55em; width: 3px; height: 3px; border-radius: 50%; background: var(--color-accent); }
+.vslide__more, .vslide__empty { font-size: var(--font-size-11); color: var(--color-text-muted); }
+
+/* One sticky action bar at the foot of the review. */
+.vreview__bar {
+  position: sticky; bottom: 0; z-index: 2; display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2) var(--space-3);
+  padding: var(--space-3) 0; margin-top: var(--space-2);
+  background: var(--color-bg); border-top: var(--size-border) solid var(--color-border);
+  /* Covers the screen's own bottom padding, so nothing shows below the bar while it sticks. */
+  box-shadow: 0 var(--space-12) 0 var(--color-bg);
+}
+.vreview__bar .action__why { color: var(--color-text-muted); display: inline-flex; align-items: center; gap: var(--space-1); }
+
+@media (max-width: 900px) {
+  .vscene { grid-template-columns: 2rem minmax(0, 1fr); }
+  .vscene .vslide { grid-column: 2; max-width: 18rem; }
+}
+
+/* Narrow windows: the action bar stops sticking (it would cover the script), and the progress head wraps. */
+@media (max-width: 640px) {
+  .vreview__bar { position: static; box-shadow: none; }
+  .vreview__bar .grow { display: none; }
+  .vreview__bar .action__why { flex: 1 1 100%; order: -1; }
+}
+@media (max-width: 900px) {
+  .video-run__head { flex-wrap: wrap; }
+  .video-run__text { flex: 1 1 60%; }
+  .video-run__where { white-space: normal; }
+  .video-run__bar { flex: 1 1 8rem; }
+}
+
+/* Time taken: the last run's slowest steps. Reuses the step list; parts sit under their step in muted text. */
+.video-time__body { display: flex; flex-direction: column; gap: var(--space-1); margin-top: var(--space-2); }
+.video-time__list { margin-top: 0; }
+.video-time__row { grid-template-columns: 1fr auto; }
+.video-time__parts { display: block; color: var(--color-text-muted); font-size: var(--font-size-12); line-height: 18px; overflow-wrap: anywhere; }
+.video-time--embedded { margin-top: var(--space-3); }

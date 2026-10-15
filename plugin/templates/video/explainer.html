@@ -1,0 +1,191 @@
+<!doctype html>
+<!--
+  JobCairn explainer template: title, bullet build, concept flow, code walkthrough, recap.
+  Adapted from HyperFrames (Apache-2.0): hyperframes-core composition contract,
+  faceless-explainer shot method, motion doctrine. See NOTICE.md.
+
+  HOW TO FILL (manual fallback when the spec expander is not available):
+  1. Copy this file to <video dir>/index.html with theme.css and kit.js beside it.
+  2. Replace every {{SLOT}}. Delete a whole <section> to drop a scene, then delete its
+     block in the script (marked "S2", "S3", ...). Keep ids, classes and data-* names.
+  3. Timing: each scene's data-start / data-duration and the root data-duration come from
+     narration.timing.json ("scenes", "total"). Scene N+1 overlaps scene N by 0.6s (the seam).
+  4. Cues: each reveal waits for a word or short phrase in the narration (CUE slots).
+     If the phrase is not found in TRANSCRIPT, the fallback seconds are used.
+  5. Run `npx hyperframes transcribe narration.wav` to fill TRANSCRIPT (local Whisper).
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>{{TITLE}}</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <link rel="stylesheet" href="theme.css" />
+    <style>
+      .bullets { margin-top: 56px; display: flex; flex-direction: column; gap: 34px; }
+      .bullet { display: flex; align-items: baseline; gap: 28px; }
+      .bullet .label { min-width: 64px; color: #f2b441; }
+      .flow { margin-top: 64px; display: flex; align-items: center; }
+      .node { width: 430px; min-height: 230px; display: flex; flex-direction: column; gap: 16px; }
+      .node .h { font-weight: 700; font-size: 44px; line-height: 1.1; }
+      .edge { display: block; width: 120px; height: 6px; background: #f2b441; transform-origin: left center; }
+      .take { margin-top: 56px; }
+      .split { margin-top: 48px; display: flex; gap: 56px; align-items: flex-start; }
+      .split .code { width: 1080px; }
+      .notes { position: relative; width: 500px; height: 420px; }
+      .note { position: absolute; left: 0; top: 0; width: 100%; }
+      .trio { margin-top: 56px; display: flex; gap: 40px; }
+      .trio .card { flex: 1; min-height: 300px; display: flex; flex-direction: column; gap: 18px; }
+      .rule { display: block; width: 240px; height: 8px; background: #f2b441; transform-origin: left center; margin: 36px 0; }
+      .center { justify-content: center; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-width="1920" data-height="1080" data-duration="{{TOTAL}}">
+      <div id="bg" class="bg"><div class="bg-glow"></div><div class="bg-grid"></div></div>
+
+      <!-- S1 TITLE: the question this video answers, in the viewer's words -->
+      <section id="s1" class="clip scene" data-start="0" data-duration="{{S1_DUR}}" data-track-index="1">
+        <div id="s1-stage" class="stage center">
+          <p id="s1-kicker" class="kicker">{{KICKER e.g. "JD gap · 4 min"}}</p>
+          <span id="s1-rule" class="rule"></span>
+          <h1 id="s1-title" class="hero">{{TITLE as a plain question or claim}}</h1>
+          <p id="s1-sub" class="lede" style="margin-top: 32px">{{ONE LINE: what you will be able to do after}}</p>
+        </div>
+      </section>
+
+      <!-- S2 BULLET BUILD: 3 parallel points, each revealed when the voice names it -->
+      <section id="s2" class="clip scene" data-start="{{S2_START}}" data-duration="{{S2_DUR}}" data-track-index="1">
+        <div id="s2-stage" class="stage">
+          <p class="step">02 / 05</p>
+          <h2 id="s2-head" class="h2" style="margin-top: 20px">{{S2 HEADLINE as a full claim}}</h2>
+          <div class="bullets">
+            <div id="s2-b1" class="bullet"><span class="label">01</span><p class="body">{{POINT 1, under 9 words}}</p></div>
+            <div id="s2-b2" class="bullet"><span class="label">02</span><p class="body">{{POINT 2}}</p></div>
+            <div id="s2-b3" class="bullet"><span class="label">03</span><p class="body">{{POINT 3}}</p></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- S3 CONCEPT FLOW: A -> B -> C, the diagram grows one node per cue -->
+      <section id="s3" class="clip scene" data-start="{{S3_START}}" data-duration="{{S3_DUR}}" data-track-index="1">
+        <div id="s3-stage" class="stage">
+          <p class="step">03 / 05</p>
+          <h2 class="h2" style="margin-top: 20px">{{S3 HEADLINE}}</h2>
+          <div class="flow">
+            <div id="s3-n1" class="card node"><p class="label">{{STEP LABEL 1}}</p><p class="h">{{NODE 1}}</p></div>
+            <span id="s3-e1" class="edge"></span>
+            <div id="s3-n2" class="card node"><p class="label">{{STEP LABEL 2}}</p><p class="h">{{NODE 2}}</p></div>
+            <span id="s3-e2" class="edge"></span>
+            <div id="s3-n3" class="card node"><p class="label">{{STEP LABEL 3}}</p><p class="h accent">{{NODE 3}}</p></div>
+          </div>
+          <p id="s3-take" class="lede take">{{ONE-LINE TAKEAWAY}}</p>
+        </div>
+      </section>
+
+      <!-- S4 CODE WALKTHROUGH: max 8 lines, the bar walks the lines the voice explains -->
+      <section id="s4" class="clip scene" data-start="{{S4_START}}" data-duration="{{S4_DUR}}" data-track-index="1">
+        <div id="s4-stage" class="stage">
+          <p class="step">04 / 05</p>
+          <h2 class="h2" style="margin-top: 20px">{{S4 HEADLINE}}</h2>
+          <div class="split">
+            <!-- Wrap tokens in <span class="k|s|n|f|c"> for color. One .ln per line. No <br>. -->
+            <div id="s4-code" class="code"><div id="s4-hl" class="code-hl"></div><span class="ln">{{CODE LINE 1}}</span><span class="ln">{{CODE LINE 2}}</span><span class="ln">{{CODE LINE 3}}</span><span class="ln">{{CODE LINE 4}}</span><span class="ln">{{CODE LINE 5}}</span><span class="ln">{{CODE LINE 6}}</span></div>
+            <div class="notes">
+              <div id="s4-n1" class="note card"><p class="label">{{LINE REF e.g. "line 2"}}</p><p class="body">{{NOTE 1}}</p></div>
+              <div id="s4-n2" class="note card"><p class="label">{{LINE REF}}</p><p class="body">{{NOTE 2}}</p></div>
+              <div id="s4-n3" class="note card"><p class="label">{{LINE REF}}</p><p class="body">{{NOTE 3}}</p></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- S5 RECAP: three takeaways, then one closing line after a short stillness -->
+      <section id="s5" class="clip scene" data-start="{{S5_START}}" data-duration="{{S5_DUR}}" data-track-index="1">
+        <div id="s5-stage" class="stage">
+          <p class="step">05 / 05</p>
+          <h2 class="h2" style="margin-top: 20px">{{RECAP HEADLINE}}</h2>
+          <div class="trio">
+            <div id="s5-c1" class="card"><p class="kicker">01</p><p class="body">{{TAKEAWAY 1}}</p></div>
+            <div id="s5-c2" class="card"><p class="kicker">02</p><p class="body">{{TAKEAWAY 2}}</p></div>
+            <div id="s5-c3" class="card"><p class="kicker">03</p><p class="body">{{TAKEAWAY 3}}</p></div>
+          </div>
+          <p id="s5-close" class="lede" style="margin-top: 48px">{{CLOSING LINE: what to practise next}}</p>
+        </div>
+      </section>
+
+      <audio id="narration" src="narration.wav" data-start="0" data-track-index="10"></audio>
+      <div id="captions" class="caption-band"></div>
+      <div id="fade" class="fade"></div>
+    </div>
+
+    <script>
+      // Filled by `npx hyperframes transcribe narration.wav`. Keep this exact line shape.
+      const TRANSCRIPT = [];
+    </script>
+    <script src="kit.js"></script>
+    <script>
+      const K = window.CareerKit;
+      const W = K.clean(TRANSCRIPT);
+      const S = K.starts(["s1", "s2", "s3", "s4", "s5"]);
+      const END = parseFloat(document.getElementById("root").getAttribute("data-duration"));
+      const SEAM = 0.6; // must match narrate.py --transition
+      const at = (phrase, after, fallback) => K.cue(W, phrase, after, fallback);
+      const LINE = 54; // .code line-height in px
+      const tl = gsap.timeline({ paused: true });
+
+      // S1: kicker, rule, title land first. The subtitle waits for its words.
+      K.reveal(tl, "#s1-kicker", 0.2, { y: 0, x: -30 }, 0.5);
+      K.draw(tl, "#s1-rule", 0.35, 0.6);
+      K.reveal(tl, "#s1-title", 0.45, { y: 44 }, 0.8);
+      K.reveal(tl, "#s1-sub", at("{{S1 CUE}}", 0.5, 2.0), { y: 20 });
+
+      // S2
+      K.seam(tl, "#s1-stage", "#s2-stage", S.s2, "left", SEAM);
+      K.reveal(tl, "#s2-b1", at("{{S2 CUE 1}}", S.s2, S.s2 + 1.2), { x: -40, y: 0 });
+      K.reveal(tl, "#s2-b2", at("{{S2 CUE 2}}", S.s2, S.s2 + 3.2), { x: -40, y: 0 });
+      K.reveal(tl, "#s2-b3", at("{{S2 CUE 3}}", S.s2, S.s2 + 5.2), { x: -40, y: 0 });
+
+      // S3: each edge draws just before its node lands.
+      K.seam(tl, "#s2-stage", "#s3-stage", S.s3, "left", SEAM);
+      const n1 = at("{{S3 CUE 1}}", S.s3, S.s3 + 1.0);
+      const n2 = at("{{S3 CUE 2}}", n1, S.s3 + 3.0);
+      const n3 = at("{{S3 CUE 3}}", n2, S.s3 + 5.0);
+      K.reveal(tl, "#s3-n1", n1, { scale: 0.92, y: 0 });
+      K.draw(tl, "#s3-e1", n2 - 0.3, 0.4);
+      K.reveal(tl, "#s3-n2", n2, { x: -30, y: 0 });
+      K.draw(tl, "#s3-e2", n3 - 0.3, 0.4);
+      K.reveal(tl, "#s3-n3", n3, { x: -30, y: 0 });
+      K.reveal(tl, "#s3-take", at("{{S3 CUE TAKEAWAY}}", n3, n3 + 2.0) + 0.4, { y: 16 }); // 0.4s stillness first
+
+      // S4: code lands with the stage, then the bar walks lines on cue.
+      K.seam(tl, "#s3-stage", "#s4-stage", S.s4, "left", SEAM);
+      K.reveal(tl, "#s4-code", S.s4 + 0.5, { y: 24 }, 0.5);
+      const c1 = at("{{S4 CUE 1}}", S.s4, S.s4 + 1.6);
+      const c2 = at("{{S4 CUE 2}}", c1, S.s4 + 4.0);
+      const c3 = at("{{S4 CUE 3}}", c2, S.s4 + 6.4);
+      const L = [{{LINE FOR NOTE 1}}, {{LINE FOR NOTE 2}}, {{LINE FOR NOTE 3}}].map((n) => (n - 1) * LINE);
+      tl.fromTo("#s4-hl", { opacity: 0, y: L[0] }, { opacity: 1, y: L[0], duration: 0.3, ease: "power2.out" }, c1);
+      tl.to("#s4-hl", { y: L[1], duration: 0.45, ease: "power3.inOut" }, c2);
+      tl.to("#s4-hl", { y: L[2], duration: 0.45, ease: "power3.inOut" }, c3);
+      K.reveal(tl, "#s4-n1", c1, { x: 30, y: 0 }, 0.5);
+      tl.to("#s4-n1", { opacity: 0, y: -16, duration: 0.25, ease: "power2.in" }, c2 - 0.05);
+      K.reveal(tl, "#s4-n2", c2 + 0.15, { x: 30, y: 0 }, 0.5);
+      tl.to("#s4-n2", { opacity: 0, y: -16, duration: 0.25, ease: "power2.in" }, c3 - 0.05);
+      K.reveal(tl, "#s4-n3", c3 + 0.15, { x: 30, y: 0 }, 0.5);
+
+      // S5: the conclusion rises (reserved "up" vector), closing line after a pause.
+      K.seam(tl, "#s4-stage", "#s5-stage", S.s5, "up", SEAM);
+      const r1 = at("{{S5 CUE 1}}", S.s5, S.s5 + 1.0);
+      K.reveal(tl, "#s5-c1", r1, { y: 36 });
+      K.reveal(tl, "#s5-c2", at("{{S5 CUE 2}}", r1, S.s5 + 2.6), { y: 36 });
+      const r3 = at("{{S5 CUE 3}}", r1, S.s5 + 4.2);
+      K.reveal(tl, "#s5-c3", r3, { y: 36 });
+      K.reveal(tl, "#s5-close", Math.min(at("{{S5 CUE CLOSE}}", r3, r3 + 2.0) + 0.4, END - 2.0), { y: 16 });
+
+      K.captions(tl, W, { until: END - 0.7 });
+      tl.to("#fade", { opacity: 1, duration: 0.6, ease: "power2.in" }, END - 0.7);
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>

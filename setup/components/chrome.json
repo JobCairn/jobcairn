@@ -1,0 +1,2 @@
+{ "id": "chrome", "name": "Google Chrome", "order": 30, "required": true, "why": "Reads job sites in your own Chrome profile and renders videos.", "docs": "https://www.google.com/chrome/",
+  "platforms": { "darwin": { "check": "test -d '/Applications/Google Chrome.app'", "install": ["brew install --cask google-chrome"] } } }

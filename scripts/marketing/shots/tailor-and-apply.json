@@ -1,0 +1,161 @@
+{
+  "slug": "tailor-and-apply",
+  "title": "Tailor and apply with JobCairn",
+  "resolution": "720p",
+  "layoutWidth": 1280,
+  "theme": "dark",
+  "clock": "2026-01-15T23:00:00Z",
+  "maxMB": 5.5,
+  "replace": [
+    [
+      "CareerOS",
+      "JobCairn"
+    ]
+  ],
+  "cards": {
+    "title": {
+      "heading": "Tailor and apply",
+      "sub": "A resume shaped for each job, sent only when you say so."
+    },
+    "end": {
+      "heading": "Apply with care, not in bulk.",
+      "sub": "JobCairn. Your job search, in one place."
+    },
+    "disclaimer": "An example job search. Every person and company shown is made up."
+  },
+  "poster": {
+    "beat": "studio",
+    "at": 3.0
+  },
+  "beats": [
+    {
+      "id": "title",
+      "card": "title",
+      "voice": "Here is how JobCairn helps you apply well.",
+      "lead": 1.3,
+      "tail": 1.0
+    },
+    {
+      "id": "tailor",
+      "route": "#/job/acme-corp/2026-01-12-ai-engineer?tab=files",
+      "voice": "Claude tailors your resume and cover letter to the ad. Every line traces back to your own history.",
+      "steps": [
+        {
+          "at": 0.3,
+          "hover": "Tailored resume",
+          "exact": true
+        },
+        {
+          "at": 2.4,
+          "role": "button",
+          "name": "Edit resume"
+        },
+        {
+          "at": 4.4,
+          "scale": 1.25,
+          "ms": 1100,
+          "zoom": "Live preview of the PDF layout."
+        }
+      ],
+      "lead": 0.3,
+      "tail": 1.0
+    },
+    {
+      "id": "studio",
+      "route": "#/resume/acme-corp/2026-01-12-ai-engineer/resume.md",
+      "voice": "Edit it with a live preview. Pick a template in Resume Studio.",
+      "steps": [
+        {
+          "at": 0.2,
+          "hover": "Live preview of the PDF layout."
+        },
+        {
+          "at": 2.0,
+          "role": "tab",
+          "name": "Style"
+        },
+        {
+          "at": 3.3,
+          "css": "label.rs-template:has(span.rs-template__name:text-is(\"Modern\"))"
+        },
+        {
+          "at": 4.4,
+          "hover": "Live preview of the PDF layout."
+        }
+      ],
+      "lead": 0.3,
+      "tail": 1.2
+    },
+    {
+      "id": "download",
+      "route": "#/resume/acme-corp/2026-01-12-ai-engineer/resume.md",
+      "voice": "Export a PDF or a Word file when it is ready.",
+      "steps": [
+        {
+          "at": 0.1,
+          "role": "tab",
+          "name": "Download"
+        },
+        {
+          "at": 1.0,
+          "hover": "Download PDF",
+          "exact": true
+        },
+        {
+          "at": 1.2,
+          "zoom": "For sites and recruiters that ask for Word.",
+          "scale": 1.3,
+          "ms": 900
+        },
+        {
+          "at": 2.6,
+          "hover": "Download Word",
+          "exact": true
+        }
+      ],
+      "lead": 0.3,
+      "tail": 1.0
+    },
+    {
+      "id": "approvals",
+      "route": "#/applications",
+      "voice": "Nothing is sent without your OK. Emails and applications wait in Approvals.",
+      "steps": [
+        {
+          "at": 0.2,
+          "zoom": "Nothing is ever sent without your OK.",
+          "scale": 1.3,
+          "ms": 900
+        },
+        {
+          "at": 1.6,
+          "unzoom": true,
+          "ms": 500
+        },
+        {
+          "at": 2.0,
+          "role": "tab",
+          "name": "Waiting for your OK 1"
+        },
+        {
+          "at": 4.0,
+          "hash": "#/approvals"
+        },
+        {
+          "at": 5.0,
+          "hover": "Approve",
+          "exact": true
+        }
+      ],
+      "lead": 0.3,
+      "tail": 1.2
+    },
+    {
+      "id": "end",
+      "card": "end",
+      "voice": "JobCairn. Apply with care, not in bulk.",
+      "lead": 0.8,
+      "tail": 1.6
+    }
+  ]
+}

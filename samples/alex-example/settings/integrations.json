@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "email": {
+    "method": "none",
+    "address": ""
+  },
+  "chrome": {
+    "profile": "",
+    "port": 9222
+  },
+  "voice": {
+    "engine": "supertonic",
+    "voice": "F4",
+    "lang": "en",
+    "expressions": true,
+    "per_type": {
+      "guide": "",
+      "interview": "",
+      "slides": ""
+    }
+  },
+  "mail": {
+    "provider": "gmail",
+    "address": "",
+    "display_name": "",
+    "signature": "",
+    "sync_minutes": 15,
+    "first_sync_days": 30,
+    "background": {
+      "on": false,
+      "minutes": 60
+    },
+    "send_limit_per_hour": 10
+  },
+  "custom": {}
+}

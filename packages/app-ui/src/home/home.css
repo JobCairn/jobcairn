@@ -1,0 +1,149 @@
+/* Home dashboard. Tokens only (brand lint). */
+
+.home-grid { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); gap: var(--space-4); align-items: start; }
+.home-grid--empty { grid-template-columns: minmax(0, 1fr); max-width: calc(var(--dialog-width) * 1.6); }
+.home-grid .home-col { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
+@media (max-width: 1180px) { .home-grid { grid-template-columns: minmax(0, 1fr); } }
+
+.home-grid .home-card { container: home-card / inline-size; display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
+.home-grid .home-card__head { display: flex; flex-direction: column; gap: var(--space-1); }
+.home-grid .home-card__head .t-body-sm, .home-grid .home-card p { margin: 0; }
+.home-grid .home-card__foot { display: flex; justify-content: flex-end; align-items: center; gap: var(--space-3); }
+.home-grid .num { font-variant-numeric: lining-nums tabular-nums; }
+
+/* Chart series colours are brand tokens (--color-viz-*, tuned per theme with the dataviz palette validator).
+   Work-rights classes pass all pairs (map) and adjacent pairs (mix bar) in both themes; marker shapes, the legend
+   and the hidden table are the secondary encoding. */
+.home-grid {
+  --viz-sponsor: var(--color-viz-sponsor); --viz-visa: var(--color-viz-visa); --viz-silent: var(--color-viz-silent); --viz-blocked: var(--color-viz-blocked);
+  --viz-found: var(--color-viz-found); --viz-applied: var(--color-viz-applied); --viz-funnel: var(--color-viz-funnel); --viz-gap: var(--color-bg);
+}
+/* Work-rights classes: colour plus a marker shape (charts.tsx). */
+.home-grid .wr--sponsorship_offered { --wr: var(--viz-sponsor); }
+.home-grid .wr--visa_ok { --wr: var(--viz-visa); }
+.home-grid .wr--silent { --wr: var(--viz-silent); }
+.home-grid .wr--citizen_pr_only, .home-grid .wr--clearance { --wr: var(--viz-blocked); }
+
+/* Today */
+.home-grid .today { background: linear-gradient(135deg, var(--color-accent-soft), transparent 70%), var(--card-bg); }
+.home-grid .today__sentence { margin: 0; max-width: 46ch; }
+.home-grid .today__chips { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.home-grid .chip {
+  font: inherit; font-size: var(--font-size-13); color: var(--color-text); cursor: pointer;
+  min-height: var(--space-8); padding: 0 var(--space-3); border-radius: var(--radius-full);
+  border: var(--size-border) solid var(--color-border-strong); background: var(--color-surface);
+  transition: background var(--motion-duration-fast) var(--motion-easing-out), border-color var(--motion-duration-fast) var(--motion-easing-out);
+}
+.home-grid .chip:hover { background: var(--color-surface-hover); border-color: var(--color-text-muted); }
+.home-grid .chip--accent { border-color: var(--color-accent); color: var(--color-accent-strong); }
+[data-theme="paper"] .home-grid .chip--accent { color: var(--color-accent); }
+
+/* Pipeline */
+.home-grid .funnel { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.home-grid .funnel-row, .home-grid .funnel-head {
+  /* stage | count | bar | share of previous | here now | usual stay: fixed sub-columns so rows line up and never wrap. */
+  display: grid;
+  grid-template-columns: calc(var(--space-12) * 2) var(--space-10) minmax(var(--space-12), 1fr) calc(var(--space-12) * 1.75) calc(var(--space-8) * 2) calc(var(--space-12) * 1.75);
+  column-gap: var(--space-3); align-items: center;
+}
+.home-grid .funnel-row { row-gap: 0; padding: var(--space-2) 0; border-top: var(--size-border) solid var(--color-border); }
+.home-grid .funnel-head { white-space: nowrap; font-size: var(--font-size-12); color: var(--color-text-muted); padding-bottom: var(--space-1); }
+.home-grid .funnel-head span:nth-child(n+4) { text-align: right; }
+.home-grid .funnel-row__value.t-heading-2 { font-size: var(--font-size-20); }
+.home-grid .funnel-row:first-child { border-top: 0; }
+.home-grid .funnel-row__label { font-weight: var(--font-weight-medium); }
+.home-grid .funnel-row__value { text-align: right; }
+.home-grid .funnel-row.is-empty .funnel-row__value { color: var(--color-text-muted); }
+.home-grid .funnel-row__track { height: var(--space-2); border-radius: var(--radius-full); background: var(--color-surface-hover); overflow: hidden; }
+.home-grid .funnel-row__track span { display: block; height: 100%; border-radius: var(--radius-full); background: var(--viz-funnel); }
+.home-grid .funnel-row__coach { grid-column: 3 / -1; color: var(--color-text-muted); }
+.home-grid .funnel-row__stats { grid-column: 4 / -1; display: grid; grid-template-columns: subgrid; white-space: nowrap; line-height: var(--font-line-height-snug); }
+.home-grid .funnel-row__stats > span { text-align: right; }
+.home-grid .funnel-row__trend { grid-column: 3 / -1; line-height: var(--font-line-height-snug); }
+.home-grid .trend--up { color: var(--color-success); }
+
+/* Job links */
+.home-grid .job-link { display: flex; flex-direction: column; color: var(--color-text); text-decoration: none; border-radius: var(--radius-sm); min-width: 0; }
+.home-grid .job-link__title { overflow-wrap: anywhere; font-weight: var(--font-weight-medium); }
+.home-grid .job-link:hover .job-link__title { color: var(--color-accent); text-decoration: underline; text-underline-offset: 3px; }
+
+/* Next up */
+.home-grid .next-list { list-style: none; margin: 0; padding: 0; }
+.home-grid .next-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: var(--space-2) var(--space-4); align-items: center; padding: var(--space-3) 0; border-top: var(--size-border) solid var(--color-border); }
+.home-grid .next-row__main { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+.home-grid .next-row__reason { color: var(--color-text-muted); }
+.home-grid .next-row__reason.is-sponsor { color: var(--color-text); }
+.home-grid .next-row__age { display: inline-flex; align-items: center; gap: var(--space-2); white-space: nowrap; }
+.home-grid .next-row__action { min-width: calc(var(--space-12) * 2); }
+@media (max-width: 1180px) { .home-grid .next-row { grid-template-columns: minmax(0, 1fr) auto; } .home-grid .next-row__age { grid-column: 1; grid-row: 2; } .home-grid .next-row__action { grid-row: 1 / span 2; grid-column: 2; } }
+
+/* Charts */
+.home-grid .chart { width: 100%; height: auto; display: block; overflow: visible; }
+.home-grid .chart.map { max-width: calc(var(--space-12) * 10); }
+.home-grid .chart-box { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
+.home-grid .axis-line { stroke: var(--color-border); stroke-width: 1; }
+.home-grid .axis-text { fill: var(--color-text-muted); font-size: var(--font-size-12); font-variant-numeric: tabular-nums; }
+.home-grid .axis-title { fill: var(--color-text-muted); font-size: var(--font-size-12); }
+.home-grid .mark { fill: var(--wr); stroke: var(--wr); stroke-width: 1.5; paint-order: stroke; }
+.home-grid .map__dot .mark { filter: drop-shadow(0 0 1.5px var(--viz-gap)); }
+.home-grid .mark--hollow { fill: var(--color-bg); }
+.home-grid path.mark { fill: none; stroke-width: 2; }
+.home-grid .map__quadrant { fill: var(--color-success-soft); }
+.home-grid .map__quadrant-label { fill: var(--color-text); font-size: var(--font-size-12); font-weight: var(--font-weight-medium); }
+.home-grid .map__dot { cursor: pointer; outline: none; }
+.home-grid .map__hit { fill: transparent; }
+.home-grid .map__dot:hover .map__hit, .home-grid .map__dot:focus-visible .map__hit, .home-grid .map__dot.is-active .map__hit { fill: var(--color-surface-hover); stroke: var(--color-focus); stroke-width: 1.5; }
+.home-grid .map__caption { margin: 0; min-height: calc(var(--font-size-13) * 2.6); }
+.home-grid .legend { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-4); font-size: var(--font-size-12); color: var(--color-text-muted); }
+.home-grid .legend li { display: inline-flex; align-items: center; gap: var(--space-2); }
+.home-grid .swatch { width: var(--space-3); height: var(--space-3); flex: none; overflow: visible; }
+.home-grid .key { width: var(--space-3); height: var(--space-3); border-radius: var(--radius-sm); display: inline-block; }
+.home-grid .key--found { background: var(--viz-found); }
+.home-grid .key--applied { background: var(--viz-applied); }
+.home-grid .key--goal { height: 0; border-top: var(--size-focus-ring) dashed var(--color-text-muted); border-radius: 0; }
+.home-grid .bar--found { fill: var(--viz-found); }
+.home-grid .bar--applied { fill: var(--viz-applied); }
+.home-grid .goal-line { stroke: var(--color-text-muted); stroke-width: 1.5; stroke-dasharray: 5 4; }
+
+.home-grid .unscored { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-3); border-radius: var(--radius-md); border: var(--size-border) dashed var(--color-border-strong); }
+.home-grid .unscored__text { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+.home-grid .unscored__text p { margin: 0; }
+
+/* Sponsorship mix */
+.home-grid .mix-bar { display: flex; height: var(--space-4); border-radius: var(--radius-full); overflow: hidden; gap: 2px; }
+.home-grid .mix-bar__seg { flex-basis: 0; min-width: var(--space-2); border: 0; padding: 0; background: var(--wr); cursor: pointer; }
+.home-grid .mix-bar__seg:hover { filter: brightness(1.15); }
+.home-grid .mix-bar__seg:focus-visible { outline-offset: calc(var(--size-focus-ring) * -1); }
+.home-grid .mix-legend { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.home-grid .mix-legend__item { width: 100%; display: flex; align-items: center; gap: var(--space-2); font: inherit; font-size: var(--font-size-14); color: var(--color-text); background: none; border: 0; padding: var(--space-2) var(--space-1); border-radius: var(--radius-sm); cursor: pointer; text-align: left; }
+.home-grid .mix-legend__item:hover { background: var(--color-surface-hover); }
+
+/* Going stale */
+.home-grid .stale-list, .home-grid .unstated-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.home-grid .stale-row { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-2) 0; border-top: var(--size-border) solid var(--color-border); }
+.home-grid .stale-row .grow { display: flex; flex-direction: column; gap: var(--space-1); }
+.home-grid .stale-row__actions { display: flex; gap: var(--space-2); flex: none; }
+.home-grid .unstated-list li { padding: var(--space-1) 0; }
+
+/* Sources */
+.home-grid .mini-table { width: 100%; border-collapse: collapse; font-size: var(--font-size-14); }
+.home-grid .mini-table th, .home-grid .mini-table td { padding: var(--space-2) var(--space-1); border-top: var(--size-border) solid var(--color-border); text-align: left; font-weight: var(--font-weight-regular); }
+.home-grid .mini-table thead th { border-top: 0; color: var(--color-text-muted); font-size: var(--font-size-12); }
+.home-grid .mini-table .num { text-align: right; }
+
+/* 482 salary check */
+.home-grid .salary-bands { margin: 0; display: flex; flex-direction: column; }
+.home-grid .salary-band { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); padding: var(--space-2) 0; border-top: var(--size-border) solid var(--color-border); }
+.home-grid .salary-band dt { display: flex; flex-direction: column; font-size: var(--font-size-14); }
+.home-grid .salary-band dd { margin: 0; }
+.home-grid .salary-band--unstated dd { color: var(--color-text-muted); }
+
+.home-visa { display: flex; flex-direction: column; align-items: flex-end; gap: var(--space-2); }
+.home-visa .t-hero { line-height: var(--font-line-height-tight); }
+
+@media (prefers-reduced-motion: reduce) { .home-grid .chip { transition: none; } }
+
+/* Claude runs started from a row: the run panel takes the row's full width under it. */
+.home-grid .next-row > .row-run { grid-column: 1 / -1; grid-row: auto; min-width: 0; }
+.home-grid .score-many { display: flex; flex-direction: column; align-items: flex-end; gap: var(--space-2); flex: none; max-width: 60%; }
+.home-grid .score-many > .row-run { text-align: right; }

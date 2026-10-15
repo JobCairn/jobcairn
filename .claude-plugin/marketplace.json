@@ -1,0 +1,14 @@
+{
+  "name": "careeros",
+  "owner": {
+    "name": "JobCairn"
+  },
+  "plugins": [
+    {
+      "name": "careeros",
+      "source": "./plugin",
+      "description": "JobCairn job-hunt skills: resume scoring and tailoring, video lessons, voice narration"
+    }
+  ],
+  "description": "JobCairn plugin marketplace for Claude Code."
+}

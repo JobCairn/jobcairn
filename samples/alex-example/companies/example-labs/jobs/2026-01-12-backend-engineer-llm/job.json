@@ -1,0 +1,64 @@
+{
+  "schema": 1,
+  "id": "2026-01-12-backend-engineer-llm",
+  "company_slug": "example-labs",
+  "client": null,
+  "title": "Backend Engineer (LLM)",
+  "source": "adzuna",
+  "source_site": "Adzuna",
+  "url": "https://jobs.example.com/labs/2",
+  "apply_via": "",
+  "posted": "",
+  "found_at": "2026-01-12T09:00:00.000Z",
+  "location": "Remote Australia",
+  "work_mode": "Remote",
+  "job_type": "",
+  "salary": {
+    "text": "",
+    "min": null,
+    "max": null,
+    "currency": "",
+    "period": ""
+  },
+  "timeline": [
+    {
+      "at": "2026-01-12T09:00:00.000Z",
+      "event": "Found",
+      "note": "Adzuna"
+    }
+  ],
+  "work_rights": {
+    "label": "silent",
+    "quotes": [],
+    "decided_by": "none"
+  },
+  "scores": {
+    "fit": {
+      "value": null,
+      "must_haves": [],
+      "nice_to_haves": []
+    },
+    "sponsor": {
+      "value": 20,
+      "tier": "Low",
+      "reasons": [
+        "no sponsorship signal; ad is silent"
+      ]
+    },
+    "career": {
+      "match": null,
+      "odds": null,
+      "tier": "",
+      "scored_at": ""
+    }
+  },
+  "status": "Found",
+  "files": [
+    {
+      "path": "jd.md",
+      "label": "Job description",
+      "at": "2026-01-12T09:00:00.000Z"
+    }
+  ],
+  "custom": {}
+}

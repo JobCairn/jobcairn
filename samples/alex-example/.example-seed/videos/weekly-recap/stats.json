@@ -1,0 +1,33 @@
+{
+  "week": "2026-W41",
+  "from": "2026-10-05",
+  "to": "2026-10-11",
+  "found": 6,
+  "applied": 2,
+  "replies": 6,
+  "interviews": 1,
+  "sponsorship": {
+    "sponsorship_offered": 2,
+    "visa_ok": 0,
+    "silent": 3,
+    "citizen_pr_only": 1,
+    "clearance": 0
+  },
+  "next_steps": [
+    {
+      "title": "Machine Learning Engineer",
+      "company": "Brightwater Analytics",
+      "action": "Prepare for the interview"
+    },
+    {
+      "title": "Conversational AI Developer",
+      "company": "Kestrel Robotics",
+      "action": "Finish the application"
+    },
+    {
+      "title": "AI Engineer, Search Quality",
+      "company": "Example Labs",
+      "action": "Decide whether to apply"
+    }
+  ]
+}

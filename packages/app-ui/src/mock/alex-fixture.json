@@ -1,0 +1,1383 @@
+{
+  "workspace": {
+    "root": "/fictional/alex-example/CareerOS",
+    "name": "Alex Example",
+    "dataVersion": 4,
+    "locked": [
+      "me/identity",
+      "me/employment"
+    ]
+  },
+  "profile": {
+    "schema": 1,
+    "contact": {
+      "name": "Alex Example",
+      "email": "alex@example.com",
+      "phone": "0491 570 006",
+      "city": "Sampletown NSW",
+      "links": [
+        "https://example.com/alex"
+      ]
+    },
+    "work_rights": {
+      "status": "needs_sponsorship",
+      "visa_subclass": "485",
+      "visa_expiry": "2028-06-30",
+      "notes": ""
+    },
+    "targets": {
+      "roles": [
+        "AI Engineer",
+        "Software Engineer (LLM)"
+      ],
+      "keywords": [
+        "agents",
+        "RAG",
+        "TypeScript"
+      ],
+      "seniority": "Senior",
+      "job_types": [
+        "full_time",
+        "contract"
+      ]
+    },
+    "locations": [
+      {
+        "place": "Sampletown NSW",
+        "modes": [
+          "onsite",
+          "hybrid",
+          "remote"
+        ],
+        "will_relocate": false
+      },
+      {
+        "place": "Remote Australia",
+        "modes": [
+          "remote"
+        ],
+        "will_relocate": false
+      }
+    ],
+    "salary": {
+      "min": 100000,
+      "currency": "AUD",
+      "includes_super": true
+    },
+    "industries": {
+      "include": [],
+      "exclude": []
+    },
+    "skip_companies": [],
+    "skip_big_tech": true,
+    "custom": {}
+  },
+  "search": {
+    "schema": 1,
+    "filters": {
+      "related_titles": [],
+      "fallback_locations": [],
+      "min_results": null,
+      "countries": [],
+      "posted_within_days": null,
+      "posted_this_week": false,
+      "exclude_keywords": [],
+      "salary_max": null,
+      "sponsor_only": false,
+      "sort": "relevance",
+      "experience": [],
+      "easy_apply": false,
+      "radius_km": null,
+      "breadth": "focused",
+      "max_jobs": null
+    },
+    "sources": {
+      "ats": true,
+      "adzuna": false,
+      "browser": true,
+      "pasted": true
+    },
+    "sweep": {
+      "every_hours": null
+    },
+    "views": [],
+    "custom": {},
+    "search_deadline": "",
+    "weekly_goal": null
+  },
+  "integrations": {
+    "schema": 1,
+    "email": {
+      "method": "none",
+      "address": ""
+    },
+    "chrome": {
+      "profile": "",
+      "port": 9222
+    },
+    "voice": {
+      "engine": "supertonic",
+      "voice": "F4",
+      "lang": "en",
+      "expressions": true,
+      "per_type": {
+        "guide": "",
+        "interview": "",
+        "slides": ""
+      }
+    },
+    "mail": {
+      "provider": "gmail",
+      "address": "",
+      "display_name": "",
+      "signature": "",
+      "sync_minutes": 15,
+      "first_sync_days": 30,
+      "background": {
+        "on": false,
+        "minutes": 60
+      },
+      "send_limit_per_hour": 10
+    },
+    "custom": {},
+    "video": {
+      "captions": "rail",
+      "motion": "full",
+      "sound": "subtle",
+      "music": false,
+      "lengths": {
+        "skill_gap_lesson": 0,
+        "jd_walkthrough": 0,
+        "company_briefing": 0,
+        "interview_prep": 0,
+        "pitch": 0,
+        "application_summary": 0,
+        "weekly_recap": 0
+      }
+    },
+    "read_aloud": {
+      "voice": "F4",
+      "speed": 1,
+      "lang": "en"
+    }
+  },
+  "fields": {
+    "profile": [
+      {
+        "path": "contact.name",
+        "label": "Full name",
+        "type": "string",
+        "options": [],
+        "optionLabels": {},
+        "help": "",
+        "pattern": "",
+        "fields": []
+      },
+      {
+        "path": "contact.email",
+        "label": "Email for applications",
+        "type": "string",
+        "options": [],
+        "optionLabels": {},
+        "help": "",
+        "pattern": "",
+        "fields": []
+      },
+      {
+        "path": "contact.phone",
+        "label": "Phone",
+        "type": "string",
+        "options": [],
+        "optionLabels": {},
+        "help": "",
+        "pattern": "",
+        "fields": []
+      },
+      {
+        "path": "contact.city",
+        "label": "City",
+        "type": "string",
+        "options": [],
+        "optionLabels": {},
+        "help": "",
+        "pattern": "",
+        "fields": []
+      },
+      {
+        "path": "contact.links",
+        "label": "Links (LinkedIn, GitHub, portfolio)",
+        "type": "string[]",
+        "options": [],
+        "optionLabels": {},
+        "help": "",
+        "pattern": "",
+        "fields": []
+      },
+      {
+        "path": "work_rights.status",
+        "label": "Work rights",
+        "type": "enum",
+        "options": [
+          "citizen",
+          "pr",
+          "full_visa",
+          "limited_visa",
+          "needs_sponsorship",
+          "unknown"
+        ],
+        "optionLabels": {
+          "citizen": "Citizen",
+          "pr": "Permanent resident",
+          "full_visa": "Visa with full work rights",
+          "limited_visa": "Visa with limited work rights",
+          "needs_sponsorship": "Need visa sponsorship",
+          "unknown": "Not set"
+        },
+        "help": "Used to hide jobs you can't apply for and rank sponsors first.",
+        "pattern": "",
+        "fields": []
+      },
+      {
+        "path": "work_rights.visa_subclass",
+        "label": "Visa subclass",
+        "type": "string",
+        "options": [],
+        "optionLabels": {},
+        "help": "",
+        "pattern": "",
+        "fields": []
+      },
+      {
+        "path": "work_rights.visa_expiry",
+        "label": "Visa expiry (YYYY-MM-DD)",
+        "type": "string",
+        "options": [],
+        "optionLabels": {},
+        "help": "",
+        "pattern": "^(\\d{4}-\\d{2}-\\d{2})?$",
+        "fields": []
+      },
+      {
+        "path": "work_rights.notes",
+        "label": "Notes",
+        "type": "string",
+        "options": [],
+        "optionLabels": {},
+        "help": "",
+        "pattern": "",
+        "fields": []
+      },
+      {
+        "path": "targets.roles",
+        "label": "Target roles",
+        "type": "string[]",
+        "options": [],
+        "optionLabels": {},
+        "help": "",
+        "pattern": "",
+        "fields": []
+      },
+      {
+        "path": "targets.keywords",
+        "label": "Keywords",
+        "type": "string[]",
+        "options": [],
+        "optionLabels": {},
+        "help": "",
+        "pattern": "",
+        "fields": []
+      },
+      {
+        "path": "targets.seniority",
+        "label": "Seniority",
+        "type": "string",
+        "options": [],
+        "optionLabels": {},
+        "help": "",
+        "pattern": "",
+        "fields": []
+      },
+      {
+        "path": "targets.job_types",
+        "label": "Job types",
+        "type": "enum[]",
+        "options": [
+          "full_time",
+          "contract",
+          "part_time",
+          "casual",
+          "internship"
+        ],
+        "optionLabels": {},
+        "help": "",
+        "pattern": "",
+        "fields": []
+      },
+      {
+        "path": "locations",
+        "label": "Preferred locations",
+        "type": "object[]",
+        "options": [],
+        "optionLabels": {},
+        "help": "Most preferred first: Claude searches them in this order. Drag a place, or use its arrows, to change the order.",
+        "pattern": "",
+        "fields": [
+          {
+            "path": "place",
+            "label": "Place",
+            "type": "string",
+            "options": [],
+            "optionLabels": {},
+            "help": "",
+            "pattern": "",
+            "fields": []
+          },
+          {
+            "path": "modes",
+            "label": "Work modes",
+            "type": "enum[]",
+            "options": [
+              "onsite",
+              "hybrid",
+              "remote"
+            ],
+            "optionLabels": {
+              "onsite": "On site",
+              "hybrid": "Hybrid",
+              "remote": "Remote"
+            },
+            "help": "",
+            "pattern": "",
+            "fields": []
+          },
+          {
+            "path": "will_relocate",
+            "label": "Willing to relocate",
+            "type": "boolean",
+            "options": [],
+            "optionLabels": {},
+            "help": "",
+            "pattern": "",
+            "fields": []
+          }
+        ]
+      },
+      {
+        "path": "salary.min",
+        "label": "Minimum salary",
+        "type": "number|null",
+        "options": [],
+        "optionLabels": {},
+        "help": "",
+        "pattern": "",
+        "fields": []
+      },
+      {
+        "path": "salary.currency",
+        "label": "Currency",
+        "type": "string",
+        "options": [],
+        "optionLabels": {},
+        "help": "",
+        "pattern": "",
+        "fields": []
+      },
+      {
+        "path": "salary.includes_super",
+        "label": "Includes super",
+        "type": "boolean",
+        "options": [],
+        "optionLabels": {},
+        "help": "",
+        "pattern": "",
+        "fields": []
+      },
+      {
+        "path": "industries.include",
+        "label": "Industries to include",
+        "type": "string[]",
+        "options": [],
+        "optionLabels": {},
+        "help": "",
+        "pattern": "",
+        "fields": []
+      },
+      {
+        "path": "industries.exclude",
+        "label": "Industries to exclude",
+        "type": "string[]",
+        "options": [],
+        "optionLabels": {},
+        "help": "",
+        "pattern": "",
+        "fields": []
+      },
+      {
+        "path": "skip_companies",
+        "label": "Companies to skip",
+        "type": "string[]",
+        "options": [],
+        "optionLabels": {},
+        "help": "",
+        "pattern": "",
+        "fields": []
+      },
+      {
+        "path": "skip_big_tech",
+        "label": "Skip big tech",
+        "type": "boolean",
+        "options": [],
+        "optionLabels": {},
+        "help": "",
+        "pattern": "",
+        "fields": []
+      }
+    ],
+    "search": [
+      {
+        "path": "filters.related_titles",
+        "label": "Related job titles",
+        "type": "string[]",
+        "options": [],
+        "optionLabels": {},
+        "help": "Other titles for the same work, searched along with your target roles.",
+        "pattern": "",
+        "fields": []
+      },
+      {
+        "path": "filters.fallback_locations",
+        "label": "If there aren't enough jobs there, also search",
+        "type": "string[]",
+        "options": [],
+        "optionLabels": {},
+        "help": "Used only when your preferred locations give too few matches. Any place can be typed.",
+        "pattern": "",
+        "fields": []
+      },
+      {
+        "path": "filters.min_results",
+        "label": "Too few matches means fewer than",
+        "type": "integer|null",
+        "options": [],
+        "optionLabels": {},
+        "help": "Below this many matches in your preferred locations, Claude also searches the fallback places above.",
+        "pattern": "",
+        "fields": []
+      },
+      {
+        "path": "filters.countries",
+        "label": "Countries jobs must be in",
+        "type": "string[]",
+        "options": [],
+        "optionLabels": {},
+        "help": "Jobs elsewhere are skipped unless they're remote and open to people here. Leave empty to use the country of your preferred locations.",
+        "pattern": "",
+        "fields": []
+      },
+      {
+        "path": "filters.posted_within_days",
+        "label": "Only ads posted in the last (days)",
+        "type": "integer|null",
+        "options": [],
+        "optionLabels": {},
+        "help": "For example 7. Leave blank for any age. Ads that don't show a date are kept.",
+        "pattern": "",
+        "fields": []
+      },
+      {
+        "path": "filters.posted_this_week",
+        "label": "Only ads posted this week",
+        "type": "boolean",
+        "options": [],
+        "optionLabels": {},
+        "help": "Since Monday. Used instead of the number of days above.",
+        "pattern": "",
+        "fields": []
+      },
+      {
+        "path": "filters.exclude_keywords",
+        "label": "Skip ads that mention",
+        "type": "string[]",
+        "options": [],
+        "optionLabels": {},
+        "help": "For example: security clearance, unpaid.",
+        "pattern": "",
+        "fields": []
+      },
+      {
+        "path": "filters.salary_max",
+        "label": "Top of your salary range (optional)",
+        "type": "number|null",
+        "options": [],
+        "optionLabels": {},
+        "help": "Leave blank for no top.",
+        "pattern": "",
+        "fields": []
+      },
+      {
+        "path": "filters.sponsor_only",
+        "label": "Only ads that offer sponsorship",
+        "type": "boolean",
+        "options": [],
+        "optionLabels": {},
+        "help": "Skips ads that say nothing about visa sponsorship.",
+        "pattern": "",
+        "fields": []
+      },
+      {
+        "path": "filters.sort",
+        "label": "Results order",
+        "type": "enum",
+        "options": [
+          "relevance",
+          "recent"
+        ],
+        "optionLabels": {
+          "relevance": "Best match",
+          "recent": "Newest first"
+        },
+        "help": "Best match, or the newest ads first. Boards that have this choice use it.",
+        "pattern": "",
+        "fields": []
+      },
+      {
+        "path": "filters.experience",
+        "label": "Experience levels",
+        "type": "enum[]",
+        "options": [
+          "internship",
+          "entry",
+          "associate",
+          "mid_senior",
+          "director",
+          "executive"
+        ],
+        "optionLabels": {},
+        "help": "Leave all off for any level. LinkedIn filters by these; on other boards Claude skips only ads clearly at another level.",
+        "pattern": "",
+        "fields": []
+      },
+      {
+        "path": "filters.easy_apply",
+        "label": "LinkedIn: Easy Apply jobs only",
+        "type": "boolean",
+        "options": [],
+        "optionLabels": {},
+        "help": "Only LinkedIn has this filter.",
+        "pattern": "",
+        "fields": []
+      },
+      {
+        "path": "filters.radius_km",
+        "label": "Distance around each place (km)",
+        "type": "integer|null",
+        "options": [],
+        "optionLabels": {},
+        "help": "For example 25. Leave blank for each board's own default. LinkedIn and Indeed use it.",
+        "pattern": "",
+        "fields": []
+      },
+      {
+        "path": "filters.breadth",
+        "label": "Search breadth",
+        "type": "enum",
+        "options": [
+          "focused",
+          "broad"
+        ],
+        "optionLabels": {
+          "focused": "Focused: up to 5 searches on your closest roles",
+          "broad": "Broad: up to 12 searches, with related titles"
+        },
+        "help": "How many searches Claude runs each time.",
+        "pattern": "",
+        "fields": []
+      },
+      {
+        "path": "filters.max_jobs",
+        "label": "Jobs to find each time",
+        "type": "integer|null",
+        "options": [],
+        "optionLabels": {},
+        "help": "The most new jobs Claude adds in one search. 100 if left blank. Bigger searches take longer and use more of your Claude plan.",
+        "pattern": "",
+        "fields": []
+      },
+      {
+        "path": "search_deadline",
+        "label": "Search deadline (YYYY-MM-DD)",
+        "type": "string",
+        "options": [],
+        "optionLabels": {},
+        "help": "The date you want an offer by. Home counts down to it. Leave blank for none.",
+        "pattern": "^(\\d{4}-\\d{2}-\\d{2})?$",
+        "fields": []
+      },
+      {
+        "path": "weekly_goal",
+        "label": "Applications per week goal",
+        "type": "integer|null",
+        "options": [],
+        "optionLabels": {},
+        "help": "Home draws this as a line on the weekly activity chart. Leave blank for none.",
+        "pattern": "",
+        "fields": []
+      }
+    ],
+    "integrations": [
+      {
+        "path": "voice",
+        "label": "Video narration",
+        "type": "object",
+        "options": [],
+        "optionLabels": {},
+        "help": "Voice used for learning guides and interview videos. Use Preview to listen before choosing.",
+        "pattern": "",
+        "fields": []
+      },
+      {
+        "path": "voice.engine",
+        "label": "Voice engine",
+        "type": "enum",
+        "options": [
+          "supertonic",
+          "macos_say",
+          "elevenlabs"
+        ],
+        "optionLabels": {
+          "supertonic": "Supertonic (on your Mac, free)",
+          "macos_say": "Mac built-in voice",
+          "elevenlabs": "ElevenLabs (needs your API key)"
+        },
+        "help": "",
+        "pattern": "",
+        "fields": []
+      },
+      {
+        "path": "voice.voice",
+        "label": "Voice",
+        "type": "enum",
+        "options": [
+          "F4",
+          "M3",
+          "F1",
+          "F2",
+          "F3",
+          "F5",
+          "M1",
+          "M2",
+          "M4",
+          "M5"
+        ],
+        "optionLabels": {},
+        "help": "Recommended: F4 (female) or M3 (male), the most natural-sounding Supertonic voices.",
+        "pattern": "",
+        "fields": []
+      },
+      {
+        "path": "voice.lang",
+        "label": "Language",
+        "type": "string",
+        "options": [],
+        "optionLabels": {},
+        "help": "",
+        "pattern": "",
+        "fields": []
+      },
+      {
+        "path": "voice.expressions",
+        "label": "Natural expressions (breaths, light laughs)",
+        "type": "boolean",
+        "options": [],
+        "optionLabels": {},
+        "help": "",
+        "pattern": "",
+        "fields": []
+      },
+      {
+        "path": "voice.per_type.guide",
+        "label": "Voice for learning guides (blank = default)",
+        "type": "string",
+        "options": [],
+        "optionLabels": {},
+        "help": "",
+        "pattern": "",
+        "fields": []
+      },
+      {
+        "path": "voice.per_type.interview",
+        "label": "Voice for interview prep (blank = default)",
+        "type": "string",
+        "options": [],
+        "optionLabels": {},
+        "help": "",
+        "pattern": "",
+        "fields": []
+      },
+      {
+        "path": "voice.per_type.slides",
+        "label": "Voice for slide recaps (blank = default)",
+        "type": "string",
+        "options": [],
+        "optionLabels": {},
+        "help": "",
+        "pattern": "",
+        "fields": []
+      },
+      {
+        "path": "mail",
+        "label": "Email",
+        "type": "object",
+        "options": [],
+        "optionLabels": {},
+        "help": "Connect Gmail in Settings > Email. These settings control syncing and sending.",
+        "pattern": "",
+        "fields": []
+      },
+      {
+        "path": "mail.sync_minutes",
+        "label": "Check for new mail every (minutes)",
+        "type": "integer",
+        "options": [],
+        "optionLabels": {},
+        "help": "",
+        "pattern": "",
+        "fields": []
+      },
+      {
+        "path": "mail.first_sync_days",
+        "label": "First sync looks back (days)",
+        "type": "integer",
+        "options": [],
+        "optionLabels": {},
+        "help": "",
+        "pattern": "",
+        "fields": []
+      },
+      {
+        "path": "mail.send_limit_per_hour",
+        "label": "Most emails sent per hour",
+        "type": "integer",
+        "options": [],
+        "optionLabels": {},
+        "help": "",
+        "pattern": "",
+        "fields": []
+      },
+      {
+        "path": "video",
+        "label": "Videos",
+        "type": "object",
+        "options": [],
+        "optionLabels": {},
+        "help": "How your videos are built. Tools status and custom video types are below this form.",
+        "pattern": "",
+        "fields": []
+      },
+      {
+        "path": "video.captions",
+        "label": "Caption style",
+        "type": "enum",
+        "options": [
+          "rail",
+          "pill",
+          "highlight",
+          "none"
+        ],
+        "optionLabels": {
+          "rail": "Rail (calm, one line at a time)",
+          "pill": "Pill (short groups)",
+          "highlight": "Highlight (no background)",
+          "none": "No burned-in captions"
+        },
+        "help": "",
+        "pattern": "",
+        "fields": []
+      },
+      {
+        "path": "video.motion",
+        "label": "Motion",
+        "type": "enum",
+        "options": [
+          "full",
+          "reduced"
+        ],
+        "optionLabels": {
+          "full": "Full (moving diagrams, slow zooms)",
+          "reduced": "Reduced (short fades only)"
+        },
+        "help": "",
+        "pattern": "",
+        "fields": []
+      },
+      {
+        "path": "video.sound",
+        "label": "Sound effects",
+        "type": "enum",
+        "options": [
+          "subtle",
+          "off"
+        ],
+        "optionLabels": {
+          "subtle": "Subtle (soft whooshes and pops under the voice)",
+          "off": "Off"
+        },
+        "help": "",
+        "pattern": "",
+        "fields": []
+      },
+      {
+        "path": "video.music",
+        "label": "Quiet music bed under the narration",
+        "type": "boolean",
+        "options": [],
+        "optionLabels": {},
+        "help": "",
+        "pattern": "",
+        "fields": []
+      },
+      {
+        "path": "video.lengths",
+        "label": "Default lengths in seconds (0 uses the type's own target)",
+        "type": "object",
+        "options": [],
+        "optionLabels": {},
+        "help": "",
+        "pattern": "",
+        "fields": []
+      },
+      {
+        "path": "video.lengths.skill_gap_lesson",
+        "label": "Skill-gap lesson",
+        "type": "integer",
+        "options": [],
+        "optionLabels": {},
+        "help": "",
+        "pattern": "",
+        "fields": []
+      },
+      {
+        "path": "video.lengths.jd_walkthrough",
+        "label": "JD walkthrough",
+        "type": "integer",
+        "options": [],
+        "optionLabels": {},
+        "help": "",
+        "pattern": "",
+        "fields": []
+      },
+      {
+        "path": "video.lengths.company_briefing",
+        "label": "Company briefing",
+        "type": "integer",
+        "options": [],
+        "optionLabels": {},
+        "help": "",
+        "pattern": "",
+        "fields": []
+      },
+      {
+        "path": "video.lengths.interview_prep",
+        "label": "Interview prep",
+        "type": "integer",
+        "options": [],
+        "optionLabels": {},
+        "help": "",
+        "pattern": "",
+        "fields": []
+      },
+      {
+        "path": "video.lengths.pitch",
+        "label": "Tell me about yourself",
+        "type": "integer",
+        "options": [],
+        "optionLabels": {},
+        "help": "",
+        "pattern": "",
+        "fields": []
+      },
+      {
+        "path": "video.lengths.application_summary",
+        "label": "Application summary",
+        "type": "integer",
+        "options": [],
+        "optionLabels": {},
+        "help": "",
+        "pattern": "",
+        "fields": []
+      },
+      {
+        "path": "video.lengths.weekly_recap",
+        "label": "Weekly recap",
+        "type": "integer",
+        "options": [],
+        "optionLabels": {},
+        "help": "",
+        "pattern": "",
+        "fields": []
+      },
+      {
+        "path": "read_aloud",
+        "label": "Reading aloud",
+        "type": "object",
+        "options": [],
+        "optionLabels": {},
+        "help": "Voice used when you press Listen on a job, a guide or a document.",
+        "pattern": "",
+        "fields": []
+      },
+      {
+        "path": "read_aloud.voice",
+        "label": "Voice",
+        "type": "enum",
+        "options": [
+          "F4",
+          "M3",
+          "F1",
+          "F2",
+          "F3",
+          "F5",
+          "M1",
+          "M2",
+          "M4",
+          "M5"
+        ],
+        "optionLabels": {},
+        "help": "",
+        "pattern": "",
+        "fields": []
+      },
+      {
+        "path": "read_aloud.speed",
+        "label": "Speed",
+        "type": "number",
+        "options": [],
+        "optionLabels": {},
+        "help": "",
+        "pattern": "",
+        "fields": []
+      },
+      {
+        "path": "read_aloud.lang",
+        "label": "Language",
+        "type": "string",
+        "options": [],
+        "optionLabels": {},
+        "help": "",
+        "pattern": "^[a-z]{2,3}(-[A-Za-z0-9]{2,8})?$",
+        "fields": []
+      }
+    ]
+  },
+  "jobs": [
+    {
+      "job": {
+        "schema": 1,
+        "id": "2026-01-12-ai-engineer",
+        "company_slug": "acme-corp",
+        "client": null,
+        "title": "AI Engineer",
+        "source": "ats",
+        "source_site": "Greenhouse",
+        "url": "https://jobs.example.com/acme/1",
+        "apply_via": "",
+        "posted": "",
+        "found_at": "2026-01-12T09:00:00.000Z",
+        "location": "Sampletown NSW",
+        "work_mode": "Hybrid",
+        "job_type": "",
+        "salary": {
+          "text": "$140k-$160k + super",
+          "min": null,
+          "max": null,
+          "currency": "",
+          "period": ""
+        },
+        "timeline": [
+          {
+            "at": "2026-01-12T09:00:00.000Z",
+            "event": "Found",
+            "note": "Greenhouse"
+          },
+          {
+            "at": "2026-01-13T09:00:00.000Z",
+            "event": "Status: Applied",
+            "note": "Applied on the careers page"
+          }
+        ],
+        "work_rights": {
+          "label": "sponsorship_offered",
+          "quotes": [
+            "Visa sponsorship available for the right candidate."
+          ],
+          "decided_by": "scan"
+        },
+        "scores": {
+          "fit": {
+            "value": null,
+            "must_haves": [],
+            "nice_to_haves": []
+          },
+          "sponsor": {
+            "value": 95,
+            "tier": "Very high",
+            "reasons": [
+              "ad says sponsorship is available"
+            ]
+          },
+          "career": {
+            "match": null,
+            "odds": null,
+            "tier": "",
+            "scored_at": ""
+          }
+        },
+        "status": "Applied",
+        "files": [
+          {
+            "path": "jd.md",
+            "label": "Job description",
+            "at": "2026-01-12T09:00:00.000Z"
+          }
+        ],
+        "custom": {}
+      },
+      "company": {
+        "name": "Acme Corp",
+        "slug": "acme-corp",
+        "website": "",
+        "sponsor_status": "unknown"
+      },
+      "description": "# AI Engineer at Acme Corp\n\nSampletown NSW · Hybrid (2 days in the office) · Full time · $140k-$160k + super\n\n## About us\n\nAcme Corp makes scheduling software for 2,000 clinics across Australia and New Zealand. Physios, dentists and GPs use us to run their day: bookings, reminders, waitlists and payments. We are a team of about 300, and 60 of us are engineers.\n\nClinic staff ask the same questions all day. Can this patient move to Friday? What is our cancellation policy? Which forms does a new patient need? The answers live in each clinic's own policies, and they differ from clinic to clinic.\n\n## The role\n\nWe are building an assistant that answers staff questions from each clinic's own policies, and takes simple actions when asked. It is in a pilot with 40 clinics. You will join a team of four engineers, a designer and a product manager, and help take it to every clinic this year.\n\n## What you'll do\n\n- Build LLM agents that answer questions and take simple actions, like moving a booking.\n- Own retrieval: chunking, embeddings, reranking and citations.\n- Set up evaluation so we know when a change makes answers worse.\n- Work with product and design on how the assistant shows its sources.\n- Look at real questions from the pilot each week and decide what to fix next.\n\n## What you'll bring\n\n- 3+ years building software in Python or TypeScript.\n- Hands-on work with LLM APIs and retrieval (RAG) in production.\n- A habit of measuring quality with test sets, not gut feel.\n- Clear writing. You will explain trade-offs to non-engineers.\n\n## Nice to have\n\n- Postgres and pgvector.\n- Agent frameworks or tool calling.\n- Healthcare or scheduling products.\n\n## What we offer\n\n- $140k-$160k base plus super, reviewed every year.\n- Two days a week in our Sampletown office, the rest from home.\n- $2,000 a year for learning, plus time to use it.\n- 18 weeks paid parental leave for any parent.\n- A new laptop and a home office budget.\n\n## Work rights\n\nVisa sponsorship available for the right candidate. Tell us in your application if you will need it, so we can plan the timing with you.\n\n## How to apply\n\nApply through the button on this page with your resume and a short note. Tell us about one LLM feature you shipped and how you knew it was working. Riley Chen from our talent team reads every application and replies within a week.\n\nOur process: a 30 minute call with Riley, a technical chat with two engineers, and a paired session on a small retrieval problem. No take-home task.\n",
+      "interview": [
+        {
+          "path": "companies/acme-corp/jobs/2026-01-12-ai-engineer/interview/questions.md",
+          "title": "Interview prep: Acme Corp",
+          "kind": "guide"
+        }
+      ]
+    },
+    {
+      "job": {
+        "schema": 1,
+        "id": "2026-01-12-ai-developer",
+        "company_slug": "acme-recruiting",
+        "client": "Example University",
+        "title": "AI Developer",
+        "source": "pasted",
+        "source_site": "Pasted link",
+        "url": "https://jobs.example.com/rec/3",
+        "apply_via": "",
+        "posted": "",
+        "found_at": "2026-01-12T09:00:00.000Z",
+        "location": "Sampletown NSW",
+        "work_mode": "",
+        "job_type": "",
+        "salary": {
+          "text": "",
+          "min": null,
+          "max": null,
+          "currency": "",
+          "period": ""
+        },
+        "timeline": [
+          {
+            "at": "2026-01-12T09:00:00.000Z",
+            "event": "Found",
+            "note": "Pasted link"
+          }
+        ],
+        "work_rights": {
+          "label": "citizen_pr_only",
+          "quotes": [
+            "Must be an Australian citizen or permanent resident."
+          ],
+          "decided_by": "scan"
+        },
+        "scores": {
+          "fit": {
+            "value": null,
+            "must_haves": [],
+            "nice_to_haves": []
+          },
+          "sponsor": {
+            "value": null,
+            "tier": "",
+            "reasons": []
+          },
+          "career": {
+            "match": null,
+            "odds": null,
+            "tier": "",
+            "scored_at": ""
+          }
+        },
+        "status": "Found",
+        "files": [
+          {
+            "path": "jd.md",
+            "label": "Job description",
+            "at": "2026-01-12T09:00:00.000Z"
+          }
+        ],
+        "custom": {}
+      },
+      "company": {
+        "name": "Acme Recruiting",
+        "slug": "acme-recruiting",
+        "website": "",
+        "sponsor_status": "unknown"
+      },
+      "description": "# AI Developer (via Acme Recruiting)\n\nSampletown NSW · Onsite · 6-month contract, possible extension · Daily rate\n\n## About Acme Recruiting\n\nAcme Recruiting places software and data people with government and enterprise clients in New South Wales. We have worked with this client for six years, and most of our contractors stay on past their first contract.\n\n## About the client\n\nOur client is a state government agency that manages licences and permits. Its staff answer thousands of questions a month from a library of policy documents, some of them hundreds of pages long. The team wants an internal chatbot that finds the right policy and quotes it, so staff can answer faster and more consistently.\n\n## The role\n\nYou will join a small delivery team of three developers, a business analyst and a product owner from the agency. The first version is a pilot for one service centre. If it works, it rolls out to every centre next year.\n\n## Responsibilities\n\n- Build an internal chatbot over policy documents, with answers that quote their source.\n- Set up retrieval over long documents: parsing, chunking and search.\n- Write tests that check answers against a list of known questions.\n- Work with the business analyst to collect questions from staff.\n- Document the system so the agency's own team can run it after the contract.\n\n## Requirements\n\n- Python and an LLM API.\n- Experience with retrieval over long documents.\n- 3+ years of professional software development.\n- Clear communication with non-technical people.\n- Must be an Australian citizen or permanent resident. A police check applies before you start.\n\n## Nice to have\n\n- Work in government or another regulated setting.\n- Azure or another cloud the client already uses.\n\n## Contract details\n\n- Six months, starting as soon as checks are done, with a likely extension.\n- Daily rate, paid weekly. Tell us your rate when you apply.\n- Five days a week onsite at the client's Sampletown office. Laptop provided.\n\n## How to apply\n\nReply to this ad or email Jordan Lee at jordan.lee@example.com with your resume and your daily rate. Shortlisted people will hear from Jordan within two working days. The client interviews in one round: a 45 minute chat with the delivery lead and product owner.\n",
+      "interview": []
+    },
+    {
+      "job": {
+        "schema": 1,
+        "id": "2026-01-12-backend-engineer-llm",
+        "company_slug": "example-labs",
+        "client": null,
+        "title": "Backend Engineer (LLM)",
+        "source": "adzuna",
+        "source_site": "Adzuna",
+        "url": "https://jobs.example.com/labs/2",
+        "apply_via": "",
+        "posted": "",
+        "found_at": "2026-01-12T09:00:00.000Z",
+        "location": "Remote Australia",
+        "work_mode": "Remote",
+        "job_type": "",
+        "salary": {
+          "text": "",
+          "min": null,
+          "max": null,
+          "currency": "",
+          "period": ""
+        },
+        "timeline": [
+          {
+            "at": "2026-01-12T09:00:00.000Z",
+            "event": "Found",
+            "note": "Adzuna"
+          }
+        ],
+        "work_rights": {
+          "label": "silent",
+          "quotes": [],
+          "decided_by": "none"
+        },
+        "scores": {
+          "fit": {
+            "value": null,
+            "must_haves": [],
+            "nice_to_haves": []
+          },
+          "sponsor": {
+            "value": 20,
+            "tier": "Low",
+            "reasons": [
+              "no sponsorship signal; ad is silent"
+            ]
+          },
+          "career": {
+            "match": null,
+            "odds": null,
+            "tier": "",
+            "scored_at": ""
+          }
+        },
+        "status": "Found",
+        "files": [
+          {
+            "path": "jd.md",
+            "label": "Job description",
+            "at": "2026-01-12T09:00:00.000Z"
+          }
+        ],
+        "custom": {}
+      },
+      "company": {
+        "name": "Example Labs",
+        "slug": "example-labs",
+        "website": "",
+        "sponsor_status": "unknown"
+      },
+      "description": "# Backend Engineer (LLM) at Example Labs\n\nRemote Australia · Full time · $135k-$150k + super\n\n## About Example Labs\n\nExample Labs builds document search for law firms. Lawyers use us to find the one clause that matters in a pile of contracts, court files and emails. Our backend serves 40 million pages and an LLM answer layer on top. We are 70 people, fully remote across Australia, and we meet in person twice a year.\n\n## The role\n\nOur customers upload more every month, and the biggest matters now run to hundreds of thousands of pages. We need another backend engineer to keep ingestion fast, search accurate and answers quick as we grow. You will join the platform squad of five and report to our Head of Engineering.\n\n## What you'll do\n\n- Design and run Node.js services for ingestion, search and answers.\n- Build retrieval pipelines: parsing, chunking, embeddings and hybrid search.\n- Keep latency low and costs predictable as usage grows.\n- Write clear design notes before big changes, and review your teammates' notes.\n- Join the on-call roster (one week in six). Pages are rare, and we fix the cause the next day.\n\n## You have\n\n- 4+ years of backend work in Node.js or TypeScript.\n- Production experience with Postgres and queues.\n- Built or run a retrieval pipeline.\n- Comfort reading traces and fixing slow paths.\n\n## Bonus\n\n- Experience with legal or other long documents.\n- Go. A few of our older services use it.\n\n## How we work\n\nWe write things down. Most decisions start as a one-page note in our wiki, and meetings are short. Core hours are 10am to 3pm Sydney time, and the rest of your day is yours to plan. Every engineer ships to production in their first two weeks.\n\n## What we offer\n\n- $135k-$150k base plus super.\n- Work from anywhere in Australia, with a $1,500 home office budget.\n- Two team weeks a year, travel paid.\n- 20 days of leave, plus your birthday off.\n- A yearly learning budget of $1,500.\n\n## How to apply\n\nSend your resume through our careers page. Skip the cover letter. Instead, answer one question in a few sentences: what is the slowest query you have fixed, and how did you find it?\n\nCasey Park from our talent team will be in touch within five working days. The process is a call with Casey, a system design chat, and a code review exercise on a real pull request.\n",
+      "interview": []
+    }
+  ],
+  "companies": [
+    {
+      "name": "Acme Corp",
+      "slug": "acme-corp",
+      "sponsor": {
+        "status": "unknown",
+        "evidence": [],
+        "last_checked": ""
+      }
+    },
+    {
+      "name": "Acme Recruiting",
+      "slug": "acme-recruiting",
+      "sponsor": {
+        "status": "unknown",
+        "evidence": [],
+        "last_checked": ""
+      }
+    },
+    {
+      "name": "Example Labs",
+      "slug": "example-labs",
+      "sponsor": {
+        "status": "unknown",
+        "evidence": [],
+        "last_checked": ""
+      }
+    }
+  ],
+  "employers": [],
+  "searches": [
+    {
+      "at": "2026-01-12T09:00:00.000Z",
+      "site": "Greenhouse",
+      "query": "ai engineer",
+      "location": "Sampletown NSW",
+      "results": "12",
+      "kept": "1",
+      "notes": "kept Acme Corp"
+    }
+  ],
+  "learning": {
+    "topics": [
+      {
+        "slug": "rag-pipelines",
+        "title": "RAG pipelines",
+        "items": [
+          {
+            "path": "learning/rag-pipelines/guide.md",
+            "title": "RAG pipelines",
+            "kind": "guide"
+          }
+        ]
+      }
+    ]
+  },
+  "texts": {
+    "companies/acme-corp/contacts.json": "{\n  \"careers_url\": \"https://acme.example.com/careers\",\n  \"ats_board_url\": \"https://boards.example.com/acme-corp\",\n  \"emails\": [\n    { \"address\": \"careers@example.com\", \"kind\": \"careers\", \"source_url\": \"https://acme.example.com/careers\", \"found_on\": \"2026-01-12\", \"confirmed\": true },\n    { \"address\": \"hr@example.com\", \"kind\": \"hr\", \"source_url\": \"https://acme.example.com/contact\", \"found_on\": \"2026-01-12\", \"confirmed\": false },\n    { \"address\": \"hello@example.com\", \"kind\": \"general\", \"source_url\": \"https://acme.example.com/contact\", \"found_on\": \"2026-01-12\", \"confirmed\": true }\n  ],\n  \"phone\": \"\",\n  \"linkedin_url\": \"\",\n  \"notes\": \"Fictional sample: Acme Corp asks applicants to apply through its job board and use the careers address for questions.\"\n}\n",
+    "companies/acme-corp/jobs/2026-01-12-ai-engineer/interview/questions.md": "# Interview prep: Acme Corp\n\n1. Tell us about an agent you built.\n2. How do you evaluate retrieval quality?\n",
+    "companies/acme-corp/jobs/2026-01-12-ai-engineer/jd.md": "# AI Engineer at Acme Corp\n\nSampletown NSW · Hybrid (2 days in the office) · Full time · $140k-$160k + super\n\n## About us\n\nAcme Corp makes scheduling software for 2,000 clinics across Australia and New Zealand. Physios, dentists and GPs use us to run their day: bookings, reminders, waitlists and payments. We are a team of about 300, and 60 of us are engineers.\n\nClinic staff ask the same questions all day. Can this patient move to Friday? What is our cancellation policy? Which forms does a new patient need? The answers live in each clinic's own policies, and they differ from clinic to clinic.\n\n## The role\n\nWe are building an assistant that answers staff questions from each clinic's own policies, and takes simple actions when asked. It is in a pilot with 40 clinics. You will join a team of four engineers, a designer and a product manager, and help take it to every clinic this year.\n\n## What you'll do\n\n- Build LLM agents that answer questions and take simple actions, like moving a booking.\n- Own retrieval: chunking, embeddings, reranking and citations.\n- Set up evaluation so we know when a change makes answers worse.\n- Work with product and design on how the assistant shows its sources.\n- Look at real questions from the pilot each week and decide what to fix next.\n\n## What you'll bring\n\n- 3+ years building software in Python or TypeScript.\n- Hands-on work with LLM APIs and retrieval (RAG) in production.\n- A habit of measuring quality with test sets, not gut feel.\n- Clear writing. You will explain trade-offs to non-engineers.\n\n## Nice to have\n\n- Postgres and pgvector.\n- Agent frameworks or tool calling.\n- Healthcare or scheduling products.\n\n## What we offer\n\n- $140k-$160k base plus super, reviewed every year.\n- Two days a week in our Sampletown office, the rest from home.\n- $2,000 a year for learning, plus time to use it.\n- 18 weeks paid parental leave for any parent.\n- A new laptop and a home office budget.\n\n## Work rights\n\nVisa sponsorship available for the right candidate. Tell us in your application if you will need it, so we can plan the timing with you.\n\n## How to apply\n\nApply through the button on this page with your resume and a short note. Tell us about one LLM feature you shipped and how you knew it was working. Riley Chen from our talent team reads every application and replies within a week.\n\nOur process: a 30 minute call with Riley, a technical chat with two engineers, and a paired session on a small retrieval problem. No take-home task.\n",
+    "companies/acme-recruiting/jobs/2026-01-12-ai-developer/jd.md": "# AI Developer (via Acme Recruiting)\n\nSampletown NSW · Onsite · 6-month contract, possible extension · Daily rate\n\n## About Acme Recruiting\n\nAcme Recruiting places software and data people with government and enterprise clients in New South Wales. We have worked with this client for six years, and most of our contractors stay on past their first contract.\n\n## About the client\n\nOur client is a state government agency that manages licences and permits. Its staff answer thousands of questions a month from a library of policy documents, some of them hundreds of pages long. The team wants an internal chatbot that finds the right policy and quotes it, so staff can answer faster and more consistently.\n\n## The role\n\nYou will join a small delivery team of three developers, a business analyst and a product owner from the agency. The first version is a pilot for one service centre. If it works, it rolls out to every centre next year.\n\n## Responsibilities\n\n- Build an internal chatbot over policy documents, with answers that quote their source.\n- Set up retrieval over long documents: parsing, chunking and search.\n- Write tests that check answers against a list of known questions.\n- Work with the business analyst to collect questions from staff.\n- Document the system so the agency's own team can run it after the contract.\n\n## Requirements\n\n- Python and an LLM API.\n- Experience with retrieval over long documents.\n- 3+ years of professional software development.\n- Clear communication with non-technical people.\n- Must be an Australian citizen or permanent resident. A police check applies before you start.\n\n## Nice to have\n\n- Work in government or another regulated setting.\n- Azure or another cloud the client already uses.\n\n## Contract details\n\n- Six months, starting as soon as checks are done, with a likely extension.\n- Daily rate, paid weekly. Tell us your rate when you apply.\n- Five days a week onsite at the client's Sampletown office. Laptop provided.\n\n## How to apply\n\nReply to this ad or email Jordan Lee at jordan.lee@example.com with your resume and your daily rate. Shortlisted people will hear from Jordan within two working days. The client interviews in one round: a 45 minute chat with the delivery lead and product owner.\n",
+    "companies/example-labs/jobs/2026-01-12-backend-engineer-llm/jd.md": "# Backend Engineer (LLM) at Example Labs\n\nRemote Australia · Full time · $135k-$150k + super\n\n## About Example Labs\n\nExample Labs builds document search for law firms. Lawyers use us to find the one clause that matters in a pile of contracts, court files and emails. Our backend serves 40 million pages and an LLM answer layer on top. We are 70 people, fully remote across Australia, and we meet in person twice a year.\n\n## The role\n\nOur customers upload more every month, and the biggest matters now run to hundreds of thousands of pages. We need another backend engineer to keep ingestion fast, search accurate and answers quick as we grow. You will join the platform squad of five and report to our Head of Engineering.\n\n## What you'll do\n\n- Design and run Node.js services for ingestion, search and answers.\n- Build retrieval pipelines: parsing, chunking, embeddings and hybrid search.\n- Keep latency low and costs predictable as usage grows.\n- Write clear design notes before big changes, and review your teammates' notes.\n- Join the on-call roster (one week in six). Pages are rare, and we fix the cause the next day.\n\n## You have\n\n- 4+ years of backend work in Node.js or TypeScript.\n- Production experience with Postgres and queues.\n- Built or run a retrieval pipeline.\n- Comfort reading traces and fixing slow paths.\n\n## Bonus\n\n- Experience with legal or other long documents.\n- Go. A few of our older services use it.\n\n## How we work\n\nWe write things down. Most decisions start as a one-page note in our wiki, and meetings are short. Core hours are 10am to 3pm Sydney time, and the rest of your day is yours to plan. Every engineer ships to production in their first two weeks.\n\n## What we offer\n\n- $135k-$150k base plus super.\n- Work from anywhere in Australia, with a $1,500 home office budget.\n- Two team weeks a year, travel paid.\n- 20 days of leave, plus your birthday off.\n- A yearly learning budget of $1,500.\n\n## How to apply\n\nSend your resume through our careers page. Skip the cover letter. Instead, answer one question in a few sentences: what is the slowest query you have fixed, and how did you find it?\n\nCasey Park from our talent team will be in touch within five working days. The process is a call with Casey, a system design chat, and a code review exercise on a real pull request.\n",
+    "learning/rag-pipelines/guide.md": "# RAG pipelines\n\nA short study guide for Alex Example.\n\n- Chunk the documents\n- Embed and retrieve\n- Cite every source\n"
+  },
+  "approvals": [
+    {
+      "id": "20260114t090000-3ec7f5",
+      "action": "status_change",
+      "title": "Move Example Labs to Interview",
+      "summary": "Claude found an interview invite in your notes.",
+      "steps": [
+        "Set the job status to Interview",
+        "Add a timeline event \"Status: Interview\""
+      ],
+      "payload": {
+        "company_slug": "example-labs",
+        "id": "2026-01-12-backend-engineer-llm",
+        "status": "Interview",
+        "note": "Invite for Thursday"
+      },
+      "created_at": "2026-01-14T09:00:00.000Z",
+      "created_by": "claude",
+      "status": "pending",
+      "decided_at": "",
+      "result_note": ""
+    }
+  ],
+  "requests": [
+    {
+      "id": "20260114t090000-b197f7",
+      "folder": "me/identity",
+      "why": "Need your visa expiry date for the Acme Corp cover letter",
+      "field": "visa_expiry",
+      "who": "claude",
+      "minutes": 15,
+      "created_at": "2026-01-14T09:00:00.000Z",
+      "status": "pending",
+      "decided_at": "",
+      "expires_at": ""
+    }
+  ],
+  "agencies": [
+    {
+      "name": "Acme Recruiting",
+      "slug": "acme-recruiting",
+      "website": "https://recruiting.example.com",
+      "since": 2009,
+      "specialties": [
+        "Technology",
+        "Government"
+      ],
+      "tags": [
+        "IT specialist",
+        "Government",
+        "AI"
+      ],
+      "cities": [
+        "Sampletown"
+      ],
+      "hiring_summary": "Has a live AI Developer role for Example University in Sampletown and works heavily with government.",
+      "about_url": "https://recruiting.example.com/about",
+      "city_links": [
+        {
+          "city": "Sampletown",
+          "url": "https://recruiting.example.com/contact/sampletown"
+        }
+      ],
+      "linkedin_url": "",
+      "team_note": {
+        "text": "Team page names a technology recruitment lead for Sampletown.",
+        "source_url": "https://recruiting.example.com/about"
+      },
+      "best_contact": {
+        "name": "",
+        "source_url": ""
+      },
+      "contacts": [
+        {
+          "kind": "email",
+          "value": "jobs@example.com",
+          "label": "Technology team",
+          "source_url": "https://recruiting.example.com/contact",
+          "found_on": "2026-01-12",
+          "confirmed": true
+        },
+        {
+          "kind": "phone",
+          "value": "0491 570 006",
+          "label": "Sampletown office",
+          "source_url": "https://recruiting.example.com/contact/sampletown",
+          "found_on": "2026-01-12",
+          "confirmed": true
+        }
+      ],
+      "people": [],
+      "job_refs": [
+        "acme-recruiting/2026-01-12-ai-developer"
+      ],
+      "favourite": false,
+      "tracking": {
+        "status": "to_contact",
+        "contacted_on": "",
+        "follow_up_on": "",
+        "notes": ""
+      },
+      "timeline": [
+        {
+          "at": "2026-01-12T09:00:00.000Z",
+          "event": "Advertised a job",
+          "note": "AI Developer"
+        }
+      ]
+    }
+  ]
+}

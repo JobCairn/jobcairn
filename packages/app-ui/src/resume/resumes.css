@@ -1,0 +1,96 @@
+/* Resumes screen and the New tailored resume dialog. */
+.resumes-section { margin-top: var(--space-6); }
+.resumes-base { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.resumes-base__open {
+  display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-1); min-width: 14rem; max-width: 28rem;
+  padding: var(--space-3) var(--space-4); border: var(--size-border) solid var(--color-border); border-radius: var(--radius-md);
+  background: var(--color-surface); color: var(--color-text); text-align: left; cursor: pointer;
+  transition: background var(--motion-duration-fast) var(--motion-easing-out), border-color var(--motion-duration-fast) var(--motion-easing-out);
+}
+.resumes-base__open:hover { background: var(--color-surface-hover); border-color: var(--color-border-strong); }
+.resumes-base__open:focus-visible { outline: var(--size-focus-ring) solid var(--color-focus); outline-offset: 2px; }
+.resumes-base__name { font-weight: var(--font-weight-medium); overflow-wrap: anywhere; }
+.resumes-empty { display: flex; flex-direction: column; gap: var(--space-2); max-width: calc(var(--dialog-width) * 1.4); }
+
+.newresume__kinds { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
+.newresume__kind {
+  position: relative; display: flex; flex-direction: column; gap: var(--space-1); padding: var(--space-3) var(--space-4);
+  border: var(--size-border) solid var(--color-border); border-radius: var(--radius-md); cursor: pointer; background: var(--color-surface);
+}
+.newresume__kind input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.newresume__kind:hover { background: var(--color-surface-hover); }
+.newresume__kind:has(input:checked) { border-color: var(--color-accent); background: var(--color-accent-soft); box-shadow: inset 0 0 0 1px var(--color-accent); }
+.newresume__kind:has(input:focus-visible) { outline: var(--size-focus-ring) solid var(--color-focus); outline-offset: 2px; }
+.newresume__kind-label { font-weight: var(--font-weight-medium); }
+.newresume__kind-hint { color: var(--color-text-muted); }
+.newresume__or { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2); }
+.newresume__examples { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: calc(-1 * var(--space-1)); }
+@media (max-width: 560px) { .newresume__kinds { grid-template-columns: minmax(0, 1fr); } }
+
+/* ---- File browser: grid of tiles, list toggle, foldable sections ---- */
+.rf-top { gap: var(--space-3); align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+.rf-view { display: inline-flex; padding: 2px; border: var(--size-border) solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); }
+.rf-view__btn {
+  display: inline-flex; align-items: center; gap: var(--space-1); padding: var(--space-1) var(--space-3); border: 0; border-radius: var(--radius-sm);
+  background: none; color: var(--color-text-muted); font: inherit; font-size: var(--font-size-13); cursor: pointer;
+}
+.rf-view__btn:hover { color: var(--color-text); background: var(--color-surface-hover); }
+.rf-view__btn[aria-checked="true"] { color: var(--color-text); background: var(--color-accent-soft); box-shadow: inset 0 0 0 1px var(--color-accent); }
+.rf-view__btn:focus-visible { outline: var(--size-focus-ring) solid var(--color-focus); outline-offset: 2px; }
+
+.rf-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; }
+.rf-head__title { margin: 0; font-size: var(--font-size-16); font-weight: var(--font-weight-medium); }
+.rf-head__fold {
+  display: inline-flex; align-items: center; gap: var(--space-2); padding: var(--space-1) var(--space-2); margin-left: calc(-1 * var(--space-2));
+  border: 0; border-radius: var(--radius-sm); background: none; color: var(--color-text); font: inherit; cursor: pointer;
+}
+.rf-head__fold:hover { background: var(--color-surface-hover); }
+.rf-head__fold:focus-visible { outline: var(--size-focus-ring) solid var(--color-focus); outline-offset: 2px; }
+.rf-head__count {
+  min-width: 1.5rem; padding: 0 var(--space-2); border-radius: var(--radius-full); background: var(--color-surface-hover);
+  color: var(--color-text-muted); font-size: var(--font-size-12); font-weight: var(--font-weight-medium); text-align: center;
+}
+
+.rf-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr)); gap: var(--space-4); }
+.rf-tile { position: relative; min-width: 0; }
+.rf-tile__open {
+  display: flex; flex-direction: column; width: 100%; height: 100%; padding: 0; overflow: hidden; text-align: left; cursor: pointer;
+  border: var(--size-border) solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); color: var(--color-text); font: inherit;
+  transition: border-color var(--motion-duration-fast) var(--motion-easing-out), box-shadow var(--motion-duration-fast) var(--motion-easing-out);
+}
+.rf-tile__open:hover { border-color: var(--color-border-strong); box-shadow: var(--shadow-card); }
+.rf-tile__open:focus-visible { outline: var(--size-focus-ring) solid var(--color-focus); outline-offset: 2px; }
+.rf-thumb {
+  position: relative; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: var(--space-1);
+  aspect-ratio: 4 / 3; overflow: hidden; background: var(--color-bg); border-bottom: var(--size-border) solid var(--color-border); color: var(--color-text-muted);
+}
+.rf-thumb--page { display: block; padding: var(--space-3) var(--space-3) 0; }
+.rf-thumb--page .rp-sheet { box-shadow: var(--shadow-card); }
+.rf-thumb__kind { font-size: var(--font-size-12); font-weight: var(--font-weight-medium); letter-spacing: 0.04em; text-transform: uppercase; }
+.rf-kind--pdf { color: var(--color-danger); }
+.rf-kind--word { color: var(--color-info); }
+.rf-thumb--folder { color: var(--color-accent); }
+.rf-thumb--folder svg { width: 3rem; height: 3rem; }
+.rf-thumb--kind svg { width: 2.25rem; height: 2.25rem; }
+.rf-tile__text { display: flex; flex-direction: column; gap: 2px; padding: var(--space-2) var(--space-3) var(--space-3); min-width: 0; }
+.rf-tile__name { font-weight: var(--font-weight-medium); overflow-wrap: anywhere; }
+.rf-tile__meta { overflow-wrap: anywhere; }
+.rf-tile__badge { position: absolute; top: var(--space-2); left: var(--space-2); pointer-events: none; }
+.rf-tile__menu { position: absolute; top: var(--space-2); right: var(--space-2); border-radius: var(--radius-sm); background: var(--color-surface); box-shadow: var(--shadow-card); opacity: 0; transition: opacity var(--motion-duration-fast) var(--motion-easing-out); }
+.rf-tile:hover .rf-tile__menu, .rf-tile:focus-within .rf-tile__menu, .rf-tile__menu:has([aria-expanded="true"]) { opacity: 1; }
+@media (hover: none) { .rf-tile__menu { opacity: 1; } }
+
+.rf-crumbs { display: flex; align-items: center; gap: var(--space-2); color: var(--color-text-muted); font-size: var(--font-size-14); }
+.rf-crumbs__back {
+  display: inline-flex; align-items: center; gap: var(--space-1); padding: var(--space-1) var(--space-2); border: 0; border-radius: var(--radius-sm);
+  background: none; color: var(--color-accent); font: inherit; cursor: pointer;
+}
+.rf-crumbs__back:hover { background: var(--color-surface-hover); }
+.rf-crumbs__back:focus-visible { outline: var(--size-focus-ring) solid var(--color-focus); outline-offset: 2px; }
+.rf-crumbs [aria-current] { color: var(--color-text); font-weight: var(--font-weight-medium); }
+.rf-rowactions { gap: var(--space-1); justify-content: flex-end; flex-wrap: nowrap; }
+.rf-empty { padding: var(--space-4); border: var(--size-border) dashed var(--color-border); border-radius: var(--radius-md); }
+@media (max-width: 560px) { .rf-grid { grid-template-columns: repeat(auto-fill, minmax(7.75rem, 1fr)); gap: var(--space-3); } .rf-view__btn span { display: none; } }
+@media (prefers-reduced-motion: reduce) { .rf-tile__open, .rf-tile__menu { transition: none; } }
+/* On a narrow window the view toggle and New button go under the title instead of squeezing it. */
+@media (max-width: 720px) { .screen-head:has(.rf-top) { flex-wrap: wrap; align-items: flex-start; } .screen-head:has(.rf-top) .rf-top { justify-content: flex-start; flex-wrap: wrap; min-width: 0; max-width: 100%; } .screen-head__actions:has(.rf-top) { flex: 1 1 100%; min-width: 0; } }

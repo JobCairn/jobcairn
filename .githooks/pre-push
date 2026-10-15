@@ -1,0 +1,21 @@
+#!/bin/sh
+# Blocks pushes that contain personal data. Needs ~/.config/careeros/denylist.txt.
+# Runs the in-repo scan plus the interim out-of-repo guard (if installed); both must pass.
+GUARD="$HOME/.config/careeros/hooks/guard.sh"
+zero=0000000000000000000000000000000000000000
+while read -r local_ref local_sha remote_ref remote_sha; do
+  [ "$local_sha" = "$zero" ] && continue
+  if [ "$remote_sha" = "$zero" ]; then range="$local_sha"; else range="$remote_sha..$local_sha"; fi
+
+  node scripts/privacy/scan.mjs --range "$range" --require-denylist
+  status=$?
+
+  if [ -x "$GUARD" ]; then
+    "$GUARD" range "$range"
+    guard_status=$?
+    [ "$guard_status" -ne 0 ] && status=$guard_status
+  fi
+
+  [ "$status" -ne 0 ] && exit $status
+done
+exit 0

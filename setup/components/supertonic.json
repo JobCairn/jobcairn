@@ -1,0 +1,6 @@
+{ "id": "supertonic", "name": "Supertonic 3 voice", "order": 60, "required": true, "why": "Reads videos aloud on your Mac, offline and free.", "docs": "https://huggingface.co/Supertone/supertonic-3",
+  "platforms": { "darwin": { "check": "test -x \"$HOME/.careeros/venv/bin/python\" && \"$HOME/.careeros/venv/bin/python\" -c 'import sys, importlib.metadata as m; sys.exit(m.version(\"supertonic\") != \"1.3.1\")'", "install": [
+    "py=\"$(for p in python3 python3.14 python3.13 python3.12 python3.11; do b=\"$(command -v $p)\" || continue; [ \"$b\" = /usr/bin/python3 ] && continue; \"$b\" -c 'import sys; sys.exit(0 if (3, 11) <= sys.version_info[:2] <= (3, 14) else 1)' && echo \"$b\" && break; done)\" && test -n \"$py\" && \"$py\" -m venv \"$HOME/.careeros/venv\"",
+    "\"$HOME/.careeros/venv/bin/pip\" install supertonic==1.3.1",
+    "\"$HOME/.careeros/venv/bin/python\" -c 'from supertonic import TTS; TTS(auto_download=True)'"
+  ] } } }

@@ -1,0 +1,155 @@
+/* "Fill from my resume". Uses the Graphite/Paper tokens only. */
+
+/* The picker: one row that is also a drop target. */
+.rfill-pick {
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: var(--space-2) var(--space-4);
+  padding: var(--space-4); border: var(--size-border) dashed var(--color-border-strong); border-radius: var(--radius-lg);
+  background: var(--color-bg-raised);
+  transition: background var(--motion-duration-fast) var(--motion-easing-out), border-color var(--motion-duration-fast) var(--motion-easing-out);
+}
+.rfill-pick.is-over { border-color: var(--color-accent); background: var(--color-accent-soft); }
+.rfill-pick--compact { padding: var(--space-3) var(--space-4); background: transparent; }
+.rfill-pick__icon {
+  display: grid; place-items: center; width: var(--space-10); height: var(--space-10); border-radius: var(--radius-md);
+  background: var(--color-surface); color: var(--color-accent); border: var(--size-border) solid var(--color-border);
+}
+.rfill-pick--compact .rfill-pick__icon { width: var(--space-8); height: var(--space-8); }
+.rfill-pick__body { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+.rfill-pick__title { font-weight: var(--font-weight-medium); }
+.rfill-pick__text { font-size: var(--font-size-13); color: var(--color-text-muted); overflow-wrap: anywhere; }
+.rfill-pick__error, .rfill-error {
+  grid-column: 1 / -1; margin: 0; padding: var(--space-2) var(--space-3); border-radius: var(--radius-md); font-size: var(--font-size-13); color: var(--color-text);
+  background: var(--color-danger-soft); border: var(--size-border) solid color-mix(in srgb, var(--color-danger) 45%, transparent);
+}
+@media (max-width: 720px) {
+  .rfill-pick { grid-template-columns: auto minmax(0, 1fr); }
+  .rfill-pick > .btn { grid-column: 1 / -1; justify-self: start; }
+}
+
+.rfill-card { display: flex; flex-direction: column; gap: var(--space-4); margin-bottom: var(--space-6); max-width: 56rem; }
+.rfill-file { color: var(--color-text); overflow-wrap: anywhere; }
+
+/* Review */
+.rfill-review { display: flex; flex-direction: column; gap: var(--space-4); }
+.rfill-review__head { display: flex; flex-direction: column; gap: var(--space-1); }
+.rfill-review__head p { margin: 0; }
+.rfill-review__title { margin: 0; }
+.rfill-review__title:focus { outline: none; }
+.rfill-review__title:focus-visible { outline: var(--size-focus-ring) solid var(--color-focus); outline-offset: var(--space-1); border-radius: var(--radius-sm); }
+.rfill-same { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); font-size: var(--font-size-13); color: var(--color-text-muted); }
+.rfill-rows { display: flex; flex-direction: column; gap: var(--space-3); margin: 0; }
+.rfill-row { display: flex; flex-direction: column; gap: var(--space-1); max-width: 40rem; }
+.rfill-row__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); min-height: var(--space-6); }
+.rfill-row__label { font-size: var(--font-size-13); color: var(--color-text-muted); }
+.rfill-row__value { overflow-wrap: anywhere; }
+.rfill-row--same .rfill-row__value { color: var(--color-text-muted); }
+.rfill-row__conflict {
+  display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-3); border-radius: var(--radius-md);
+  border: var(--size-border) solid var(--color-border); background: var(--color-bg-raised);
+}
+.rfill-row__conflict .checkbox { overflow-wrap: anywhere; }
+.rfill-rights { border: 0; padding: 0; margin: 0; display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+.rfill-rights__legend { padding: 0; float: left; width: 100%; font-size: var(--font-size-13); color: var(--color-text-muted); }
+.rfill-rights .choice-group { margin-top: var(--space-1); }
+.rfill-review__actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); padding-top: var(--space-2); border-top: var(--size-border) solid var(--color-border); }
+.rfill-review__note { flex: 1 1 18rem; }
+
+/* The one-tap choices, as on the onboarding page (that stylesheet isn't loaded in Settings). */
+.rfill-review .choice-group { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.rfill-review .choice {
+  display: inline-flex; align-items: center; min-height: var(--button-height-md); padding: 0 var(--space-3); border-radius: var(--radius-md);
+  border: var(--size-border) solid var(--color-border-strong); background: var(--color-surface); color: var(--color-text); font-size: var(--font-size-13); cursor: pointer;
+}
+.rfill-review .choice:hover { background: var(--color-surface-hover); }
+.rfill-review .choice.is-on { border-color: var(--color-accent); background: var(--color-accent-soft); box-shadow: inset 0 0 0 var(--size-border) var(--color-accent); font-weight: var(--font-weight-medium); }
+.rfill-review .choice:has(input:focus-visible) { outline: var(--size-focus-ring) solid var(--color-focus); outline-offset: var(--size-border); }
+
+/* After saving: a lasting note. */
+.rfill-done { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-3); align-items: start; }
+.rfill-done:focus { outline: none; }
+.rfill-done:focus-visible { outline: var(--size-focus-ring) solid var(--color-focus); outline-offset: var(--space-1); border-radius: var(--radius-sm); }
+.rfill-done__icon {
+  display: grid; place-items: center; width: var(--space-8); height: var(--space-8); border-radius: var(--radius-full);
+  color: var(--color-success); background: var(--color-success-soft);
+}
+.rfill-done__body { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+.rfill-done__body p, .rfill-done__title { margin: 0; }
+.rfill-done__title { font-weight: var(--font-weight-medium); }
+
+/* Claude's suggestions */
+.rfill-sugg { display: flex; flex-direction: column; gap: var(--space-3); padding-top: var(--space-4); border-top: var(--size-border) solid var(--color-border); }
+.rfill-sugg__bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3) var(--space-6); }
+.rfill-sugg__intro { display: flex; flex-direction: column; gap: var(--space-1); flex: 1 1 20rem; min-width: 0; }
+.rfill-sugg__intro p, .rfill-sugg__title { margin: 0; }
+.rfill-sugg__title { font-weight: var(--font-weight-medium); }
+/* The slot keeps its size whether it holds the button or the status chip, so nothing around it moves. */
+.rfill-sugg__slot { flex: 0 0 auto; min-height: var(--button-height-md); display: flex; align-items: center; }
+.rfill-sugg__why { margin: 0; }
+
+/* The fixed-size status chip: same height as a button, fixed width, text cut short with a tooltip. */
+.rfill-chip {
+  display: inline-grid; grid-template-columns: auto minmax(0, 1fr) auto auto; align-items: center; gap: var(--space-2);
+  width: 19rem; max-width: 100%; height: var(--button-height-md); padding: 0 var(--space-1) 0 var(--space-3);
+  border-radius: var(--radius-full); border: var(--size-border) solid var(--color-border-strong); background: var(--color-surface);
+  font-size: var(--font-size-13); color: var(--color-text);
+}
+.rfill-chip--failed { border-color: color-mix(in srgb, var(--color-danger) 45%, transparent); }
+.rfill-chip--failed .icon { color: var(--color-danger); }
+.rfill-chip__text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rfill-chip__time { font-variant-numeric: tabular-nums; color: var(--color-text-muted); min-width: 3.5ch; text-align: right; }
+.rfill-chip__btn {
+  height: calc(var(--button-height-md) - var(--space-2)); padding: 0 var(--space-3); border-radius: var(--radius-full); border: 0;
+  background: transparent; color: var(--color-accent); font: inherit; font-weight: var(--font-weight-medium); cursor: pointer;
+}
+.rfill-chip__btn:hover { background: var(--color-surface-hover); }
+.rfill-chip__btn:focus-visible { outline: var(--size-focus-ring) solid var(--color-focus); outline-offset: 0; }
+
+.rfill-sugg__result { display: flex; flex-direction: column; gap: var(--space-3); }
+.rfill-sugg__result p { margin: 0; }
+.rfill-sugg__group { border: 0; padding: 0; margin: 0; min-width: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+.rfill-sugg__legend { padding: 0; float: left; width: 100%; font-size: var(--font-size-13); color: var(--color-text-muted); }
+.rfill-chips { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.rfill-toggle {
+  display: inline-flex; align-items: center; gap: var(--space-1); min-height: var(--button-height-sm); padding: 0 var(--space-3);
+  border-radius: var(--radius-full); border: var(--size-border) solid var(--color-border-strong); background: transparent;
+  font: inherit; font-size: var(--font-size-13); color: var(--color-text); cursor: pointer;
+}
+.rfill-toggle:hover { background: var(--color-surface-hover); }
+.rfill-toggle.is-on { background: var(--color-accent-soft); border-color: var(--color-accent); }
+.rfill-toggle.is-on .icon { color: var(--color-accent); }
+.rfill-toggle:focus-visible { outline: var(--size-focus-ring) solid var(--color-focus); outline-offset: var(--size-border); }
+.rfill-sugg__actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
+
+/* Home notice: one quiet line that stays until reviewed or dismissed. */
+.rfill-notice {
+  display: flex; align-items: center; gap: var(--space-2); padding: var(--space-1) var(--space-1) var(--space-1) var(--space-3); margin-bottom: var(--space-4);
+  border-radius: var(--radius-md); border: var(--size-border) solid color-mix(in srgb, var(--color-success) 35%, transparent); background: var(--color-success-soft);
+}
+.rfill-notice > .icon { color: var(--color-success); }
+.rfill-notice__dot { color: var(--color-text-muted); }
+.rfill-notice__link {
+  padding: 0; border: 0; background: none; font: inherit; font-size: var(--font-size-13); font-weight: var(--font-weight-medium); color: var(--color-accent); cursor: pointer;
+  text-decoration: underline; text-underline-offset: var(--space-1); border-radius: var(--radius-sm);
+}
+.rfill-notice__link:hover { color: var(--color-accent-strong); }
+.rfill-notice__link:focus-visible { outline: var(--size-focus-ring) solid var(--color-focus); outline-offset: var(--size-border); }
+.rfill-notice__close { margin-left: auto; }
+
+/* Onboarding: the picker above the first question, and the extra fields found. */
+.rfill-onboard { display: flex; flex-direction: column; gap: var(--space-3); }
+.rfill-field { position: relative; }
+.rfill-field__tag { position: absolute; top: 0; right: 0; }
+.rfill-extra {
+  display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-3) var(--space-4); border-radius: var(--radius-md);
+  border: var(--size-border) solid var(--color-border); background: var(--color-bg-raised);
+}
+.rfill-extra__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
+.rfill-extra p { margin: 0; }
+.rfill-extra__head .onboard__link { white-space: nowrap; flex: 0 0 auto; }
+.rfill-extra__head { align-items: flex-start; }
+.rfill-extra .checkbox { overflow-wrap: anywhere; }
+
+@media (prefers-reduced-motion: reduce) {
+  .rfill-pick { transition: none; }
+}
+.rfill-titles { display: flex; flex-direction: column; gap: var(--space-2); align-items: flex-start; }

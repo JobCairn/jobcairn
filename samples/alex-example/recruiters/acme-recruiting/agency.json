@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "name": "Acme Recruiting",
+  "slug": "acme-recruiting",
+  "website": "https://recruiting.example.com",
+  "since": 2009,
+  "specialties": ["Technology", "Government"],
+  "tags": ["IT specialist", "Government", "AI"],
+  "cities": ["Sampletown"],
+  "hiring_summary": "Has a live AI Developer role for Example University in Sampletown and works heavily with government.",
+  "about_url": "https://recruiting.example.com/about",
+  "city_links": [{ "city": "Sampletown", "url": "https://recruiting.example.com/contact/sampletown" }],
+  "linkedin_url": "",
+  "team_note": { "text": "Team page names a technology recruitment lead for Sampletown.", "source_url": "https://recruiting.example.com/about" },
+  "best_contact": { "name": "", "source_url": "" },
+  "contacts": [
+    { "kind": "email", "value": "jobs@example.com", "label": "Technology team", "source_url": "https://recruiting.example.com/contact", "found_on": "2026-01-12", "confirmed": true },
+    { "kind": "phone", "value": "0491 570 006", "label": "Sampletown office", "source_url": "https://recruiting.example.com/contact/sampletown", "found_on": "2026-01-12", "confirmed": true }
+  ],
+  "people": [],
+  "job_refs": ["acme-recruiting/2026-01-12-ai-developer"],
+  "favourite": false,
+  "tracking": { "status": "to_contact", "contacted_on": "", "follow_up_on": "", "notes": "" },
+  "timeline": [{ "at": "2026-01-12T09:00:00.000Z", "event": "Advertised a job", "note": "AI Developer" }],
+  "custom": {}
+}

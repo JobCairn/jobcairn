@@ -1,0 +1,8 @@
+{
+  "compilerOptions": {
+    "target": "ES2022", "module": "ESNext", "moduleResolution": "Bundler", "jsx": "react-jsx",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"], "strict": true, "noEmit": true, "skipLibCheck": true,
+    "isolatedModules": true, "resolveJsonModule": true, "allowImportingTsExtensions": true, "types": ["node"]
+  },
+  "include": ["src", "identity.ts", "alias.mjs", "alias.d.mts", "dist/tokens.ts", "scripts/*.d.mts", "test", "guide", "test-visual", "playwright.config.ts", "../../tests/dom-setup.ts"]
+}

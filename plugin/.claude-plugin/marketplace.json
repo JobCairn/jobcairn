@@ -1,0 +1,12 @@
+{
+  "name": "jobcairn",
+  "owner": { "name": "JobCairn" },
+  "description": "The JobCairn skills, from this copy of the app, for Claude Code sessions in a JobCairn workspace",
+  "plugins": [
+    {
+      "name": "careeros",
+      "source": "./",
+      "description": "JobCairn job-hunt skills: career scoring and tailoring, video lessons, voice"
+    }
+  ]
+}

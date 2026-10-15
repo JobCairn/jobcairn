@@ -1,0 +1,108 @@
+/*
+  JobCairn video theme. One palette, one font pair, fixed safe areas.
+  Copy next to index.html. Do not edit per video: no design choices per lesson.
+  Adapted from HyperFrames (Apache-2.0): hyperframes-creative house-style,
+  typography and video-composition guidance. See NOTICE.md.
+
+  Canvas 1920x1080. Safe area: 140px left/right, 96px top.
+  Caption band: y 880-1040 is reserved for captions. Keep content above 860.
+  Fonts: Montserrat (display, body, numbers and dates) and JetBrains Mono (code + labels).
+  Both are bundled by the HyperFrames renderer, so they render offline.
+  Write font names literally (not through var()) so the renderer finds them.
+*/
+:root {
+  --bg: #0f1317;
+  --surface: #181e24;
+  --surface-2: #202830;
+  --line: #2c353f;
+  --ink: #eef1f3;
+  --muted: #a3adb7;
+  --accent: #f2b441;
+  --good: #6cc49a;
+  --bad: #ec7a6c;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 1920px; height: 1080px; overflow: hidden; background: #0f1317; }
+
+#root {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  color: #eef1f3;
+  font-family: "Montserrat", sans-serif;
+}
+
+/* Background: layered, never pure black. The grid drifts slowly over the whole video (kit.js drift); no breathing loops. */
+.bg { position: absolute; inset: 0; }
+.bg-glow {
+  position: absolute; inset: 0;
+  background: radial-gradient(1100px 700px at 78% 18%, rgba(242, 180, 65, 0.10), transparent 70%),
+              radial-gradient(900px 600px at 10% 95%, rgba(108, 196, 154, 0.06), transparent 70%);
+}
+.bg-grid {
+  position: absolute; inset: -240px; opacity: 0.35;
+  background-image: linear-gradient(#1b2229 2px, transparent 2px),
+                    linear-gradient(90deg, #1b2229 2px, transparent 2px);
+  background-size: 120px 120px;
+}
+
+/* Scenes. Root-level clips get absolute full-frame layout from the runtime. */
+.scene { position: absolute; inset: 0; }
+.stage {
+  position: absolute; inset: 0;
+  padding: 96px 140px 220px;
+  display: flex; flex-direction: column;
+}
+
+/* Type ramp (video sizes, not web sizes). */
+.kicker {
+  font-family: "JetBrains Mono", monospace; font-weight: 700;
+  font-size: 26px; letter-spacing: 0.14em; text-transform: uppercase; color: #f2b441;
+}
+.hero { font-weight: 900; font-size: 116px; line-height: 1.02; letter-spacing: -0.035em; max-width: 1500px; }
+.h2 { font-weight: 700; font-size: 68px; line-height: 1.08; letter-spacing: -0.03em; max-width: 1560px; }
+.lede { font-weight: 400; font-size: 40px; line-height: 1.35; color: #a3adb7; max-width: 1300px; }
+.body { font-weight: 400; font-size: 40px; line-height: 1.35; }
+.label { font-family: "JetBrains Mono", monospace; font-weight: 400; font-size: 24px; color: #a3adb7; }
+.num { font-variant-numeric: tabular-nums; }
+.accent { color: #f2b441; }
+.step { font-family: "Montserrat", sans-serif; font-weight: 600; font-variant-numeric: tabular-nums; font-size: 24px; color: #a3adb7; letter-spacing: 0.1em; }
+
+/* Cards and code. 2px+ borders: 1px vanishes after H.264 compression. */
+.card {
+  background: #181e24; border: 2px solid #2c353f; border-radius: 22px; padding: 40px 44px;
+}
+.code {
+  position: relative; display: block;
+  font-family: "JetBrains Mono", monospace; font-size: 34px; line-height: 54px;
+  background: #141a1f; border: 2px solid #2c353f; border-radius: 22px; padding: 36px 44px;
+  font-variant-ligatures: none; white-space: pre;
+}
+.code .ln { display: block; position: relative; }
+.code .k { color: #f2b441; }       /* keyword */
+.code .s { color: #6cc49a; }       /* string */
+.code .n { color: #e9a07a; }       /* number */
+.code .f { color: #9cc3ef; }       /* function or type */
+.code .c { color: #75808b; }       /* comment */
+.code-hl {
+  position: absolute; left: 0; right: 0; height: 54px; top: 36px;
+  background: rgba(242, 180, 65, 0.14); border-left: 6px solid #f2b441; opacity: 0;
+}
+
+/* Captions: lower band, one group at a time, readable on any scene. */
+.caption-band {
+  position: absolute; left: 0; right: 0; top: 896px; height: 132px;
+  display: flex; align-items: center; justify-content: center; pointer-events: none;
+}
+.cg {
+  position: absolute; max-width: 1500px; padding: 14px 30px; border-radius: 16px;
+  background: rgba(9, 12, 15, 0.78); opacity: 0;
+  font-family: "Montserrat", sans-serif; font-weight: 700; font-size: 44px; line-height: 1.2;
+  color: #eef1f3; text-align: center;
+}
+.cw { display: inline-block; }
+
+/* End fade. Starts hidden in CSS, so the overlay lint stays quiet. */
+.fade { position: absolute; inset: 0; background: #0f1317; opacity: 0; pointer-events: none; }

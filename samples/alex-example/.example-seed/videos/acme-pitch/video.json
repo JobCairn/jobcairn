@@ -1,0 +1,210 @@
+{
+  "schema": 1,
+  "type": "pitch",
+  "type_version": 2,
+  "subject": {
+    "kind": "job",
+    "company_slug": "acme-corp",
+    "id": "2026-01-12-ai-engineer"
+  },
+  "options": {
+    "length_s": 45,
+    "review": "if_problems"
+  },
+  "created_at": "2026-10-11T11:45:44.869Z",
+  "updated_at": "2026-10-11T11:46:35.891Z",
+  "captions": {
+    "style": "rail",
+    "estimated": false,
+    "srt": "captions.srt",
+    "vtt": "captions.vtt"
+  },
+  "locked_facts": [],
+  "title": "My answer for Acme Corp",
+  "status": "done",
+  "voice": {
+    "engine": "supertonic",
+    "voice": "F4",
+    "fell_back": false
+  },
+  "length_s": 31.72,
+  "renders": {
+    "draft": null,
+    "final": {
+      "path": "renders/final.mp4",
+      "at": "2026-10-11T11:46:34.212Z",
+      "duration_s": 31.733333,
+      "quality": "final"
+    }
+  },
+  "stages": {
+    "request": {
+      "status": "done",
+      "hash": "",
+      "at": "2026-10-11T11:45:44.871Z",
+      "ms": 0,
+      "message": "Saved"
+    },
+    "sources": {
+      "status": "done",
+      "hash": "",
+      "at": "2026-10-11T11:45:44.876Z",
+      "ms": 1,
+      "message": "3 files"
+    },
+    "write": {
+      "status": "done",
+      "hash": "",
+      "at": "2026-10-11T11:45:44.877Z",
+      "ms": 1,
+      "message": "Written"
+    },
+    "check": {
+      "status": "done",
+      "hash": "",
+      "at": "2026-10-11T11:45:44.895Z",
+      "ms": 17,
+      "message": "No problems left"
+    },
+    "review": {
+      "status": "skipped",
+      "hash": "",
+      "at": "2026-10-11T11:45:44.896Z",
+      "ms": 0,
+      "message": "The script passed its checks, so it went straight on to the video"
+    },
+    "narrate": {
+      "status": "done",
+      "hash": "a062faaf35c14c5e67aeae17de27c7c18728f97d21341299b08d78e3f492a949",
+      "at": "2026-10-11T11:45:58.297Z",
+      "ms": 13418,
+      "message": "Narrated with supertonic while the script was checked",
+      "parts": [
+        {
+          "name": "Narrated 5 paragraphs, while the script was checked",
+          "ms": 13418
+        }
+      ]
+    },
+    "captions": {
+      "status": "done",
+      "hash": "da115c7f39bb9057fa27393148eaccba12bdfc34a3cefe5018e01531432c4138",
+      "at": "2026-10-11T11:46:00.844Z",
+      "ms": 2546,
+      "message": "21 caption lines"
+    },
+    "media": {
+      "status": "done",
+      "hash": "",
+      "at": "2026-10-11T11:46:02.820Z",
+      "ms": 1975,
+      "message": "14 sound effects",
+      "parts": [
+        {
+          "name": "Pictures and sound",
+          "ms": 1975
+        }
+      ]
+    },
+    "expand": {
+      "status": "done",
+      "hash": "7e1795dae98bfb482549d4326ff83d111829e6a338f1b47aaaa929412892fa95",
+      "at": "2026-10-11T11:46:02.829Z",
+      "ms": 8,
+      "message": "5 scenes, 32 seconds"
+    },
+    "lint": {
+      "status": "done",
+      "hash": "7e1795dae98bfb482549d4326ff83d111829e6a338f1b47aaaa929412892fa95",
+      "at": "2026-10-11T11:46:11.300Z",
+      "ms": 8470,
+      "message": "10 warnings",
+      "parts": [
+        {
+          "name": "Quick lint and layout check",
+          "ms": 8468
+        }
+      ]
+    },
+    "draft": {
+      "status": "skipped",
+      "hash": "",
+      "at": "2026-10-11T11:46:11.301Z",
+      "ms": 0,
+      "message": "Not needed for the final video"
+    },
+    "final": {
+      "status": "done",
+      "hash": "7e1795dae98bfb482549d4326ff83d111829e6a338f1b47aaaa929412892fa95",
+      "at": "2026-10-11T11:46:35.889Z",
+      "ms": 24586,
+      "message": "32 seconds, 15 QA stills",
+      "parts": [
+        {
+          "name": "Render",
+          "ms": 22809
+        },
+        {
+          "name": "Label the file",
+          "ms": 60
+        },
+        {
+          "name": "Check the file",
+          "ms": 41
+        },
+        {
+          "name": "Contact sheet",
+          "ms": 504
+        },
+        {
+          "name": "QA stills",
+          "ms": 1068
+        },
+        {
+          "name": "Caption sync",
+          "ms": 103
+        }
+      ]
+    },
+    "save": {
+      "status": "done",
+      "hash": "",
+      "at": "2026-10-11T11:46:35.890Z",
+      "ms": 1,
+      "message": "Saved"
+    }
+  },
+  "issues": {
+    "errors": 0,
+    "warnings": 0
+  },
+  "sources": [
+    "me/history/roles.md",
+    "companies/acme-corp/jobs/2026-01-12-ai-engineer/jd.md",
+    "settings/profile.json"
+  ],
+  "error": "",
+  "custom": {},
+  "autofix": {
+    "repairs": [],
+    "claude_passes": 0,
+    "claude_fixed": 0,
+    "at": "2026-10-11T11:45:44.892Z"
+  },
+  "check_notes": [
+    {
+      "area": "runtime",
+      "text": "GSAP target #s3-l1 .kn-ink not found. https://gsap.com"
+    },
+    {
+      "area": "runtime",
+      "text": "GSAP target not found. https://gsap.com"
+    }
+  ],
+  "last_run": {
+    "phase": "final",
+    "status": "done",
+    "started_at": "2026-10-11T11:45:44.869Z",
+    "total_ms": 51022
+  }
+}

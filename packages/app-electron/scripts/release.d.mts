@@ -1,0 +1,15 @@
+export const CHECKSUMS_FILE: string;
+export function isReleaseArtifact(file: string): boolean;
+export function sha256File(file: string): string;
+export function checksumLines(files: string[]): string;
+export const UPDATE_FEED: string;
+export function isUploadAsset(file: string): boolean;
+export function uploadAssets(dir: string): string[];
+export function feedFiles(text: string): { url: string; sha512: string; size: number }[];
+export function feedProblems(dir: string, feed?: string): string[];
+export function writeChecksums(outDir: string, artifactPaths: string[]): string | null;
+export function checksumMismatches(dir: string): string[];
+export function signatureKind(codesignOutput: string): { kind: "unsigned" | "adhoc" | "developer-id" | "other"; authority?: string | null; team?: string | null };
+export function strayMachO(appPath: string): string[];
+export function notarytoolAuthArgs(mode: "keychain-profile" | "api-key" | "apple-id", env: Record<string, string | undefined>): string[];
+export function notaryResult(json: string): { id: string | null; accepted: boolean; status: string };

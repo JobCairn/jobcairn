@@ -1,0 +1,12 @@
+{
+  "careers_url": "https://acme.example.com/careers",
+  "ats_board_url": "https://boards.example.com/acme-corp",
+  "emails": [
+    { "address": "careers@example.com", "kind": "careers", "source_url": "https://acme.example.com/careers", "found_on": "2026-01-12", "confirmed": true },
+    { "address": "hr@example.com", "kind": "hr", "source_url": "https://acme.example.com/contact", "found_on": "2026-01-12", "confirmed": false },
+    { "address": "hello@example.com", "kind": "general", "source_url": "https://acme.example.com/contact", "found_on": "2026-01-12", "confirmed": true }
+  ],
+  "phone": "",
+  "linkedin_url": "",
+  "notes": "Fictional sample: Acme Corp asks applicants to apply through its job board and use the careers address for questions."
+}

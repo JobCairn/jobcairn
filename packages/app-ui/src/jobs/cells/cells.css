@@ -1,0 +1,72 @@
+/* Jobs table cells: Fit, Sponsor, Status, Work rights (jobs/cells). Tokens only. */
+
+/* Figures: tabular, in the body face, so columns of numbers line up without a monospace costume. */
+.cell-num { font-variant-numeric: lining-nums tabular-nums; font-size: var(--font-size-13); color: var(--color-text); }
+
+/* Tones: the word and its icon share one colour. Each is pulled 20% toward the text colour so it keeps
+   4.5:1 on the pinned rows' green tint as well as the plain background, in both themes. */
+.cell-tone--success { color: color-mix(in oklab, var(--color-success) 80%, var(--color-text)); }
+.cell-tone--accent { color: color-mix(in oklab, var(--color-accent) 80%, var(--color-text)); }
+.cell-tone--info { color: color-mix(in oklab, var(--color-info) 80%, var(--color-text)); }
+.cell-tone--warning { color: color-mix(in oklab, var(--color-warning) 80%, var(--color-text)); }
+.cell-tone--danger { color: color-mix(in oklab, var(--color-danger) 80%, var(--color-text)); }
+.cell-tone--neutral { color: var(--color-text); }
+.cell-tone--muted { color: var(--color-text-muted); }
+
+/* Icon and one word, no border: read-only status, not a button. */
+.cell-tag {
+  display: inline-flex; align-items: center; gap: var(--space-1); max-width: 100%; min-width: 0; vertical-align: middle;
+  font-size: var(--font-size-13); line-height: 1.2; font-weight: var(--font-weight-medium); white-space: nowrap;
+}
+.cell-tag__icon { flex: none; width: 14px; height: 14px; }
+.cell-tag__word { overflow: hidden; text-overflow: ellipsis; }
+/* The one state per column that must jump out gets a soft fill. */
+.cell-tag--filled { padding: 2px var(--space-2) 2px 6px; border-radius: var(--radius-full); background: color-mix(in srgb, currentColor 12%, transparent); }
+.cell-tone--muted.cell-tag { font-weight: var(--font-weight-regular); }
+
+/* Fit: number and bar (ScoreMeter), banded at the scoring rubric's thresholds. */
+/* A ramp, not a rainbow: green for a strong match, lighter green for good, grey for partial, amber for weak. */
+.score-meter__fill--fit-top { stroke: var(--color-success); }
+.score-meter__fill--fit-high { stroke: color-mix(in srgb, var(--color-success) 55%, var(--color-text-muted)); }
+.score-meter__fill--fit-mid { stroke: var(--color-text-muted); }
+.score-meter__fill--fit-low { stroke: var(--color-warning); }
+
+.cell-fit { display: block; width: 100%; }
+
+/* Not scored: quiet words; the Score button takes their place on row hover or keyboard focus. */
+.cell-fit-empty { display: inline-flex; justify-content: center; align-items: center; width: 100%; }
+.cell-fit-empty__text { font-size: var(--font-size-13); color: var(--color-text-muted); transition: opacity var(--motion-duration-fast) var(--motion-easing-out); }
+.cell-action {
+  display: inline-flex; align-items: center; gap: var(--space-1); height: 24px; padding: 0 var(--space-2); border: var(--size-border) solid var(--color-border); border-radius: var(--radius-sm);
+  background: transparent; color: var(--color-text-muted); font: inherit; font-size: var(--font-size-12); font-weight: var(--font-weight-medium); cursor: pointer;
+  transition: opacity var(--motion-duration-fast) var(--motion-easing-out);
+}
+.cell-action:hover, tr:hover .cell-action { background: var(--color-bg-raised); border-color: var(--color-border-strong); color: var(--color-text); }
+.cell-action:focus-visible { outline: var(--size-focus-ring) solid var(--color-focus); outline-offset: 1px; }
+
+/* Sponsor: mark, tier word, number. The numbers line up at the right edge of the column. */
+/* Sponsor: a traffic-light chip (tinted fill, tone text, a dot or shield). The tint comes from the tone below. */
+.cell-sponsor { display: inline-flex; align-items: center; gap: var(--space-1); max-width: 100%; padding: 2px var(--space-2) 2px 6px; border-radius: var(--radius-full); font-size: var(--font-size-13); line-height: 1.2; background: var(--color-surface-hover); }
+.cell-sponsor.cell-tone--success { background: var(--color-success-soft); }
+.cell-sponsor.cell-tone--warning { background: var(--color-warning-soft); }
+.cell-sponsor.cell-tone--danger { background: var(--color-danger-soft); }
+.cell-sponsor--unknown { background: transparent; }
+.cell-sponsor__mark { display: inline-grid; place-items: center; width: 14px; height: 14px; }
+.cell-sponsor__mark .icon { width: 14px; height: 14px; }
+.cell-sponsor__word { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: var(--font-weight-medium); }
+.cell-dot { width: 7px; height: 7px; border-radius: var(--radius-full); background: currentColor; }
+.cell-sponsor--unknown .cell-sponsor__word { color: var(--color-text-muted); font-weight: var(--font-weight-regular); }
+/* "Confirmed": the ad says so. Bold, with a shield; the row itself is already pinned and tinted, so no second fill. */
+.cell-sponsor--explicit .cell-sponsor__word { font-weight: var(--font-weight-semibold); }
+
+@media (prefers-reduced-motion: reduce) { .cell-action, .cell-fit-empty__text { transition: none; } }
+
+/* Fit is centred: the ring and the Score button share one centre line. */
+.cell-fit .score-meter { justify-content: center; }
+
+/* Job › Description: the sponsor estimate and why. */
+.job-sponsor { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-3) var(--space-4); border: var(--size-border) solid var(--color-border); border-radius: var(--radius-md); background: var(--color-bg-raised); max-width: 72ch; }
+.job-sponsor__head { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
+.job-sponsor__h { margin: 0; font-size: var(--font-size-14); font-weight: var(--font-weight-semibold); color: var(--color-text); }
+.job-sponsor__reasons { margin: 0; padding-left: var(--space-4); color: var(--color-text-muted); font-size: var(--font-size-13); line-height: var(--font-line-height-body); }
+.job-sponsor__none { margin: 0; color: var(--color-text-muted); font-size: var(--font-size-13); }

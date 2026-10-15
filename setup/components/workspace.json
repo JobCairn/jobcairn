@@ -1,0 +1,2 @@
+{ "id": "workspace", "name": "Your JobCairn folder", "order": 100, "required": true, "why": "Creates ~/JobCairn, where your documents and jobs live (never uploaded).", "docs": "docs/specs/2026-10-08-workspace-design.md",
+  "platforms": { "darwin": { "check": "test -f \"$HOME/JobCairn/workspace.json\" || test -f \"$HOME/CareerOS/workspace.json\"", "install": ["npm run --silent careeros -- init \"$HOME/JobCairn\""] } } }

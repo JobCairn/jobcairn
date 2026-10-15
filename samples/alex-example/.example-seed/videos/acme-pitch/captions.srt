@@ -1,0 +1,84 @@
+1
+00:00:00,902 --> 00:00:01,432
+Here is how I would
+
+2
+00:00:01,472 --> 00:00:03,092
+answer, tell me about yourself,
+
+3
+00:00:03,132 --> 00:00:04,252
+for Acme Corp.
+
+4
+00:00:05,343 --> 00:00:06,212
+Right now I'm a Senior
+
+5
+00:00:06,252 --> 00:00:08,222
+AI Engineer at Sampletown Software.
+
+6
+00:00:08,262 --> 00:00:09,252
+I lead the retrieval
+
+7
+00:00:09,302 --> 00:00:11,582
+platform behind our support assistant.
+
+8
+00:00:12,650 --> 00:00:13,710
+I built the evaluation suite
+
+9
+00:00:13,750 --> 00:00:15,430
+that checks each answer against
+
+10
+00:00:15,470 --> 00:00:16,706
+its sources.
+
+11
+00:00:16,746 --> 00:00:18,030
+It runs 400 fixed questions
+
+12
+00:00:18,070 --> 00:00:19,160
+every night.
+
+13
+00:00:20,387 --> 00:00:21,261
+Acme Corp's assistant has to
+
+14
+00:00:21,301 --> 00:00:22,671
+cite clinic policies.
+
+15
+00:00:22,711 --> 00:00:23,451
+That is the work I
+
+16
+00:00:23,491 --> 00:00:24,581
+do today.
+
+17
+00:00:25,565 --> 00:00:26,437
+So that's why I applied.
+
+18
+00:00:26,477 --> 00:00:27,207
+I want to build an
+
+19
+00:00:27,247 --> 00:00:28,727
+assistant people can trust.
+
+20
+00:00:28,767 --> 00:00:29,325
+Thanks
+
+21
+00:00:29,365 --> 00:00:30,437
+for listening.
+

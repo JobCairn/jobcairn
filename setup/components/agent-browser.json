@@ -1,0 +1,2 @@
+{ "id": "agent-browser", "name": "agent-browser", "order": 80, "required": true, "why": "Lets Claude read job ads in your own Chrome profile.", "docs": "https://github.com/vercel-labs/agent-browser",
+  "platforms": { "darwin": { "check": "(command -v agent-browser >/dev/null && agent-browser --version) || \"$HOME/.npm-global/bin/agent-browser\" --version", "install": ["npm install -g agent-browser@0.38.2"] } } }

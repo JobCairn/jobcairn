@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "careeros/company",
+  "type": "object",
+  "required": ["schema", "name", "slug"],
+  "properties": {
+    "schema": { "type": "integer", "minimum": 1 },
+    "name": { "type": "string", "minLength": 1, "x-ui": { "label": "Company" } },
+    "slug": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+    "aliases": { "type": "array", "items": { "type": "string" }, "default": [] },
+    "website": { "type": "string", "default": "", "x-ui": { "label": "Website" } },
+    "size": { "type": "string", "default": "", "x-ui": { "label": "Size" } },
+    "type": { "enum": ["employer", "recruiter", "consultancy", "government", "unknown"], "default": "unknown", "x-ui": { "label": "Type" } },
+    "big_tech": { "type": "boolean", "default": false },
+    "email_match": { "type": "array", "items": { "type": "string", "minLength": 1, "maxLength": 254 }, "maxItems": 50, "default": [] },
+    "recruiter": {
+      "type": "object", "default": {},
+      "properties": { "name": { "type": "string", "maxLength": 200, "default": "" }, "email": { "type": "string", "maxLength": 254, "default": "" } }
+    },
+    "sponsor": {
+      "type": "object", "default": {},
+      "properties": {
+        "status": { "enum": ["verified", "to_verify", "checked_none", "sanctioned", "unknown"], "default": "unknown", "x-ui": { "label": "Sponsor status" } },
+        "evidence": {
+          "type": "array", "default": [],
+          "items": { "type": "object", "required": ["date", "note"], "properties": { "date": { "type": "string" }, "note": { "type": "string" }, "url": { "type": "string", "default": "" } } }
+        },
+        "last_checked": { "type": "string", "default": "" }
+      }
+    },
+    "custom": { "type": "object", "default": {} }
+  }
+}

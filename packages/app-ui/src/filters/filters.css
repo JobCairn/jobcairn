@@ -1,0 +1,122 @@
+/* Quick filters (ui/search-filters): a row of chips above a list; each opens a small panel of choices with counts. */
+.qf-bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); min-width: 0; }
+.qf-bar__lead { display: inline-flex; color: var(--color-text-muted); margin-right: 2px; }
+.qf-bar__clear {
+  height: 28px; padding: 0 var(--space-2); border: 0; border-radius: var(--radius-sm); background: transparent;
+  color: var(--color-accent-strong); font: inherit; font-size: var(--font-size-13); font-weight: var(--font-weight-medium); cursor: pointer;
+}
+.qf-bar__clear:hover { background: var(--color-surface-hover); text-decoration: underline; }
+.qf-bar__clear:focus-visible { outline: var(--size-focus-ring) solid var(--color-focus); outline-offset: 1px; }
+
+.qf-chip {
+  position: relative; display: inline-flex; align-items: stretch; height: 28px; min-width: 0; max-width: 20rem;
+  border: var(--size-border) solid var(--color-border-strong); border-radius: var(--radius-full); background: transparent;
+  transition: background-color var(--motion-duration-fast) var(--motion-easing-out), border-color var(--motion-duration-fast) var(--motion-easing-out);
+}
+.qf-chip:hover { background: var(--color-surface-hover); }
+.qf-chip[data-on] { background: var(--color-accent-soft); border-color: var(--color-accent); }
+.qf-chip__btn {
+  display: inline-flex; align-items: center; gap: var(--space-1); min-width: 0; padding: 0 var(--space-2) 0 var(--space-3); border: 0; border-radius: var(--radius-full);
+  background: transparent; color: var(--color-text-muted); font: inherit; font-size: var(--font-size-13); white-space: nowrap; cursor: pointer;
+}
+.qf-chip:not([data-on]) .qf-chip__btn { padding-right: var(--space-2); }
+.qf-chip[data-on] .qf-chip__btn { color: var(--color-text); }
+.qf-chip[data-on]:has(.qf-chip__clear) .qf-chip__btn { padding-right: 2px; }
+.qf-chip__btn:hover { color: var(--color-text); }
+.qf-chip__btn:focus-visible, .qf-chip__clear:focus-visible { outline: var(--size-focus-ring) solid var(--color-focus); outline-offset: 2px; }
+.qf-chip__value { min-width: 0; overflow: hidden; text-overflow: ellipsis; font-weight: var(--font-weight-medium); }
+.qf-chip__clear {
+  display: inline-grid; place-items: center; width: 26px; padding: 0; border: 0; border-radius: var(--radius-full);
+  background: transparent; color: var(--color-text-muted); cursor: pointer;
+}
+.qf-chip__clear:hover { color: var(--color-text); background: var(--color-surface-hover); }
+
+.qf-panel {
+  position: absolute; top: calc(100% + 6px); z-index: 60; min-width: 15rem; max-width: 22rem; max-height: min(26rem, 70vh); overflow: auto;
+  display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-2);
+  background: var(--color-bg-raised); border: var(--size-border) solid var(--color-border-strong); border-radius: var(--radius-lg); box-shadow: var(--shadow-pop);
+}
+.qf-panel:focus { outline: none; }
+.qf-panel__head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); padding: var(--space-1) var(--space-2) 0; }
+.qf-panel__title { font-size: var(--font-size-12); color: var(--color-text-muted); }
+.qf-panel__foot { display: flex; justify-content: flex-end; gap: var(--space-2); padding: var(--space-1) var(--space-1) 0; border-top: var(--size-border) solid var(--color-border); }
+.qf-panel__hint { padding: 0 var(--space-2); }
+.qf-panel .field { padding: 0 var(--space-1); }
+.qf-choices { border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 1px; }
+.qf-choice {
+  display: flex; align-items: center; gap: var(--space-2); min-height: 32px; padding: 0 var(--space-2); border-radius: var(--radius-sm);
+  color: var(--color-text); font-size: var(--font-size-14); cursor: pointer;
+}
+.qf-choice:hover { background: var(--color-surface-hover); }
+.qf-choice:focus-within { background: var(--color-surface-hover); }
+.qf-choice input { width: var(--size-icon-sm); height: var(--size-icon-sm); margin: 0; accent-color: var(--color-accent); flex: none; }
+.qf-choice__label { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.qf-choice[data-empty] .qf-choice__label { color: var(--color-text-muted); }
+.qf-count { flex: none; min-width: 2ch; text-align: right; color: var(--color-text-muted); font-size: var(--font-size-12); font-variant-numeric: tabular-nums; }
+.qf-dot { flex: none; width: 8px; height: 8px; border-radius: var(--radius-full); background: var(--color-text-muted); }
+.qf-dot--success { background: var(--color-success); }
+.qf-dot--warning { background: var(--color-warning); }
+.qf-dot--danger { background: var(--color-danger); }
+.qf-dot--neutral { background: transparent; box-shadow: inset 0 0 0 1.5px var(--color-text-muted); }
+.qf-places { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 1px; }
+.qf-place { width: 100%;
+  display: flex; align-items: center; gap: var(--space-2); min-height: 30px; padding: 0 var(--space-2); border: 0; border-radius: var(--radius-sm);
+  background: transparent; color: var(--color-text); font: inherit; font-size: var(--font-size-14); text-align: left; cursor: pointer;
+}
+.qf-place:hover, .qf-place:focus-visible { background: var(--color-surface-hover); outline: none; }
+.qf-place > span:first-of-type { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+@media (prefers-reduced-motion: reduce) { .qf-chip { transition: none; } }
+
+/* Jobs: search, sort and saved views on one line; the quick-filter chips under it. */
+.jobs-filters { display: flex; flex-direction: column; gap: var(--space-3); margin-bottom: var(--space-4); }
+.jobs-filters__row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.jobs-filters__row > .field:first-child { flex: 1 1 18rem; max-width: 28rem; }
+.jobs-filters__row > .field { flex: 0 1 12rem; }
+.jobs-filters__views { display: flex; gap: var(--space-2); margin-left: auto; }
+
+/* Tag lists inside a panel: roles, places in order, words to skip. */
+.qf-tags { display: flex; flex-direction: column; gap: var(--space-2); padding: 0 var(--space-1); }
+.qf-tags__list { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--space-1); }
+.qf-tags__list--ordered { flex-direction: column; flex-wrap: nowrap; }
+.qf-tag {
+  display: inline-flex; align-items: center; gap: 2px; min-height: 28px; padding: 0 2px 0 var(--space-2); border-radius: var(--radius-md);
+  background: var(--color-surface); border: var(--size-border) solid var(--color-border); font-size: var(--font-size-13); color: var(--color-text);
+}
+.qf-tags__list--ordered .qf-tag { display: flex; }
+.qf-tag__rank { min-width: 1.5ch; color: var(--color-text-muted); font-variant-numeric: tabular-nums; }
+.qf-tag__text { flex: 1; min-width: 0; overflow-wrap: anywhere; padding-right: var(--space-1); }
+.qf-tag__btn {
+  display: inline-grid; place-items: center; width: 24px; height: 24px; padding: 0; border: 0; border-radius: var(--radius-sm);
+  background: transparent; color: var(--color-text-muted); cursor: pointer;
+}
+.qf-tag__btn:hover:not(:disabled) { color: var(--color-text); background: var(--color-surface-hover); }
+.qf-tag__btn:focus-visible { outline: var(--size-focus-ring) solid var(--color-focus); outline-offset: 1px; }
+.qf-tag__btn:disabled { opacity: 0.35; cursor: default; }
+.qf-tags__add { display: flex; align-items: flex-end; gap: var(--space-2); }
+.qf-tags__add > .field { flex: 1; }
+.qf-panel--wide { min-width: 20rem; max-width: 26rem; }
+.qf-panel__section { display: flex; flex-direction: column; gap: var(--space-1); }
+.qf-panel__section + .qf-panel__section { border-top: var(--size-border) solid var(--color-border); padding-top: var(--space-2); }
+.qf-panel__label { padding: 0 var(--space-2); font-size: var(--font-size-12); color: var(--color-text-muted); }
+.qf-range { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2); padding: 0 var(--space-1); }
+
+/* "setting" chips (Find jobs): the value is the search itself, so it reads as plain text; a dot marks a change. */
+.qf-chip[data-kind="setting"][data-on] { background: var(--color-surface); border-color: var(--color-border-strong); }
+.qf-chip[data-kind="setting"][data-changed] { border-color: var(--color-accent); }
+.qf-chip__value--any { font-weight: var(--font-weight-regular); color: var(--color-text-muted); }
+.qf-chip__changed { flex: none; width: 6px; height: 6px; border-radius: var(--radius-full); background: var(--color-accent); }
+.qf-choice__sub { margin-left: var(--space-2); color: var(--color-text-muted); font-size: var(--font-size-12); }
+
+/* A place box with the app's own suggestion list (no browser datalist, no autofill colours). */
+.place-input { position: relative; display: flex; flex: 1; min-width: 0; }
+.place-input__box { flex: 1; width: 100%; }
+.input:-webkit-autofill, .input:-webkit-autofill:hover, .input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--color-text); caret-color: var(--color-text);
+  -webkit-box-shadow: 0 0 0 1000px var(--input-bg) inset; box-shadow: 0 0 0 1000px var(--input-bg) inset; transition: background-color 9999s ease-out 0s;
+}
+.place-input__list {
+  position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 70; margin: 0; padding: var(--space-1); list-style: none; max-height: 16rem; overflow: auto;
+  background: var(--color-bg-raised); border: var(--size-border) solid var(--color-border-strong); border-radius: var(--radius-md); box-shadow: var(--shadow-pop);
+}
+.place-input__option { padding: var(--space-1) var(--space-2); border-radius: var(--radius-sm); font-size: var(--font-size-14); color: var(--color-text); cursor: pointer; }
+.place-input__option[aria-selected="true"], .place-input__option:hover { background: var(--color-surface-hover); }

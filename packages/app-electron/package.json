@@ -1,0 +1,20 @@
+{
+  "name": "@careeros/app-electron",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "start": "node scripts/build.mjs && node scripts/dev-app.mjs",
+    "dev": "node scripts/build.mjs --no-renderer && CAREEROS_DEV_URL=http://127.0.0.1:5173 node scripts/dev-app.mjs",
+    "e2e": "node scripts/build.mjs && playwright test -c playwright.config.ts",
+    "package:mac": "node scripts/package.mjs --mac",
+    "package:mac:all": "node scripts/package.mjs --mac --all-arch",
+    "package:win": "node scripts/package.mjs --win",
+    "package:linux": "node scripts/package.mjs --linux",
+    "release:verify": "node scripts/verify-release.mjs"
+  },
+  "dependencies": { "@careeros/contract": "0.1.0", "@careeros/core": "0.1.0", "@careeros/mail": "0.1.0", "@careeros/services": "0.1.0", "@careeros/video": "0.1.0", "electron-updater": "6.8.10" },
+  "devDependencies": { "@playwright/test": "1.64.0", "electron": "44.7.0", "electron-builder": "26.15.3", "esbuild": "0.28.2" }
+}

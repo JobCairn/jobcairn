@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "type": "pitch",
+  "type_version": 2,
+  "subject": {
+    "kind": "job",
+    "company_slug": "acme-corp",
+    "id": "2026-01-12-ai-engineer"
+  },
+  "options": {
+    "length_s": 45,
+    "review": "if_problems"
+  },
+  "created_at": "2026-10-11T11:45:44.869Z",
+  "requested_by": "app",
+  "custom": {}
+}

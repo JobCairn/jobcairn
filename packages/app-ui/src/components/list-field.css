@@ -1,0 +1,54 @@
+/* Settings list editor (ui/search-filters): rows you add, edit, remove and reorder. First row = most preferred. */
+.list-field { border: 0; margin: 0; padding: 0; min-width: 0; display: flex; flex-direction: column; gap: var(--space-2); max-width: 46rem; }
+.list-field__legend { padding: 0; margin-bottom: var(--space-1); font-size: var(--font-size-13); color: var(--color-text-muted); }
+.list-field__help { margin: 0 0 var(--space-1); }
+.list-field__rows { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+.list-field__row {
+  position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: start; gap: var(--space-2);
+  padding: var(--space-2); border: var(--size-border) solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface);
+  transition: border-color var(--motion-duration-fast) var(--motion-easing-out), opacity var(--motion-duration-fast) var(--motion-easing-out);
+}
+.list-field__row:focus-within { border-color: var(--color-border-strong); }
+.list-field__row[data-dragging] { opacity: 0.5; }
+.list-field__row[data-drop]::before {
+  content: ""; position: absolute; left: var(--space-2); right: var(--space-2); height: 2px; border-radius: 1px; background: var(--color-accent);
+}
+.list-field__row[data-drop="before"]::before { top: calc(-1 * var(--space-1) - 1px); }
+.list-field__row[data-drop="after"]::before { bottom: calc(-1 * var(--space-1) - 1px); }
+.list-field__handle {
+  display: inline-flex; align-items: center; gap: 2px; height: var(--input-height); padding: 0 var(--space-1) 0 2px; border: 0; border-radius: var(--radius-sm);
+  background: transparent; color: var(--color-text-muted); font: inherit; font-size: var(--font-size-13); font-variant-numeric: tabular-nums; cursor: grab;
+}
+.list-field__handle:hover { color: var(--color-text); background: var(--color-surface-hover); }
+.list-field__handle:active { cursor: grabbing; }
+.list-field__handle:focus-visible { outline: var(--size-focus-ring) solid var(--color-focus); outline-offset: 1px; }
+.list-field__rank { min-width: 1ch; text-align: right; color: var(--color-text); font-weight: var(--font-weight-medium); }
+.list-field__body { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-4); min-width: 0; }
+.list-field__body > .field { flex: 1 1 14rem; }
+.list-field__choices { border: 0; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-3); }
+.list-field__flag { white-space: nowrap; }
+.list-field__tools { display: flex; align-items: center; gap: 2px; height: var(--input-height); }
+.list-field__tool {
+  display: inline-grid; place-items: center; width: 28px; height: 28px; border: 0; border-radius: var(--radius-sm);
+  background: transparent; color: var(--color-text-muted); cursor: pointer;
+}
+.list-field__tool:hover:not(:disabled) { color: var(--color-text); background: var(--color-surface-hover); }
+.list-field__tool--danger:hover:not(:disabled) { color: var(--color-danger); background: var(--color-danger-soft); }
+.list-field__tool:focus-visible { outline: var(--size-focus-ring) solid var(--color-focus); outline-offset: 1px; }
+.list-field__tool:disabled { opacity: 0.35; cursor: default; }
+.list-field__empty { padding: var(--space-3); border: var(--size-border) dashed var(--color-border); border-radius: var(--radius-md); }
+.list-field__foot { display: flex; align-items: center; gap: var(--space-3); }
+.list-field__error { color: var(--color-danger); }
+@media (prefers-reduced-motion: reduce) { .list-field__row { transition: none; } }
+/* Settings › Search: the places (profile) and the search's own fields read as two sections of one page. */
+.settings-search > .field-form + .field-form { border-top: var(--size-border) solid var(--color-border); padding-top: var(--space-5); margin-top: var(--space-2); }
+.list-field__body > .place-input { flex: 1 1 14rem; }
+.chip-field { border: 0; margin: 0; padding: 0; min-width: 0; display: flex; flex-direction: column; gap: var(--space-2); max-width: 46rem; }
+.chip-field .qf-tags { padding: 0; }
+.stepper-field { display: flex; flex-direction: column; gap: var(--space-1); }
+.stepper { display: inline-flex; align-items: stretch; width: max-content; border: var(--size-border) solid var(--input-border); border-radius: var(--input-radius); overflow: hidden; }
+.stepper__value { width: 4.5rem; border: 0; border-radius: 0; text-align: center; font-variant-numeric: tabular-nums; }
+.stepper__btn { width: 36px; border: 0; background: var(--color-surface); color: var(--color-text); font: inherit; font-size: var(--font-size-16); cursor: pointer; }
+.stepper__btn:hover:not(:disabled) { background: var(--color-surface-hover); }
+.stepper__btn:disabled { color: var(--color-text-disabled); cursor: default; }
+.stepper__btn:focus-visible { outline: var(--size-focus-ring) solid var(--color-focus); outline-offset: -2px; }

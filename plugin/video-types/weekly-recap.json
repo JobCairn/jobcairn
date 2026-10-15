@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "id": "weekly-recap",
+  "label": "Weekly recap",
+  "description": "Your week in numbers: jobs found, applications, replies, interviews, the sponsorship mix and what to do next. Built from your data, no Claude call.",
+  "version": 1,
+  "entry_points": ["home"],
+  "subject": "week",
+  "writer": "template",
+  "skill": "video-slides",
+  "voice_type": "slides",
+  "length": { "min_s": 30, "target_s": 50, "max_s": 60 },
+  "scene_types": ["title", "stat", "bullet-build", "recap-card"],
+  "scene_counts": { "title": { "min": 1, "max": 1 }, "recap-card": { "min": 1, "max": 1 } },
+  "sources": [{ "resolver": "index.stats", "required": true }],
+  "brief_template": "This recap shows {name} their job hunt for {week}.",
+  "rules": ["Numbers come from stats.json only."],
+  "facts": "strict",
+  "extras": [],
+  "output": "recaps/{week}/",
+  "media": "none",
+  "modes": []
+}

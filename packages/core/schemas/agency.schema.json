@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "careeros/agency",
+  "type": "object",
+  "required": ["schema", "name", "slug"],
+  "properties": {
+    "schema": { "type": "integer", "minimum": 1 },
+    "name": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "slug": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$", "maxLength": 64 },
+    "website": { "type": "string", "maxLength": 500, "default": "" },
+    "since": { "type": ["integer", "null"], "minimum": 1800, "maximum": 2100, "default": null },
+    "specialties": { "type": "array", "items": { "type": "string", "maxLength": 60 }, "maxItems": 20, "default": [] },
+    "tags": { "type": "array", "items": { "type": "string", "maxLength": 40 }, "maxItems": 20, "default": [] },
+    "cities": { "type": "array", "items": { "type": "string", "maxLength": 80 }, "maxItems": 20, "default": [] },
+    "hiring_summary": { "type": "string", "maxLength": 400, "default": "" },
+    "about_url": { "type": "string", "maxLength": 500, "default": "" },
+    "city_links": {
+      "type": "array", "maxItems": 20, "default": [],
+      "items": { "type": "object", "required": ["city", "url"], "properties": { "city": { "type": "string", "maxLength": 80 }, "url": { "type": "string", "maxLength": 500 } } }
+    },
+    "linkedin_url": { "type": "string", "maxLength": 500, "default": "" },
+    "team_note": {
+      "type": "object", "default": {},
+      "properties": { "text": { "type": "string", "maxLength": 400, "default": "" }, "source_url": { "type": "string", "maxLength": 500, "default": "" } }
+    },
+    "best_contact": {
+      "type": "object", "default": {},
+      "properties": { "name": { "type": "string", "maxLength": 120, "default": "" }, "source_url": { "type": "string", "maxLength": 500, "default": "" } }
+    },
+    "contacts": {
+      "type": "array", "maxItems": 40, "default": [],
+      "items": {
+        "type": "object", "required": ["kind", "value", "source_url"],
+        "properties": {
+          "kind": { "enum": ["email", "phone"] }, "value": { "type": "string", "maxLength": 254 }, "label": { "type": "string", "maxLength": 80, "default": "" },
+          "source_url": { "type": "string", "maxLength": 500 }, "found_on": { "type": "string", "maxLength": 10, "default": "" }, "confirmed": { "type": "boolean", "default": false }
+        }
+      }
+    },
+    "people": {
+      "type": "array", "maxItems": 40, "default": [],
+      "items": {
+        "type": "object", "required": ["name", "source_url"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1, "maxLength": 120 }, "title": { "type": "string", "maxLength": 120, "default": "" },
+          "email": { "type": "string", "maxLength": 254, "default": "" }, "phone": { "type": "string", "maxLength": 40, "default": "" },
+          "source_url": { "type": "string", "maxLength": 500 },
+          "specialties": { "type": "array", "items": { "type": "string", "maxLength": 60 }, "maxItems": 20, "default": [] },
+          "job_refs": { "type": "array", "items": { "type": "string", "maxLength": 200 }, "maxItems": 200, "default": [] }
+        }
+      }
+    },
+    "job_refs": { "type": "array", "items": { "type": "string", "maxLength": 200 }, "maxItems": 500, "default": [] },
+    "favourite": { "type": "boolean", "default": false },
+    "tracking": {
+      "type": "object", "default": {},
+      "properties": {
+        "status": { "enum": ["to_contact", "contacted", "replied", "meeting", "not_a_fit"], "default": "to_contact" },
+        "contacted_on": { "type": "string", "maxLength": 10, "default": "" },
+        "follow_up_on": { "type": "string", "maxLength": 10, "default": "" },
+        "notes": { "type": "string", "maxLength": 4000, "default": "" }
+      }
+    },
+    "timeline": {
+      "type": "array", "maxItems": 500, "default": [],
+      "items": { "type": "object", "required": ["at", "event"], "properties": { "at": { "type": "string" }, "event": { "type": "string" }, "note": { "type": "string", "default": "" } } }
+    },
+    "custom": { "type": "object", "default": {} }
+  }
+}

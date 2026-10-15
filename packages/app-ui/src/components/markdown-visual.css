@@ -1,0 +1,71 @@
+/* Guide visuals in the Markdown reader: callouts, section icons and Mermaid diagrams (ui/learn-visual). */
+
+/* ---- callouts ---- */
+.markdown .callout {
+  --callout-ink: var(--color-text-muted);
+  --callout-bg: var(--color-surface);
+  margin: 0 0 var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border: var(--size-border) solid var(--color-border);
+  border-left: 3px solid var(--callout-ink);
+  border-radius: var(--radius-md);
+  background: var(--callout-bg);
+}
+.markdown .callout--tldr { --callout-ink: var(--color-accent); --callout-bg: var(--color-accent-soft); }
+.markdown .callout--tip { --callout-ink: var(--color-success); --callout-bg: var(--color-success-soft); }
+.markdown .callout--interview { --callout-ink: var(--color-info, var(--color-accent)); }
+.markdown .callout--watch { --callout-ink: var(--color-warning); --callout-bg: var(--color-warning-soft); }
+.markdown .callout__title {
+  display: flex; align-items: center; gap: var(--space-2);
+  margin: 0 0 var(--space-1);
+  font-size: var(--font-size-13); font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.02em; text-transform: uppercase; color: var(--color-text);
+}
+.markdown .callout__title .icon { color: var(--callout-ink); flex: none; }
+.markdown .callout__body > :last-child { margin-bottom: 0; }
+.markdown .callout__body ul, .markdown .callout__body ol { padding-left: var(--space-5); }
+.markdown .callout--tldr .callout__body { font-size: var(--font-size-16); }
+
+/* ---- section icons ---- */
+.markdown h2:has(> .md-section-icon) { display: flex; align-items: center; gap: var(--space-2); }
+.markdown .md-section-icon {
+  flex: none; box-sizing: content-box; padding: 5px;
+  border-radius: var(--radius-sm); background: var(--color-accent-soft); color: var(--color-accent);
+}
+
+/* ---- code blocks ---- */
+.markdown.prose pre {
+  padding: var(--space-3) var(--space-4); margin: 0 0 var(--space-4);
+  overflow-x: auto; border: var(--size-border) solid var(--color-border); border-radius: var(--radius-md);
+  font-size: var(--font-size-13); line-height: 1.55;
+}
+.markdown.prose pre code { padding: 0; background: none; }
+
+/* ---- diagrams ---- */
+.markdown .diagram {
+  position: relative;
+  margin: 0 0 var(--space-4);
+  padding: var(--space-4);
+  border: var(--size-border) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-raised);
+}
+.markdown .diagram__canvas { display: flex; justify-content: center; overflow-x: auto; min-height: 120px; }
+.markdown .diagram__canvas:focus-visible { outline: var(--size-focus-ring) solid var(--color-focus); outline-offset: 2px; border-radius: var(--radius-sm); }
+.markdown .diagram__canvas svg { max-width: 100%; height: auto; }
+.markdown .diagram[data-diagram="drawing"] .diagram__canvas { min-height: 160px; }
+.markdown .diagram__wait { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; }
+.markdown .diagram__src { margin-top: var(--space-2); }
+.markdown .diagram__src summary {
+  display: inline-flex; cursor: pointer; font-size: var(--font-size-13); color: var(--color-text-muted);
+  border-radius: var(--radius-sm); padding: 2px var(--space-1);
+}
+.markdown .diagram__src summary:hover { color: var(--color-text); background: var(--color-surface-hover); }
+.markdown .diagram__src summary:focus-visible { outline: var(--size-focus-ring) solid var(--color-focus); outline-offset: 2px; }
+.markdown .diagram__src pre { margin: var(--space-2) 0 0; }
+.markdown .diagram--failed { padding: var(--space-3) var(--space-4); }
+.markdown .diagram__note { margin-bottom: var(--space-2); }
+.markdown .diagram--failed pre { margin: 0; }
+/* Mermaid mind maps: the root circle's SVG label isn't centred by Mermaid, and the branch underline is noise. */
+.markdown .diagram .mindmap-node.section-root .label text { text-anchor: middle; }
+.markdown .diagram .mindmap-node line { stroke: transparent; }

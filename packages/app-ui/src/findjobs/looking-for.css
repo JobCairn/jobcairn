@@ -1,0 +1,46 @@
+/* Find jobs > What you're looking for. Brand tokens only. */
+.looking__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; }
+.looking__actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.looking__list { margin: 0; display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: var(--space-1) var(--space-4); font-size: var(--font-size-14); }
+.looking__row { display: contents; }
+.looking__row dt { color: var(--color-text-muted); }
+.looking__row dd { margin: 0; color: var(--color-text); overflow-wrap: anywhere; }
+.looking__quiet { color: var(--color-text-muted) !important; }
+.looking__quick { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); }
+.looking__fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: var(--space-3) var(--space-4); }
+.looking__error { color: var(--color-danger); }
+.looking--edit[data-missing] { border-top-color: var(--color-warning); }
+.looking__chips { margin: var(--space-1) 0; }
+.looking__title { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+.looking__saved { margin: 0; }
+.looking__modes { display: flex; flex-direction: column; gap: var(--space-3); }
+.looking__modes-row { border: 0; margin: 0; padding: 0; min-width: 0; display: flex; flex-direction: column; gap: var(--space-1); }
+.looking__modes-choices { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); padding: 0 var(--space-2); }
+.looking__breadth .qf-choice__label { display: flex; flex-direction: column; gap: 2px; }
+.looking__breadth-hint { color: var(--color-text-muted); font-size: var(--font-size-12); }
+.looking__breadth { min-width: 18rem; }
+
+/* Find jobs > Describe the jobs you want: one box, what it understood as removable chips. */
+.describe { display: flex; flex-direction: column; gap: var(--space-2); }
+.describe__row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-2) var(--space-3); }
+.describe__row > :first-child { flex: 1 1 22rem; min-width: 0; }
+.describe__actions { display: flex; gap: var(--space-2); }
+.describe__chips { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.describe__chip {
+  display: inline-flex; align-items: center; gap: var(--space-1); min-height: 28px; max-width: 100%; padding: 0 var(--space-1) 0 var(--space-3);
+  border: var(--size-border) solid var(--color-accent); border-radius: var(--radius-full); background: var(--color-accent-soft); font-size: var(--font-size-14);
+}
+.describe__chip span { overflow-wrap: anywhere; }
+.describe__chip--text { border-style: dashed; }
+.describe__x { border: 0; background: transparent; color: var(--color-text-muted); cursor: pointer; padding: 0 var(--space-2); font-size: var(--font-size-16); line-height: 1; }
+.describe__x:hover { color: var(--color-text); }
+.describe__x:focus-visible { outline: var(--size-focus-ring) solid var(--color-focus); outline-offset: 2px; border-radius: var(--radius-full); }
+.describe__hint { margin: 0; }
+.looking__all > summary { cursor: pointer; color: var(--color-text-muted); font-size: var(--font-size-14); padding: var(--space-1) 0; }
+.looking__all[open] > summary { margin-bottom: var(--space-1); }
+
+/* Find jobs > Repeat this search. */
+.repeat__row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-2) var(--space-3); }
+.repeat__days { border: 0; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); }
+.repeat__foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2); }
+.repeat__foot p { margin: 0; }

@@ -1,0 +1,7 @@
+# Force LF for text assets that get hashed (sub-project 5 video rendering: a CRLF checkout
+# would change the hash of an otherwise-identical file and break render caching / diffing).
+plugin/**/*.css text eol=lf
+plugin/**/*.js text eol=lf
+plugin/**/*.json text eol=lf
+plugin/**/*.html text eol=lf
+plugin/**/*.md text eol=lf

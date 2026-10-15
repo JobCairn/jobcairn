@@ -3,7 +3,7 @@ import { iso, type Clock } from "./clock.js";
 import { assertSegment, insideRoot, layout } from "./paths.js";
 import { defaults } from "./schema.js";
 import { readRecord, updateRecord, writeRecord } from "./store.js";
-import type { Agency, AgencyContact, AgencyPerson } from "./types.js";
+import type { Agency, AgencyContact, AgencyPerson, AgencySource } from "./types.js";
 
 /**
  * Recruitment agencies and the recruiters they publish: one record per agency at recruiters/<slug>/agency.json.
@@ -12,7 +12,7 @@ import type { Agency, AgencyContact, AgencyPerson } from "./types.js";
  */
 
 const SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/;
-const CAP = { list: 20, contacts: 40, people: 40, jobs: 500, timeline: 500 } as const;
+const CAP = { list: 20, contacts: 40, people: 40, jobs: 500, timeline: 500, sources: 100 } as const;
 
 /** What a caller may add to an agency: anything left out (or empty) keeps what is there. */
 export interface AgencyInput {
@@ -22,7 +22,10 @@ export interface AgencyInput {
   team_note?: { text: string; source_url: string }; best_contact?: { name: string; source_url: string };
   contacts?: AgencyContactInput[];
   people?: AgencyPersonInput[]; job_refs?: string[];
+  /** Where it was found: merged by url (the first time an address was seen is kept). */
+  sources?: AgencySourceInput[];
 }
+export interface AgencySourceInput { name: string; url: string; found_at?: string }
 export interface AgencyPersonInput { name?: string; title?: string; email?: string; phone?: string; source_url?: string; specialties?: string[]; job_refs?: string[] }
 export interface AgencyContactInput { kind: "email" | "phone"; value: string; source_url: string; label?: string; found_on?: string; confirmed?: boolean }
 
@@ -77,7 +80,7 @@ function mergePeople(cur: AgencyPerson[], add: AgencyPersonInput[] | undefined):
 
 /**
  * Adds to an agency, making it when it is new: lists are merged without duplicates (contacts by kind and value,
- * people by name), and a non-empty field replaces the old one (newer research wins). `event` goes on its timeline.
+ * people by name, sources by url), and a non-empty field replaces the old one (newer research wins). `event` goes on its timeline.
  */
 export function mergeAgency(root: string, input: AgencyInput, event: { event: string; note?: string } | null, c?: Clock): Agency {
   const file = agencyPath(root, input.slug);
@@ -105,6 +108,11 @@ export function mergeAgency(root: string, input: AgencyInput, event: { event: st
     }
     a.people = mergePeople(a.people, input.people);
     a.job_refs = union(a.job_refs, input.job_refs, CAP.jobs);
+    a.sources ??= [];
+    for (const x of input.sources ?? []) {
+      if (!x.url || !x.name || a.sources.some((y) => y.url === x.url) || a.sources.length >= CAP.sources) continue;
+      a.sources.push({ name: x.name, url: x.url, found_at: x.found_at || at } satisfies AgencySource);
+    }
     if (event) a.timeline = [...a.timeline, { at, event: event.event, note: event.note ?? "" }].slice(-CAP.timeline);
   });
 }

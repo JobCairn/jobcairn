@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 import identity from "@careeros/brand/identity.json" with { type: "json" };
-import { layout, listAgencies, readRecord, readSearches } from "@careeros/core";
+import { layout, listAgencies, listJobs, readRecord, readSearches } from "@careeros/core";
 import {
   BREADTH_QUERIES, EXPERIENCE_WORDS, JOB_TYPE_WORDS, jobSearchRightsRule, MIN_RELEVANT_PER_PLACE, MIN_SKILL_OVERLAP, searchPlan, skillsIn, WR_STATUSES,
   type ActionId, type ActionTarget, type SearchOverride, type SearchPlan, type SearchPrefs, type WorkRightsStatus,
@@ -120,10 +120,33 @@ function recruiterLines(root: string): string[] {
   if (skills) out.push(`- Core skills: ${skills}`);
   const cities = list(places, 10);
   if (cities) out.push(`- Cities: ${cities}`);
-  const known = listAgencies(root).slice(0, 60).map((a) => v(a.name, 80)).filter(Boolean);
+  const saved = listAgencies(root);
+  const known = saved.slice(0, KNOWN_AGENCIES).map((a) => v(a.name, 80)).filter(Boolean);
   if (known.length) out.push(`- Agencies already saved (add to them rather than repeat them): ${known.join(", ")}`);
+  // Advertisers of saved job ads (source d): recruiters first (the company is marked one, or the ad names a client),
+  // then other advertisers, which may be agencies too. Names only, and none already saved as an agency.
+  const have = new Set(saved.map((a) => a.slug));
+  const agencies: string[] = [];
+  const others: string[] = [];
+  const seen = new Set<string>();
+  for (const j of listJobs(root).slice(0, 2_000)) {
+    if (have.has(j.company_slug) || seen.has(j.company_slug)) continue;
+    seen.add(j.company_slug);
+    if (seen.size > 400) break;
+    let name = "", recruiter = false;
+    try {
+      const c = readRecord("company", layout(root).companyFile(j.company_slug));
+      name = v(c.name, 80);
+      recruiter = c.type === "recruiter" || !!readRecord("job", j.file).client;
+    } catch { continue; }
+    if (name) (recruiter ? agencies : others).push(name);
+  }
+  if (agencies.length) out.push(`- Agencies that advertised my saved job ads, not saved as agencies yet: ${agencies.slice(0, 60).join(", ")}`);
+  if (others.length) out.push(`- Other advertisers of my saved job ads (some may be agencies): ${others.slice(0, 60).join(", ")}`);
   return out;
 }
+/** Saved agency names given to Find recruiters, so a run aiming for up to 100 new ones knows which to skip. */
+const KNOWN_AGENCIES = 150;
 
 const MAX_GAPS = 10;
 

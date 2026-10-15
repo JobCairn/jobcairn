@@ -287,14 +287,22 @@ export const ACTIONS: { readonly [K in ActionId]: ActionDef & { id: K } } = {
   find_recruiters: {
     id: "find_recruiters", group: "career", target: "workspace", label: "Find recruiters", button: "Find recruiters", done: "Recruiter report ready", skills: ["career"], surface: "recruiters",
     // A web run: main puts the target roles, cities and known agencies in front of the request. Records go in only
-    // through the recruiter_add tool, which applies the published-contact rules (contract/recruiters.ts).
+    // through the recruiter_add tool, which applies the published-contact rules (contract/recruiters.ts). With Search
+    // in my Chrome on, the run also searches the job boards in the person's Chrome, in recruiters mode (spec
+    // 2026-10-16-find-recruiters-sources): a note in front of the request says so; without it, web search only.
     folder: "knowledge/recruiter-searches", outputs: ["{folder}/{date}.md"],
     steps: [
-      "Find recruitment agencies and recruiters who place people in my target roles in my cities. Use the roles, cities and known agencies given with this request.",
-      "Read only public pages: each agency's own site (its about, team and contact pages) and its own job listings. Note what each agency is hiring for now from its live ads.",
-      "Save each agency once with recruiter_add: name, website, the year it started if its site says, specialties, a few short tags (for example \"IT specialist\", \"Government\", \"Contract\"), cities, a one-line summary of what it is hiring for now, its about or team page, a contact page per city, its LinkedIn company page if its site links to it, and the email addresses and phone numbers it publishes, each with the https page it appears on.",
+      "Find recruitment agencies and recruiters who place people in my target roles in my cities. Use the roles, skills, cities and known agencies given with this request, and aim for the number of agencies asked for below.",
+      "Search every kind of source, in this order, and keep going until you reach that number or run out of sources:",
+      "(a) Web search, for each target role and city: \"<role> recruitment agency <city>\", \"<role> recruiters <city>\", \"<specialty> recruitment <city>\" for my specialties (for example IT, data, digital, cloud), \"IT recruitment agency <city>\" and \"government contract recruiters <state>\". Open the agency sites and the lists of agencies the results lead to.",
+      "(b) Job boards: agencies advertising my target roles on SEEK, Indeed and LinkedIn job search. If the note at the top says Chrome is on for this run, search the boards there; otherwise use web search (for example \"<role> <city> site:seek.com.au\"). An advertiser counts as an agency only when the ad says it is recruiting for a client or its own site says it recruits for other employers.",
+      "(c) Directories and panels: the RCSA member directory (Recruitment, Consulting and Staffing Association), and state and federal government ICT, digital and labour-hire supplier panels and prequalified supplier lists, through web search and the pages they publish.",
+      "(d) Agencies named in my saved job ads (given with this request). Agencies already saved are listed too: skip them unless you find something new for them, and never count them towards the number.",
+      "Check each agency on its own site before you save it: its about or team page, its contact page and its live job listings. Save only agencies that recruit for other employers (not an employer hiring for itself, not a job board) and that place people in my kind of roles or in my cities. Note what each is hiring for now from its live ads.",
+      "Save each agency with recruiter_add as soon as you have checked it: name, website, the year it started if its site says, specialties, a few short tags (for example \"IT specialist\", \"Government\", \"Contract\"), cities, a one-line summary of what it is hiring for now, its about or team page, a contact page per city, its LinkedIn company page if its site links to it, and the email addresses and phone numbers it publishes, each with the https page it appears on.",
+      "Give every agency its sources: each place you found it, as {\"name\", \"url\"}. Use the board's name (SEEK, Indeed or LinkedIn) with the ad's address, \"Web search\" with the page the search led you to, the directory or panel's name (for example \"RCSA directory\") with its page, \"Saved job\" with the saved ad's address, or \"Agency website\" with its own page. Found it again somewhere else? Save it again with the new source: saving adds to what is there.",
       "Add named recruiters (people) only when the agency's own team page or its own job ad publishes them, with that page as the source. Set best_contact only when the agency itself names that person as the one to contact.",
-      "In the report, list the agencies you saved, what each is hiring for, and anything you could not confirm.",
+      "In the report, start with how many new agencies you saved against the number asked for, then how many came from each source (web search, each job board, each directory or panel, saved job ads). Then list each agency you saved, what it is hiring for and where you found it. End with anything you could not confirm, and the sources you didn't get to if you stopped short.",
     ],
   },
   outreach_note: {
@@ -330,8 +338,8 @@ Object.freeze(ACTIONS);
 
 /** Actions that read public web pages. They get no workspace reads, so their prompts never point at workspace files. */
 export const WEB_ACTION_IDS: readonly ActionId[] = Object.freeze(["find_jobs", "research_company", "study_topic", "chrome_check", "find_recruiters"] as ActionId[]);
-/** Actions that browse the person's Chrome (jobcairn-chrome). chrome_check never falls back to web search. */
-export const BROWSER_ACTION_IDS: readonly ActionId[] = Object.freeze(["find_jobs", "chrome_check"] as ActionId[]);
+/** Actions that browse the person's Chrome (jobcairn-chrome). chrome_check never falls back to web search; find_recruiters browses only in recruiters mode (no raw page text) and falls back to web only. */
+export const BROWSER_ACTION_IDS: readonly ActionId[] = Object.freeze(["find_jobs", "chrome_check", "find_recruiters"] as ActionId[]);
 /** The no-fabrication rule for web runs: facts come from the request and from public pages, cited. */
 export const WEB_EVIDENCE_RULE = "- No fabrication: use only facts given in this request and on the public pages you read. Cite the URL for every claim about a company, role or topic, and mark anything you could not confirm.";
 
@@ -353,6 +361,9 @@ export const CONTACTS_RULES = [
   ...PUBLISHED_CONTACT_RULES,
   "- Contacts: role addresses only, like careers@ or hr@. Don't collect details about individual people: no personal names, personal emails or personal phone numbers.",
 ] as const;
+/** Find recruiters: where it may look on LinkedIn, and that browsing stays read-only. */
+export const RECRUITER_SEARCH_RULE =
+  "- Read only: never apply, sign in, follow, connect or message. On LinkedIn use only job search and agencies' company pages: never open people's profiles or people search.";
 Object.freeze(PUBLISHED_CONTACT_RULES);
 Object.freeze(CONTACTS_RULES);
 
@@ -617,7 +628,7 @@ export function buildActionPrompt(id: ActionId, target: ActionTarget, info: Prom
   // Research company writes contacts.json only with the Contacts chip (on by default, so also with no request).
   const contacts = id === "research_company" && (!req || ((req.options.focus as string[] | undefined) ?? []).includes("contacts"));
   if (contacts) rules.splice(rules.length - 1, 0, ...CONTACTS_RULES);
-  if (id === "find_recruiters") rules.splice(rules.length - 1, 0, ...PUBLISHED_CONTACT_RULES);
+  if (id === "find_recruiters") rules.splice(rules.length - 1, 0, ...PUBLISHED_CONTACT_RULES, RECRUITER_SEARCH_RULE);
   const also = id === "research_company" && !contacts ? extras.filter((o) => !o.endsWith("/contacts.json")) : extras;
   return [
     `${identity.name} request: ${def.label}.`,

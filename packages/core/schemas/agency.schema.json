@@ -51,6 +51,13 @@
       }
     },
     "job_refs": { "type": "array", "items": { "type": "string", "maxLength": 200 }, "maxItems": 500, "default": [] },
+    "sources": {
+      "type": "array", "maxItems": 100, "default": [],
+      "items": {
+        "type": "object", "required": ["name", "url"],
+        "properties": { "name": { "type": "string", "maxLength": 60 }, "url": { "type": "string", "maxLength": 500 }, "found_at": { "type": "string", "maxLength": 40, "default": "" } }
+      }
+    },
     "favourite": { "type": "boolean", "default": false },
     "tracking": {
       "type": "object", "default": {},

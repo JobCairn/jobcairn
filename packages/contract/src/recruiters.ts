@@ -1,4 +1,5 @@
 import { isPlainEmail, linkedinCompanyPage } from "./contacts.js";
+import { jobBoardByUrl } from "./job-boards.js";
 import type { JobRow } from "./types.js";
 import { ArgError, isSafeHttpsUrl } from "./validate.js";
 
@@ -30,6 +31,12 @@ export const AGENCY_FOLLOW_UP_DAYS = 5;
 
 export interface AgencyContactView { kind: "email" | "phone"; value: string; label: string; source_url: string; found_on: string; confirmed: boolean }
 export interface AgencyPersonView { name: string; title: string; email: string; phone: string; source_url: string; specialties: string[]; job_refs: string[] }
+/**
+ * One place an agency was found, like a job's source: `name` is the board's name as jobs show it ("SEEK", "LinkedIn",
+ * "Indeed") when the page is on a job board, else the kind of page ("Web search", "RCSA directory", "Agency website",
+ * "Saved job"); `url` the https page; `found_at` an ISO timestamp (like a job's found_at).
+ */
+export interface AgencySourceView { name: string; url: string; found_at: string }
 export interface AgencyTracking { status: AgencyStatus; contacted_on: string; follow_up_on: string; notes: string }
 /** The stored record, as the bridge sends it. */
 export interface AgencyRecordView {
@@ -38,6 +45,8 @@ export interface AgencyRecordView {
   team_note: { text: string; source_url: string }; best_contact: { name: string; source_url: string };
   contacts: AgencyContactView[]; people: AgencyPersonView[]; job_refs: string[]; favourite: boolean; tracking: AgencyTracking;
   timeline: { at: string; event: string; note: string }[];
+  /** Where it was found, oldest first (merged by url). Records read through the store always have it ([] by default). */
+  sources?: AgencySourceView[];
 }
 export interface AgencyJob { company_slug: string; id: string; title: string; location: string; job_type: string; status: string; open: boolean; sponsor_friendly: boolean }
 /** One card on the Recruiters screen. */
@@ -186,6 +195,15 @@ export interface AgencyInputClean {
   hiring_summary: string; about_url: string; city_links: { city: string; url: string }[]; linkedin_url: string;
   team_note: { text: string; source_url: string }; best_contact: { name: string; source_url: string };
   contacts: AgencyContactView[]; people: AgencyPersonView[]; job_refs: string[];
+  /** Where it was found (name and https page); the store adds when. */
+  sources: { name: string; url: string }[];
+}
+
+/** Most sources one save may add. */
+export const AGENCY_SOURCES_MAX = 20;
+/** A source's name: the job board's own name when the page is on one (as jobs name it), else the name given, else "Web search". */
+export function agencySourceName(name: unknown, url: string): string {
+  return jobBoardByUrl(url)?.name ?? (line(name, 60) || "Web search");
 }
 
 /**
@@ -235,12 +253,22 @@ export function cleanAgencyInput(raw: unknown, today = ""): { agency: AgencyInpu
     const url = https(x.url);
     return city && url ? [{ city, url }] : [];
   });
+  const website = https(o.website);
+  const sources: { name: string; url: string }[] = [];
+  for (const x of (Array.isArray(o.sources) ? o.sources : []).slice(0, AGENCY_SOURCES_MAX)) {
+    const r = (x && typeof x === "object" ? x : {}) as Record<string, unknown>;
+    const url = https(r.url);
+    if (!url) { dropped.push(`source ${line(r.name, 60) || "(no name)"}: no https page`); continue; }
+    if (!sources.some((y) => y.url === url)) sources.push({ name: agencySourceName(r.name, url), url });
+  }
+  // Nothing said where it was found: its own site is where it was checked.
+  if (!sources.length && website) sources.push({ name: "Agency website", url: website });
   return {
     agency: {
-      slug: agencySlug(name), name, website: https(o.website), since, specialties: words(o.specialties, 20, 60), tags: words(o.tags, 20, 40),
+      slug: agencySlug(name), name, website, since, specialties: words(o.specialties, 20, 60), tags: words(o.tags, 20, 40),
       cities: words(o.cities, 20, 80), hiring_summary: line(o.hiring_summary, 400), about_url: https(o.about_url), city_links: cityLinks,
       linkedin_url: linkedin, team_note: pair(o.team_note, "text", 400), best_contact: pair(o.best_contact, "name", 120),
-      contacts, people, job_refs: [],
+      contacts, people, job_refs: [], sources,
     },
     dropped,
   };

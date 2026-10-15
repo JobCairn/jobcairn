@@ -1,9 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
 import identity from "@careeros/brand/identity.json" with { type: "json" };
-import { BOARD_IDS, BOARD_NAMES, cleanBoardFilters, findBudget, MAX_JOBS, type BoardFilters, type BoardId, type SignInDiag } from "@careeros/contract";
+import { BOARD_IDS, BOARD_NAMES, cleanBoardFilters, findBudget, MAX_AGENCIES, MAX_JOBS, recruiterBudget, type BoardFilters, type BoardId, type SignInDiag } from "@careeros/contract";
 import { nodeProcessRunner, type ProcessRunner } from "../claude/process.js";
-import { boardForUrl, landingPage, readControls } from "./boards.js";
+import { boardForUrl, canonicalAddress, directAddress, landingPage, pageKind, readControls } from "./boards.js";
 import { BrowserHelper, checkAttached, fileLock, helperEnv, isOwnChrome, SESSION, sessionLockDir, type HelperRun } from "./helper.js";
 import { openVerifiedTab, profileDirShape, readChromeProfiles, spawnLaunch, validProfileDir, type Launch, type OpenBudget } from "./profile.js";
 import { BoardStopped, BrowseRefused, BrowserRun, fileControl, RUN_ID, type BrowserRunState, type Caps } from "./session.js";
@@ -44,6 +44,12 @@ export interface ChromeCliRun {
   run: string; boards: BoardId[]; dir: string; reconnected?: boolean; jobs: number | null;
   /** The boards' own search filters for this run (written by main from the person's settings, never by Claude). */
   filters?: BoardFilters | null;
+  /**
+   * "recruiters": a Find recruiters run, which also has WebFetch, so the command answers only what the app reads off
+   * a page (RECRUITER_HELP), never the page. `agencies` is its target, which its limits scale with (recruiterBudget).
+   */
+  purpose?: "recruiters" | null;
+  agencies?: number | null;
 }
 
 export const HELP = [
@@ -110,7 +116,9 @@ export function readCliRun(root: string): ChromeCliRun | null {
   if (!boards.length) return null;
   try { const st = fs.lstatSync(j.dir); if (!st.isDirectory() || st.isSymbolicLink()) return null; } catch { return null; }
   const jobs = typeof j.jobs === "number" && Number.isInteger(j.jobs) && j.jobs >= MAX_JOBS.min && j.jobs <= MAX_JOBS.max ? j.jobs : null;
-  return { run: j.run, boards, dir: j.dir, reconnected: j.reconnected === true, jobs, filters: cleanBoardFilters(j.filters) };
+  const recruiters = j.purpose === "recruiters";
+  const agencies = recruiters && typeof j.agencies === "number" && Number.isInteger(j.agencies) && j.agencies >= MAX_AGENCIES.min && j.agencies <= MAX_AGENCIES.max ? j.agencies : null;
+  return { run: j.run, boards, dir: j.dir, reconnected: j.reconnected === true, jobs, filters: cleanBoardFilters(j.filters), ...(recruiters ? { purpose: "recruiters" as const, agencies } : {}) };
 }
 
 /**
@@ -118,7 +126,11 @@ export function readCliRun(root: string): ChromeCliRun | null {
  * (findBudget), so 100 is reachable; with none (a sign-in check) they stay session.ts's CAPS. A Bash call has about
  * two minutes, so a pause for the person waits less than that, then the board is skipped.
  */
-export function runCaps(jobs: number | null): Partial<Caps> {
+export function runCaps(jobs: number | null, recruiters: { agencies: number | null } | null = null): Partial<Caps> {
+  if (recruiters) {
+    const r = recruiterBudget(recruiters.agencies ?? MAX_AGENCIES.default);
+    return { pagesPerBoard: r.pagesPerBoard, actions: r.actions, browseMs: r.browseMs, pauseWaitMs: 90_000 };
+  }
   if (!jobs) return { pauseWaitMs: 90_000 };
   const b = findBudget(jobs);
   return { pagesPerBoard: b.pagesPerBoard, actions: b.actions, browseMs: b.browseMs, pauseWaitMs: 90_000 };
@@ -148,10 +160,13 @@ export async function chromeCli(root: string, argv: readonly string[], d: CliDep
   const [cmd = "", ...rest] = argv;
   const ok = (out: string): CliResult => ({ code: 0, out });
   const no = (out: string): CliResult => ({ code: 1, out });
-  if (cmd === "" || cmd === "help" || cmd === "--help" || cmd === "-h") return ok(HELP);
+  // Recruiters mode (a Find recruiters run) has its own, smaller set of commands and no helper guide.
+  const recruiters = readCliRun(root)?.purpose === "recruiters";
+  if (cmd === "" || cmd === "help" || cmd === "--help" || cmd === "-h") return ok(recruiters ? RECRUITER_HELP : HELP);
   const cfg = readCliConfig(root);
   if (!cfg) return no(`Search in my Chrome isn't set up in this workspace. ${NOT_CONNECTED}`);
 
+  if (cmd === "skills" && recruiters) return no(`The helper's guide isn't available in recruiters mode. Commands:\n${RECRUITER_HELP}`);
   if (cmd === "skills") {
     // The helper's own guide: only `skills get core` (and --full), which reads nothing from Chrome.
     if (rest[0] !== "get" || rest[1] !== "core" || rest.length > 3 || (rest[2] !== undefined && rest[2] !== "--full")) return no(`Only "${CLI_NAME} skills get core" (or with --full) is available.`);
@@ -201,7 +216,7 @@ export async function chromeCli(root: string, argv: readonly string[], d: CliDep
   }
   const b = new BrowserRun(run.run, run.boards, {
     helper, control: fileControl(run.dir), now: d.now, sleep: d.sleep, random: d.random, profileTab, ...(profileName ? { profileName } : {}),
-    caps: runCaps(run.jobs),
+    caps: runCaps(run.jobs, run.purpose === "recruiters" ? { agencies: run.agencies ?? null } : null),
   });
 
   // One command at a time per run: load the run's state, act, save it. Boards aren't browsed in parallel on purpose
@@ -215,14 +230,17 @@ export async function chromeCli(root: string, argv: readonly string[], d: CliDep
   let saved = false;
   try {
     const st = loadRunState(run.dir);
-    if (st === "unreadable") return no(LOST_STATE);
+    if (st === "unreadable") return no(run.purpose === "recruiters" ? `${LOST_STATE}\n${RECRUITER_CARRY_ON}` : LOST_STATE);
     b.restoreState(st);
     saved = true;
-    return ok(await dispatchCmd(b, run, cmd, rest, () => lastDiag, () => fresh));
+    return ok(run.purpose === "recruiters" ? await dispatchRecruiters(b, run, cmd, rest, () => lastDiag, () => fresh) : await dispatchCmd(b, run, cmd, rest, () => lastDiag, () => fresh));
   } catch (e) {
     if (e instanceof BoardStopped) keepStopDiag(run.dir, e, lastDiag, cfg);
-    if (e instanceof BrowseRefused) return no(e.message);
-    return no(`The browser couldn't do that: ${(e as Error).message.split("\n")[0]!.slice(0, 200)}`);
+    // Recruiters mode: Chrome is one source among several, so a refusal (time or steps used up, a board stopped) never
+    // ends the run, whatever the words above say about jobs.
+    const more = run.purpose === "recruiters" ? `\n${RECRUITER_CARRY_ON}` : "";
+    if (e instanceof BrowseRefused) return no(`${e.message}${more}`);
+    return no(`The browser couldn't do that: ${(e as Error).message.split("\n")[0]!.slice(0, 200)}${more}`);
   } finally {
     try { if (saved) saveRunState(run.dir, b.saveState()); } catch { /* the next command starts from what was saved before */ }
     release();
@@ -327,6 +345,52 @@ async function dispatchCmd(b: BrowserRun, run: ChromeCliRun, cmd: string, rest: 
       return `Recorded: ${BOARD_NAMES[board]} ${state.replace("_", " ")}.`;
     }
     default: throw new BrowseRefused(`"${cmd.slice(0, 40)}" isn't available here: this command only searches and reads job boards.\n${HELP}`);
+  }
+}
+
+/**
+ * Recruiters mode (a Find recruiters run, which also has WebFetch): only commands whose answers the app builds itself
+ * from a page (session.ts adList, adFacts), never a page's text, tree or controls. Nothing is clicked or typed.
+ */
+export const RECRUITER_HELP = [
+  `${CLI_NAME} (recruiters mode): find the agencies that advertise on the person's job boards, in their own Chrome, read-only. One command per call.`,
+  "  search <board> <words> [place]  Search a board (boards: the ticked ones of SEEK, Indeed, LinkedIn) and list the job ads found: title and address",
+  "  open <url>                      A results page from a list: list its ads. A job ad: its title, advertiser, place, whether it says it recruits for a client, and its contact links",
+  "  more                            Scroll the current results page and list its ads again",
+  "  tab close                       Close the current board's tab",
+  "  close                           Close all of this run's tabs (do this when you're done)",
+  "Page text, snapshots, clicks and typing aren't available in this mode.",
+].join("\n");
+
+/** Said after anything the browser refuses in recruiters mode. */
+export const RECRUITER_CARRY_ON = "This only ends Chrome for this run (or this board): carry on finding agencies with web search and the other sources until you reach the number asked for.";
+
+async function dispatchRecruiters(b: BrowserRun, run: ChromeCliRun, cmd: string, rest: readonly string[], diag: () => SignInDiag | null, fresh: () => boolean): Promise<string> {
+  const usage = (u: string) => new BrowseRefused(`Use: ${CLI_NAME} ${u}`);
+  const keepDiag = (board: BoardId) => {
+    const dg = diag();
+    if (dg && (fresh() || !fs.existsSync(path.join(run.dir, `diag-${board}.json`)))) writeRunFile(run.dir, `diag-${board}.json`, dg);
+  };
+  switch (cmd) {
+    case "search": {
+      const board = boardArg(rest[0], run.boards);
+      if (!board) throw new BrowseRefused(`Name one of this run's boards: ${run.boards.map((x) => BOARD_NAMES[x]).join(", ")}.`);
+      if (!rest[1] || rest.length > 3) throw usage("search <board> <words> [place]");
+      try { await b.open(board, { query: rest[1].slice(0, 200), location: (rest[2] ?? "").slice(0, 120), filters: run.filters ?? null }); } finally { keepDiag(board); }
+      return b.adList();
+    }
+    case "open": {
+      const url = rest[0];
+      if (!url || rest.length !== 1) throw usage("open <url>");
+      const board = boardForUrl(url, run.boards);
+      if (!board) throw new BrowseRefused(`That address isn't on one of this run's boards (${run.boards.map((x) => BOARD_NAMES[x]).join(", ")}). Only their search results and job ads open.`);
+      try { await b.open(board, { url }); } finally { keepDiag(board); }
+      return pageKind(canonicalAddress(directAddress(url, board), board) ?? "", board) === "ad" ? b.adFacts() : b.adList();
+    }
+    case "more": if (rest.length) throw usage("more"); await b.scroll("down"); return b.adList();
+    case "tab": if (rest[0] !== "close" || rest.length !== 1) throw usage("tab close"); return b.closeTab();
+    case "close": await b.closeAll(); return "All of this run's tabs are closed.";
+    default: throw new BrowseRefused(`"${cmd.slice(0, 40)}" isn't available in recruiters mode: this command only lists job ads and reads an ad's advertiser.\n${RECRUITER_HELP}`);
   }
 }
 

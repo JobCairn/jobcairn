@@ -1,7 +1,7 @@
 import type { ActionId } from "./actions.js";
 import { prioritiseSponsorship, showSponsorship } from "./candidate.js";
 import type { WorkRightsStatus } from "./constants.js";
-import { BREADTH_QUERIES, MAX_JOBS } from "./find-plan.js";
+import { BREADTH_QUERIES, MAX_AGENCIES, MAX_JOBS } from "./find-plan.js";
 
 /**
  * What a person may change about a Claude request, per action: a typed allowlist of options, each turning the chosen
@@ -210,7 +210,11 @@ export const ACTION_OPTIONS: { readonly [K in ActionId]: readonly ActionOption[]
     ]),
   ],
   chrome_check: [],
-  find_recruiters: [],
+  find_recruiters: [
+    // Like Find jobs' max_jobs: the run's limits scale with it (recruiterBudget).
+    { kind: "range", key: "max_agencies", label: "Agencies to find", help: "How many agencies Claude aims to save this time.", min: MAX_AGENCIES.min, max: MAX_AGENCIES.max, step: 1, default: MAX_AGENCIES.default, unit: "agencies",
+      line: (n) => `Aim for ${n} agencies. Don't stop after the first search: keep going through the sources below, one after another, until you have saved ${n} agencies or run out of sources, and say in the report if you stopped short and why.` },
+  ],
   rewrite_resume: [
     sel("scope", "What to rewrite", "The whole resume, one section or one bullet.", "resume", [
       { value: "resume", label: "Whole resume", line: "Rewrite the whole resume." },

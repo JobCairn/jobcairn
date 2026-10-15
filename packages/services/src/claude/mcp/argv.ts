@@ -1,5 +1,5 @@
 import path from "node:path";
-import { MAX_JOBS, searchOverride, searchReportRel, type SearchOverride } from "@careeros/contract";
+import { MAX_AGENCIES, MAX_JOBS, searchOverride, searchReportRel, type SearchOverride } from "@careeros/contract";
 import { MCP_TOOL_NAMES, mcpSession, type McpSession, type McpToolName } from "./tools.js";
 
 const SLUG = /^[a-z0-9][a-z0-9-]{0,119}$/;
@@ -8,7 +8,8 @@ const SLUG = /^[a-z0-9][a-z0-9-]{0,119}$/;
  * The server's start arguments, as main writes them into --mcp-config: `--tools a,b` (required, known names
  * only), `--job <company_slug>/<id>` (optional), `--mode chrome` (a find-jobs run that browses the person's Chrome,
  * with search_add), `--report <file>` (with search_report), `--jobs <n>` (a find-jobs run's target, with job_new: its
- * job_new and search_add caps grow with it), and CAREEROS_WORKSPACE in the environment. Anything else is refused.
+ * job_new and search_add caps grow with it), `--agencies <n>` (a find-recruiters run's target, with recruiter_add: its
+ * cap grows with it), and CAREEROS_WORKSPACE in the environment. Anything else is refused.
  */
 export function parseMcpArgv(argv: readonly string[], env: Record<string, string | undefined>): McpSession {
   const root = env.CAREEROS_WORKSPACE ?? "";
@@ -20,6 +21,7 @@ export function parseMcpArgv(argv: readonly string[], env: Record<string, string
   let search: SearchOverride | null = null;
   let report: string | null = null;
   let jobs: number | null = null;
+  let agencies: number | null = null;
   for (let i = 0; i < argv.length; i += 2) {
     const flag = argv[i];
     const value = argv[i + 1];
@@ -51,6 +53,10 @@ export function parseMcpArgv(argv: readonly string[], env: Record<string, string
       const n = /^[1-9][0-9]{0,3}$/.test(value) ? Number(value) : 0;
       if (n < MAX_JOBS.min || n > MAX_JOBS.max) throw new Error(`--jobs must be a whole number from ${MAX_JOBS.min} to ${MAX_JOBS.max}`);
       jobs = n;
+    } else if (flag === "--agencies" && agencies === null) {
+      const n = /^[1-9][0-9]{0,3}$/.test(value) ? Number(value) : 0;
+      if (n < MAX_AGENCIES.min || n > MAX_AGENCIES.max) throw new Error(`--agencies must be a whole number from ${MAX_AGENCIES.min} to ${MAX_AGENCIES.max}`);
+      agencies = n;
     } else throw new Error(`unknown or repeated argument ${String(flag).slice(0, 40)}`);
   }
   if (!tools || !tools.length) throw new Error("needs --tools");
@@ -61,5 +67,6 @@ export function parseMcpArgv(argv: readonly string[], env: Record<string, string
   if (search !== null && !tools.includes("job_new")) throw new Error("--search goes with the job_new tool");
   if (jobs !== null && !tools.includes("job_new")) throw new Error("--jobs goes with the job_new tool");
   if ((report !== null) !== tools.includes("search_report")) throw new Error("--report and the search_report tool go together");
-  return { ...mcpSession(root, tools as McpToolName[], job), ask, search, report, jobs, chrome: mode === "chrome" };
+  if (agencies !== null && !tools.includes("recruiter_add")) throw new Error("--agencies goes with the recruiter_add tool");
+  return { ...mcpSession(root, tools as McpToolName[], job), ask, search, report, jobs, agencies, chrome: mode === "chrome" };
 }

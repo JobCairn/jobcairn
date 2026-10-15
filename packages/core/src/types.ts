@@ -179,6 +179,8 @@ export interface AgencyContact extends Extra {
 export interface AgencyPerson extends Extra {
   name: string; title: string; email: string; phone: string; source_url: string; specialties: string[]; job_refs: string[];
 }
+/** One place an agency was found (merged by url). `found_at` is an ISO timestamp, like a job's. */
+export interface AgencySource extends Extra { name: string; url: string; found_at: string }
 export const AGENCY_STATUSES = ["to_contact", "contacted", "replied", "meeting", "not_a_fit"] as const;
 export type AgencyStatus = (typeof AGENCY_STATUSES)[number];
 /** A recruitment agency: recruiters/<slug>/agency.json. Same slug as its company folder when it has one. */
@@ -195,6 +197,8 @@ export interface Agency extends Extra {
   contacts: AgencyContact[]; people: AgencyPerson[];
   /** "<company_slug>/<job id>" of saved jobs it advertised. */
   job_refs: string[];
+  /** Every place it was found, like a job's source: the board's name as jobs show it ("SEEK") or a kind of page ("Web search"), the https page, when. */
+  sources: AgencySource[];
   favourite: boolean;
   tracking: { status: AgencyStatus; contacted_on: string; follow_up_on: string; notes: string } & Extra;
   timeline: TimelineEvent[];

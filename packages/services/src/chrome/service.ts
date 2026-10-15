@@ -5,7 +5,7 @@ import path from "node:path";
 import identity from "@careeros/brand/identity.json" with { type: "json" };
 import { layout, readRecord, updateRecord } from "@careeros/core";
 import {
-  BOARD_NAMES, DEFAULT_BOARDS,
+  BOARD_NAMES, DEFAULT_BOARDS, RECRUITER_BOARDS,
   type BoardFilters, type BoardId, type BoardRunDiag, type BoardSignIn, type ChromeRunProgress, type ChromeSearchSettings, type ChromeSearchState, type FindJobsMode, type SignInDiag, type SignInWhy,
   type TerminalFix, type WebReason,
 } from "@careeros/contract";
@@ -150,7 +150,7 @@ function writeCliFiles(root: string, plan: BrowserPlan, profileName: string): vo
     bin: plan.bin, config: plan.config, path: plan.path, home: plan.home,
     profile: plan.profile ? { dir: plan.profile.dir, name: profileName, local_state: plan.profile.localState, chrome_bin: plan.profile.chromeBin } : null,
   });
-  put(CHROME_RUN_REL, { run: plan.run, boards: [...plan.boards], dir: plan.dir, reconnected: plan.reconnected === true, ...(plan.jobs ? { jobs: plan.jobs } : {}), ...(plan.filters ? { filters: plan.filters } : {}) });
+  put(CHROME_RUN_REL, { run: plan.run, boards: [...plan.boards], dir: plan.dir, reconnected: plan.reconnected === true, ...(plan.jobs ? { jobs: plan.jobs } : {}), ...(plan.filters ? { filters: plan.filters } : {}), ...(plan.purpose ? { purpose: plan.purpose, agencies: plan.agencies } : {}) });
 }
 
 /** The run is over: jobcairn-chrome refuses to browse until the next one (only this run's file is removed). */
@@ -773,13 +773,18 @@ export class ChromeSearch {
    * Called by the engine when a find-jobs run starts: a browser plan when Search in my Chrome is set up, on and
    * connected, else null (the run uses web search as before). Makes the run's private control folder. `jobs`: the new
    * jobs the search aims for, which the run's browsing limits scale with.
+   * `recruiters`: a Find recruiters run (the agencies it aims for). It browses in recruiters mode (no page text goes
+   * to Claude), only SEEK, Indeed and LinkedIn among the ticked boards, and only with Search in my Chrome on. It never
+   * changes Find jobs' state (its board chips, what the composer says about its last search, the scheduled-skip
+   * reason): null just means the run uses the web tools only.
    */
-  async planForRun(o: { check?: boolean; jobs?: number; filters?: BoardFilters | null; scheduled?: { waitMs: number; askAllow?: () => void } } = {}): Promise<BrowserPlan | null> {
-    const next = o.check ? null : this.nextBoards;
-    if (!o.check) this.nextBoards = null;
+  async planForRun(o: { check?: boolean; jobs?: number; recruiters?: number; filters?: BoardFilters | null; scheduled?: { waitMs: number; askAllow?: () => void } } = {}): Promise<BrowserPlan | null> {
+    const own = !o.check && !o.recruiters;
+    const next = own ? this.nextBoards : null;
+    if (own) this.nextBoards = null;
     const at = this.ctx.now().toISOString();
-    // A sign-in check never changes what the composer says about the last search.
-    const web = (reason: WebReason): null => { if (!o.check) this.lastRun = { mode: "web", reason, boards: [], at }; else this.checkWhy = reason; return null; };
+    // A sign-in check (or a recruiters run) never changes what the composer says about the last search.
+    const web = (reason: WebReason): null => { if (own) this.lastRun = { mode: "web", reason, boards: [], at }; else if (o.check) this.checkWhy = reason; return null; };
     const h = this.host;
     const root = this.ctx.root;
     if (!h || !root) return web("unavailable");
@@ -789,7 +794,7 @@ export class ChromeSearch {
     if (!s.enabled && !o.check) return web(s.set_up_at ? "off" : "not_set_up");
     const f = await this.findHelper(false);
     if (!f.helper || f.tooOld) return web("no_helper");
-    const boards = next ? s.boards.filter((b) => next.includes(b)) : s.boards;
+    const boards = next ? s.boards.filter((b) => next.includes(b)) : o.recruiters ? s.boards.filter((b) => RECRUITER_BOARDS.includes(b)) : s.boards;
     if (!boards.length) return web("no_boards");
     // Chrome comes to the front in the chosen profile before anything below may make it ask "Allow remote
     // debugging?", so the person sees the prompt. It also starts a Chrome that isn't running.
@@ -805,14 +810,14 @@ export class ChromeSearch {
       // Connected earlier, but the helper now drives a browser of its own: stopped, reconnected once, still not.
       return web("connect_failed");
     }
-    if (!o.check) this.lastRun = { mode: "chrome", reason: "", boards: [...boards], at };
+    if (own) this.lastRun = { mode: "chrome", reason: "", boards: [...boards], at };
     const dir = fs.mkdtempSync(path.join(h.tmpDir ?? os.tmpdir(), "careeros-chrome-"));
     fs.chmodSync(dir, 0o700);
     const run = crypto.randomBytes(6).toString("hex");
     // With a profile chosen, the run's tabs go to that profile or nowhere: the run checks the folder again against
     // Chrome's list and refuses to open a board when it can't (it never falls back to the window used last).
     const profile = s.profile_dir ? { profile: { dir: s.profile_dir, localState: h.localStateFile ?? "", chromeBin: h.chromeBin?.() ?? "" } } : {};
-    this.active = { run, boards, dir, bin: f.helper.bin, config: this.configFile(h), path: this.pathVar(h), home: h.home, ...profile, reconnected: this.attach?.reconnected === true, ...(o.jobs ? { jobs: o.jobs } : {}), ...(o.filters && !o.check ? { filters: o.filters } : {}) };
+    this.active = { run, boards, dir, bin: f.helper.bin, config: this.configFile(h), path: this.pathVar(h), home: h.home, ...profile, reconnected: this.attach?.reconnected === true, ...(o.jobs ? { jobs: o.jobs } : {}), ...(o.filters && own ? { filters: o.filters } : {}), ...(o.recruiters ? { purpose: "recruiters" as const, agencies: o.recruiters } : {}) };
     // What jobcairn-chrome (the browser command Claude runs) reads: the app's helper and profile, and this run.
     writeCliFiles(root, this.active, s.profile_dir ? this.profileName(s.profile_dir) : "");
     return this.active;
@@ -1024,6 +1029,23 @@ export function browserRequest(boards: readonly BoardId[]): string {
     "Web search isn't available in this run; use only these boards. Follow the search rules below: preferred locations first, widen only as they say, allowed countries only.",
   ].join(" ");
 }
+
+/**
+ * The text a Find recruiters run gets in front of its request when it may look at the boards in Chrome (recruiters
+ * mode; fixed words plus board names, no person's input).
+ */
+export function recruiterBrowserRequest(boards: readonly BoardId[]): string {
+  const names = boards.map((b) => BOARD_NAMES[b]).join(", ");
+  const cmd = "./.careeros/bin/jobcairn-chrome";
+  return [
+    `Chrome is on for this run: for source (b), search these job boards in the person's own Chrome with ${cmd}: ${names}.`,
+    `Run \`${cmd} search <board> "<role>" "<city>"\` for each target role and city: it lists the job ads found. Then \`${cmd} open <ad address>\` for ads that may be from an agency: it gives the advertiser, whether the ad says it recruits for a client, and the contact links in the ad. \`${cmd} open <results page>\` or \`${cmd} more\` lists more ads. Finish with \`${cmd} close\`.`,
+    "Check each advertiser on its own site with web search before you save it, and give the ad's address as its source with the board's name. Use web search and web pages for every other source, but never fetch these boards' pages directly.",
+  ].join(" ");
+}
+
+/** The note a Find recruiters run gets when Chrome isn't used (not set up, off, not connected, or busy). */
+export const RECRUITER_WEB_ONLY = "Chrome isn't used for this run: for source (b), find the agencies advertising on the job boards with web search.";
 
 /** The text a sign-in check gets in front of its request (fixed words plus board names). */
 export function checkRequest(boards: readonly BoardId[]): string {

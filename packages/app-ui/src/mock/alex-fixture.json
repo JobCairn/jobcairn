@@ -1364,6 +1364,18 @@
       "job_refs": [
         "acme-recruiting/2026-01-12-ai-developer"
       ],
+      "sources": [
+        {
+          "name": "Saved job",
+          "url": "https://jobs.example.com/rec/3",
+          "found_at": "2026-01-12T09:00:00.000Z"
+        },
+        {
+          "name": "Agency website",
+          "url": "https://recruiting.example.com",
+          "found_at": "2026-01-12T09:00:00.000Z"
+        }
+      ],
       "favourite": false,
       "tracking": {
         "status": "to_contact",

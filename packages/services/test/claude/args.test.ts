@@ -220,3 +220,44 @@ describe("per-action permissions", () => {
     expect(t).not.toMatch(/is score_record|undefined/);
   });
 });
+
+describe("Find recruiters: Chrome in recruiters mode keeps the web tools (spec 2026-10-16)", () => {
+  const BROWSER = { run: "abc123def456", boards: ["seek", "linkedin"] as ("seek" | "linkedin")[], dir: "/tmp/x", bin: "/apps/helper/agent-browser", config: "/apps/helper.json", path: "/usr/bin", home: "/Users/alex" };
+  const files = ["knowledge/recruiter-searches/2026-10-16.md"];
+  const plan = (o: Partial<Parameters<typeof toolArgs>[0]> = {}) => ({ action: "find_recruiters" as const, folder: "knowledge/recruiter-searches", files, web: true, mcp: mcpToolsFor("find_recruiters"), job: null, ...o });
+
+  it("gives the browser command plus WebSearch and WebFetch, keeps the exact output file, and denies fetching the boards", () => {
+    const t = toolArgs(plan({ browser: { ...BROWSER, purpose: "recruiters", agencies: 40 } }), LOCKABLE_DIRS, PLACE.pluginDir);
+    expect(t.tools).toEqual(expect.arrayContaining(["Bash", "WebSearch", "WebFetch"]));
+    expect(t.allowed).toEqual(expect.arrayContaining(["Bash(./.careeros/bin/jobcairn-chrome *)", "WebSearch", "WebFetch", `Edit(./${files[0]})`]));
+    expect(t.allowed).not.toContain("Edit(./**)");
+    expect(t.denied).toEqual(expect.arrayContaining(["WebFetch(domain:seek.com.au)", "WebFetch(domain:*.seek.com.au)", "WebFetch(domain:linkedin.com)", "WebFetch(domain:*.linkedin.com)", "WebFetch(domain:*.indeed.com)", "Grep", "Glob"]));
+    expect(t.denied).not.toContain("WebFetch");
+    expect(t.denied).not.toContain("WebSearch");
+    const args = claudeArgs(plan({ browser: { ...BROWSER, purpose: "recruiters", agencies: 40 }, agencies: 40 }), LOCKABLE_DIRS, PLACE);
+    expect(args[args.indexOf("--permission-mode") + 1]).toBe("dontAsk");
+    const sys = args[args.indexOf("--append-system-prompt") + 1]!;
+    expect(sys).toContain("recruiters mode");
+    expect(sys).not.toMatch(/search_check|search_add|search_report|job_new/);
+    const mcp = JSON.parse(args[args.indexOf("--mcp-config") + 1]!) as { mcpServers: { careeros: { args: string[] } } };
+    expect(mcp.mcpServers.careeros.args.slice(-2)).toEqual(["--agencies", "40"]);
+  });
+
+  it("without Chrome: web tools, LinkedIn never fetched, job boards fetchable", () => {
+    const t = toolArgs(plan(), LOCKABLE_DIRS, PLACE.pluginDir);
+    expect(t.allowed).toEqual(expect.arrayContaining(["WebSearch", "WebFetch"]));
+    expect(t.tools).not.toContain("Bash");
+    expect(t.denied).toEqual(expect.arrayContaining(["WebFetch(domain:linkedin.com)", "WebFetch(domain:*.linkedin.com)"]));
+    expect(t.denied).not.toContain("WebFetch(domain:seek.com.au)");
+  });
+
+  it("recruiters mode is Find recruiters' only, and Find recruiters browses only in it; Find jobs' browser run is unchanged", () => {
+    expect(() => toolArgs(plan({ browser: BROWSER }), LOCKABLE_DIRS)).toThrow(/only in recruiters mode/);
+    const jobs = { action: "find_jobs" as const, folder: "knowledge/job-searches", files: ["knowledge/job-searches/2026-10-16.md"], web: true, mcp: mcpToolsFor("find_jobs"), job: null };
+    expect(() => toolArgs({ ...jobs, browser: { ...BROWSER, purpose: "recruiters" } }, LOCKABLE_DIRS)).toThrow(/Only Find recruiters/);
+    const t = toolArgs({ ...jobs, browser: BROWSER }, LOCKABLE_DIRS);
+    expect(t.denied).toEqual(expect.arrayContaining(["WebSearch", "WebFetch"]));
+    expect(t.allowed).toContain("Edit(./**)");
+    expect(t.denied.some((d) => d.startsWith("WebFetch(domain:"))).toBe(false);
+  });
+});

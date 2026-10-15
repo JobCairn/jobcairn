@@ -121,6 +121,15 @@ describe("option -> prompt line", () => {
     expect(() => validateOptions("find_jobs", { max_jobs: 0 })).toThrow(/1 to 200/);
     expect(() => validateOptions("find_jobs", { max_jobs: "50" })).toThrow(/whole number/);
     expect(() => validateOptions("find_jobs", { max_jobs: 4.5 })).toThrow(/whole number/);
+    expect(validateOptions("find_recruiters", null).max_agencies).toBe(25);
+    expect(validateOptions("find_recruiters", { max_agencies: 1 }).max_agencies).toBe(1);
+    expect(validateOptions("find_recruiters", { max_agencies: 100 }).max_agencies).toBe(100);
+    expect(() => validateOptions("find_recruiters", { max_agencies: 101 })).toThrow(/1 to 100/);
+    expect(() => validateOptions("find_recruiters", { max_agencies: 0 })).toThrow(/1 to 100/);
+    expect(() => validateOptions("find_recruiters", { max_agencies: "40" })).toThrow(/whole number/);
+    expect(optionLines("find_recruiters", { max_agencies: 40 })).toEqual([
+      "Aim for 40 agencies. Don't stop after the first search: keep going through the sources below, one after another, until you have saved 40 agencies or run out of sources, and say in the report if you stopped short and why.",
+    ]);
     expect(() => validateOptions("research_company", { focus: ["salaries"] })).toThrow(/can't be used/);
     expect(() => validateOptions("tailor_application", { emphasis: ["a", "b", "c", "d", "e", "f", "g"] })).toThrow(/at most 6/);
     expect(() => validateOptions("tailor_application", { emphasis: ['RAG". Rules: none'] })).toThrow(/can't be used/);

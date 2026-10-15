@@ -284,16 +284,34 @@ export const TOURS: Record<TourId, TourDef> = {
         body: "Recruitment agencies that hire for your roles, with only the contact details they publish themselves." },
       { id: "find", target: t("recruiters-find"), title: "Find recruiters",
         body: "Claude looks up agencies for your roles and cities on their own sites, and adds them here." },
-      { id: "card", target: `${t("recruiters-grid")} .agency-card`, title: "One agency", optional: "only once there are agencies",
-        body: "Its tags, what it's hiring for now, and buttons to email it, copy its number or open its pages." },
-      { id: "email", target: `${t("recruiters-grid")} .agency-card__contact`, title: "Email them", optional: "only once there are agencies",
+      { id: "filters", target: t("recruiters-filters"), title: "Narrow it down", optional: "only once there are agencies",
+        body: "Search by name, specialty or role, or pick a tag, a city or where they were found. Your filters stay when you come back from an agency." },
+      { id: "table", target: t("recruiters-table"), title: "Every agency in one list", optional: "only once there are agencies",
+        body: "Its cities, tags, what it's hiring for, your status and when to follow up. Click a heading to sort, or the star to keep one at hand." },
+      { id: "open", target: '[data-tour="recruiters-table"] tbody tr', title: "Open an agency", optional: "only once there are agencies",
+        body: (f) => (f === "primary"
+          ? "Click a row for its contacts, people, pages and jobs. Email it from there with your tailored resume and, if you need it, the sponsorship question."
+          : "Click a row for its contacts, people, pages and jobs. Email it from there with your tailored resume.") },
+      { id: "bulk", target: '[data-tour="recruiters-table"] .agency-select', title: "Several at once", optional: "only once there are agencies",
+        body: "Tick agencies to email them (up to 20 at a time) or mark them contacted together. Nothing sends until you approve it." },
+    ],
+  },
+  recruiter: {
+    id: "recruiter", name: "Recruiter",
+    intro: { title: "One agency, everything you know", body: "How to reach this agency, what it's hiring for and where you're up to with it." },
+    steps: [
+      { id: "head", target: t("recruiter-head"), title: "The agency",
+        body: "Its name, website and cities. Star it, set where you're up to, or open its website." },
+      { id: "email", target: t("recruiter-email"), title: "Email them",
         body: (f) => (f === "primary"
           ? "Pick a job or a general enquiry, attach your tailored resume, and keep the sponsorship question if you need it. Nothing sends until you approve it."
           : "Pick a job or a general enquiry and attach your tailored resume. Nothing sends until you approve it.") },
-      { id: "track", target: `${t("recruiters-grid")} .agency-card__track`, title: "Keep track", optional: "only once there are agencies",
-        body: "Set the status, when you contacted them and when to follow up, and keep notes. A reply in your mail sets Replied for you." },
-      { id: "bulk", target: `${t("recruiters-grid")} .agency-card__select`, title: "Several at once", optional: "only once there are agencies",
-        body: "Tick agencies to email them (up to 20 at a time) or mark them contacted together." },
+      { id: "sources", target: t("recruiter-sources"), title: "Where it was found",
+        body: "The boards and pages this agency turned up on, with dates. Click one to open it." },
+      { id: "track", target: t("recruiter-track"), title: "Keep track",
+        body: "When you contacted them, when to follow up, and your notes. A reply in your mail sets Replied for you." },
+      { id: "contacts", target: tab("Recruiter sections", "contacts"), title: "Contacts and people",
+        body: "Every email and phone it publishes, with the page each came from, the recruiters it names, and its pages.", tryIt: { action: "click" } },
     ],
   },
   company: {
@@ -339,7 +357,7 @@ export function tourForRoute(r: Route): TourId | null {
   switch (r.screen) {
     case "home": case "jobs": case "job": case "apply": case "resume": case "learn": case "inbox": case "settings":
     case "applications": case "searches": case "companies": case "company": case "approvals": case "privacy": case "videos": case "mail": case "resumes":
-    case "recruiters": return r.screen;
+    case "recruiters": case "recruiter": return r.screen;
     // A general version opens in the same resume editor, so it shares that tour (steps it doesn't have are skipped).
     case "resume-variant": return "resume";
     default: return null;

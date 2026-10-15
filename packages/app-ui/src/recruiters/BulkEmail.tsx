@@ -4,7 +4,7 @@ import { recruiterEmailDraft, sponsorshipLine, type AgencyRow } from "@careeros/
 import { errorText, useAction, useBridge, useLoad } from "../bridge-context";
 import { EMPTY_DRAFT } from "../components/DraftEditor";
 import { plural } from "../format";
-import { emailBlocker } from "./AgencyCard";
+import { emailBlocker } from "./parts";
 import { meFromProfile } from "./RecruiterEmail";
 import { useSponsorshipFocus } from "../useSponsorshipFocus";
 

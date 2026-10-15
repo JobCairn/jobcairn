@@ -5,10 +5,10 @@ import { JOB_STATUSES, RESUME_FILE, VARIANT_SLUG, WR_LABELS, videoFolder, type J
 export const APPLY_STEPS = ["prepare", "review", "handoff", "confirm"] as const;
 export type ApplyStepName = (typeof APPLY_STEPS)[number];
 
-export type ScreenName = "home" | "jobs" | "job" | "apply" | "resume" | "resume-variant" | "resumes" | "applications" | "inbox" | "learn" | "companies" | "company" | "searches" | "settings" | "privacy" | "approvals" | "video" | "videos" | "mail" | "recruiters";
-type Simple = "home" | "resumes" | "applications" | "inbox" | "settings" | "privacy" | "approvals" | "videos" | "mail" | "recruiters";
+export type ScreenName = "home" | "jobs" | "job" | "apply" | "resume" | "resume-variant" | "resumes" | "applications" | "inbox" | "learn" | "companies" | "company" | "searches" | "settings" | "privacy" | "approvals" | "video" | "videos" | "mail" | "recruiters" | "recruiter";
+type Simple = "home" | "resumes" | "applications" | "inbox" | "settings" | "privacy" | "approvals" | "videos" | "mail";
 /** Long lists whose page is kept in the address (`?p=3`), so Back from a row returns to the same page. */
-type Paged = "companies" | "searches";
+type Paged = "companies" | "searches" | "recruiters";
 /** The Settings tabs, in order: the one allow-list for `#/settings?tab=` and the Settings screen's own tabs. */
 export const SETTINGS_TABS = ["profile", "search", "connections", "voice", "video", "appearance", "workspace"] as const;
 export type SettingsTab = (typeof SETTINGS_TABS)[number];
@@ -38,12 +38,14 @@ export type Route =
   | { screen: "video"; folder: string }
   /** One company's page. `slug` is the company's key (its folder, or a list-only employer's name slug). */
   | { screen: "company"; slug: string; tab?: string }
+  /** One recruitment agency's page (recruiters/<slug>/agency.json). */
+  | { screen: "recruiter"; slug: string; tab?: string }
   /** `c` picks a connection; `section` scrolls to a section anchor in the tab and highlights it briefly. */
   | { screen: "settings"; tab?: SettingsTab; c?: ConnectionId; section?: string }
   | { screen: Exclude<Simple, "settings"> };
 
-const SIMPLE: Simple[] = ["home", "resumes", "applications", "inbox", "privacy", "approvals", "videos", "mail", "recruiters"];
-const PAGED: Paged[] = ["companies", "searches"];
+const SIMPLE: Simple[] = ["home", "resumes", "applications", "inbox", "privacy", "approvals", "videos", "mail"];
+const PAGED: Paged[] = ["companies", "searches", "recruiters"];
 /** A page number from the address: a whole number from 2 up (page 1 is the default and isn't written). */
 function pageParam(params: URLSearchParams): number | undefined {
   const raw = params.get("p");
@@ -73,6 +75,10 @@ export function parseHash(hash: string): Route {
     return tab && TAB.test(tab) ? { screen, slug: a, id: b, tab } : { screen, slug: a, id: b };
   }
   if (screen === "company" && a && SLUG.test(a) && a.length <= 120 && parts.length === 2) {
+    const tab = params.get("tab");
+    return tab && TAB.test(tab) ? { screen, slug: a, tab } : { screen, slug: a };
+  }
+  if (screen === "recruiter" && a && SLUG.test(a) && a.length <= 120 && parts.length === 2) {
     const tab = params.get("tab");
     return tab && TAB.test(tab) ? { screen, slug: a, tab } : { screen, slug: a };
   }
@@ -145,12 +151,13 @@ export function toHash(r: Route): string {
       const s = withPage(q, r.page).toString();
       return s ? `#/jobs?${s}` : "#/jobs";
     }
-    case "companies": case "searches": {
+    case "companies": case "searches": case "recruiters": {
       const s = withPage(new URLSearchParams(), r.page).toString();
       return s ? `#/${r.screen}?${s}` : `#/${r.screen}`;
     }
     case "video": return `#/video?folder=${encodeURIComponent(r.folder)}`;
     case "company": return `#/company/${r.slug}${r.tab ? `?tab=${r.tab}` : ""}`;
+    case "recruiter": return `#/recruiter/${r.slug}${r.tab ? `?tab=${r.tab}` : ""}`;
     case "settings": {
       if (!r.tab) return "#/settings";
       const q = new URLSearchParams({ tab: r.tab });

@@ -324,12 +324,21 @@ describe("guide video on the first card", () => {
 describe("Recruiters tour", () => {
   const shown = () => availableSteps(TOURS.recruiters.steps, (sel) => !!findTarget(sel)).map((s) => s.id);
 
-  it("walks the cards when there are agencies", async () => {
+  it("walks the list when there are agencies", async () => {
     window.location.hash = "#/recruiters";
     render(<App bridge={new MockBridge()} />);
-    await screen.findByRole("article", { name: "Acme Recruiting" });
-    await waitFor(() => expect(shown()).toEqual(["head", "find", "card", "email", "track", "bulk"]));
+    await screen.findByRole("checkbox", { name: "Select Acme Recruiting" });
+    await waitFor(() => expect(shown()).toEqual(["head", "find", "filters", "table", "open", "bulk"]));
     expect(tourForRoute({ screen: "recruiters" })).toBe("recruiters");
+  });
+
+  it("walks an agency's page", async () => {
+    window.location.hash = "#/recruiter/acme-recruiting";
+    render(<App bridge={new MockBridge()} />);
+    await screen.findByRole("heading", { name: "Acme Recruiting", level: 1 });
+    const steps = () => availableSteps(TOURS.recruiter.steps, (sel) => !!findTarget(sel)).map((s) => s.id);
+    await waitFor(() => expect(steps()).toEqual(["head", "email", "sources", "track", "contacts"]));
+    expect(tourForRoute({ screen: "recruiter", slug: "acme-recruiting" })).toBe("recruiter");
   });
 
   it("still runs with no agencies: the screen and the Find recruiters button", async () => {
@@ -342,8 +351,9 @@ describe("Recruiters tour", () => {
   });
 
   it("mentions the sponsorship question only to people who need sponsorship", () => {
-    const email = TOURS.recruiters.steps.find((s) => s.id === "email")!;
-    expect(stepBody(email, "primary")).toMatch(/sponsorship question/);
-    expect(stepBody(email, "off")).not.toMatch(/sponsor/i);
+    for (const step of [TOURS.recruiters.steps.find((s) => s.id === "open")!, TOURS.recruiter.steps.find((s) => s.id === "email")!]) {
+      expect(stepBody(step, "primary")).toMatch(/sponsorship question/);
+      expect(stepBody(step, "off")).not.toMatch(/sponsor/i);
+    }
   });
 });

@@ -74,7 +74,7 @@ export function Shell({ route, children }: { route: Route; children: ReactNode }
   // A folder with an open grant isn't locked right now, and a moved folder needs a look, so the rail says so.
   const privacy = counts.data?.privacy;
   const privacyLabel = privacy ? privacyNavLabel(privacy, new Date()) : undefined;
-  const current = route.screen === "job" ? "jobs" : route.screen === "company" ? "companies" : route.screen === "apply" || route.screen === "applications" ? "apply" : route.screen === "video" ? "videos"
+  const current = route.screen === "job" ? "jobs" : route.screen === "company" ? "companies" : route.screen === "recruiter" ? "recruiters" : route.screen === "apply" || route.screen === "applications" ? "apply" : route.screen === "video" ? "videos"
     : route.screen === "resume" || route.screen === "resume-variant" ? "resumes" : route.screen;
   // Grouped by what you're doing (owner, 2026-10-10): find jobs, apply, prepare. Labels, not sub-menus: there are
   // few items, and folding them away would cost clicks.

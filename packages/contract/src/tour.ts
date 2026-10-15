@@ -2,7 +2,7 @@
  * Guided tours: one short walkthrough per screen. Which ones a person has seen or skipped is kept per folder in
  * `.careeros/tour.json`. Only known tour ids are ever stored, so the file stays tiny whatever it held before.
  */
-export const TOUR_IDS = ["home", "jobs", "job", "apply", "resume", "learn", "inbox", "settings", "applications", "searches", "companies", "company", "approvals", "privacy", "mail", "videos", "resumes", "recruiters"] as const;
+export const TOUR_IDS = ["home", "jobs", "job", "apply", "resume", "learn", "inbox", "settings", "applications", "searches", "companies", "company", "approvals", "privacy", "mail", "videos", "resumes", "recruiters", "recruiter"] as const;
 export type TourId = (typeof TOUR_IDS)[number];
 
 /** "seen": finished the tour. "dismissed": skipped or closed it. Either way it isn't offered again on its own. */

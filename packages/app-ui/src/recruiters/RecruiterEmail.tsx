@@ -9,7 +9,7 @@ import { Loading } from "../components/States";
 import { applicationAttachments } from "../screens/Apply";
 import { placesOf } from "../sponsors/region";
 import { useSponsorshipFocus } from "../useSponsorshipFocus";
-import { RECRUITER_NOTE } from "./AgencyCard";
+import { RECRUITER_NOTE } from "./parts";
 
 const GENERAL = "general";
 const isResume = (rel: string) => /(^|\/)resume\.(pdf|docx?|md)$/i.test(rel);

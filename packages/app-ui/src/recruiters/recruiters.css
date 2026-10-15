@@ -1,27 +1,27 @@
-/* Recruiters: a grid of agency cards on the shared card surface and theme tokens. */
+/* Recruiters list and agency page. The list is the shared Table (like Companies); the page reuses the Job and Company
+   page's head, tabs, facts and timeline. Only agency bits live here. */
 .agency-note { margin: 0 0 var(--space-3); }
-.agency-bulk { gap: var(--space-2); margin-bottom: var(--space-3); padding: var(--space-2) var(--space-3); border-radius: var(--radius-md); background: var(--color-surface-hover); }
-.agency-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 24rem), 1fr)); gap: var(--space-4); }
+.agency-bulk { gap: var(--space-2); padding: var(--space-1) var(--space-2); border-radius: var(--radius-md); background: var(--color-surface-hover); }
 
-.agency-card { display: flex; flex-direction: column; gap: var(--space-3); }
-.agency-card--selected { border-color: var(--color-accent); }
-.agency-card__head { display: flex; align-items: flex-start; gap: var(--space-2); }
-.agency-card__select { flex: none; }
-.agency-card__select .checkbox__label, .agency-card__select label > span:last-child { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-.agency-card__title { min-width: 0; }
-.agency-card__name { margin: 0; font-size: var(--font-size-16); font-weight: var(--font-weight-semibold); }
-.agency-card__star {
-  flex: none; border: 0; background: transparent; padding: var(--space-1); border-radius: var(--radius-sm); color: var(--color-text-muted); cursor: pointer;
+/* The row's tick box: the native control in the accent colour, with its name for screen readers only. */
+.agency-select { width: 1rem; height: 1rem; margin: 0; accent-color: var(--color-accent); cursor: pointer; }
+.agency-select:focus-visible { outline: var(--size-focus-ring) solid var(--color-focus); outline-offset: 2px; }
+
+.agency-star {
+  flex: none; display: inline-grid; place-items: center; border: 0; background: transparent; padding: var(--space-1);
+  border-radius: var(--radius-sm); color: var(--color-text-muted); cursor: pointer;
 }
-.agency-card__star:hover { color: var(--color-text); }
-.agency-card__star--on { color: var(--color-warning); }
-.agency-card__star--on svg { fill: currentColor; }
-.agency-card__star:focus-visible { outline: var(--size-focus-ring) solid var(--color-focus); outline-offset: 2px; }
-.agency-card__tags { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--space-1); }
-.agency-card__summary, .agency-card__jobs { margin: 0; }
-.agency-card__team { padding: var(--space-2) var(--space-3); border-radius: var(--radius-md); background: var(--color-surface-hover); }
-.agency-card__contact { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-2); }
-.agency-card__address { display: inline-flex; align-items: center; gap: var(--space-1); overflow-wrap: anywhere; }
-.agency-card__track { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-2); align-items: end; }
-.agency-card__timeline > summary { cursor: pointer; color: var(--color-text-muted); font-size: var(--font-size-13); }
-.agency-card__timeline .timeline { margin-top: var(--space-2); }
+.agency-star:hover { color: var(--color-text); background: var(--color-surface-hover); }
+.agency-star--on { color: var(--color-warning); }
+.agency-star--on svg { fill: currentColor; }
+.agency-star--md { padding: var(--space-2); }
+.agency-star:focus-visible { outline: var(--size-focus-ring) solid var(--color-focus); outline-offset: 2px; }
+
+.agency-tags { display: inline-flex; align-items: center; flex-wrap: nowrap; gap: var(--space-1); min-width: 0; overflow: hidden; }
+dd .agency-tags { flex-wrap: wrap; }
+.agency-source { display: inline-flex; align-items: center; gap: var(--space-2); min-width: 0; }
+
+/* The agency page's overview: what it's hiring for and the facts, with the person's tracking alongside. */
+.recruiter-overview { display: grid; grid-template-columns: minmax(0, 1fr) minmax(16rem, 22rem); gap: var(--space-6); align-items: start; max-width: 72rem; }
+@media (max-width: 1100px) { .recruiter-overview { grid-template-columns: minmax(0, 1fr); } }
+.agency-team { margin: 0; padding: var(--space-2) var(--space-3); border-radius: var(--radius-md); background: var(--color-surface-hover); }

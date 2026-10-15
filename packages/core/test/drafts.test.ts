@@ -353,8 +353,10 @@ describe("the message digest", () => {
     fs.symlinkSync(path.join(root, "me", "identity"), jobDir, "dir");
     expect(() => writeDraft(root, job.company_slug, job.id, draft())).toThrow(/locked/);
   });
-  it("refuses a drafts folder reached through a differently-cased ME/IDENTITY symlink target, and creates nothing inside the real folder (realish case, fix round 3)", () => {
+  it("refuses a drafts folder reached through a differently-cased ME/IDENTITY symlink target, and creates nothing inside the real folder (realish case, fix round 3)", (ctx) => {
     const { root, job } = ws();
+    // Only meaningful where ME/IDENTITY and me/identity are the same folder (macOS, Windows), not on Linux.
+    if (!fs.existsSync(path.join(root, "ME", "IDENTITY"))) ctx.skip();
     const jobDir = path.join(root, "companies", job.company_slug, "jobs", job.id);
     fs.rmSync(jobDir, { recursive: true, force: true });
     fs.writeFileSync(path.join(root, "me", "identity", "job.json"), "placeholder");

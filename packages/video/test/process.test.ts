@@ -50,9 +50,9 @@ describe("nodeProcessRunner", () => {
   });
 
   it("bounds the per-stream pending-line buffer when a child writes a huge line with no newline", async () => {
-    const big = "y".repeat(5 * 64 * 1024); // well over the 64 KiB cap, no newline anywhere
+    // Well over the 64 KiB cap, no newline anywhere. Built in the child: Linux refuses one argument over 128 KiB.
     const lines: string[] = [];
-    const r = await nodeProcessRunner().run(NODE, ["-e", `process.stdout.write(${JSON.stringify(big)})`], {
+    const r = await nodeProcessRunner().run(NODE, ["-e", `process.stdout.write("y".repeat(${5 * 64 * 1024}))`], {
       cwd: os.tmpdir(), onLine: (l) => lines.push(l),
     });
     expect(r.code).toBe(0);

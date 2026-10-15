@@ -95,7 +95,7 @@ When you pick up existing work:
   by hand. Exactly-pinned npm packages installed by `npm ci` need only the row in
   `docs/dependencies.md`'s "App packages" table.
 - Nothing is ever sent, applied for or posted without the user approving it in the app.
-- **Branches.** `develop` is the default branch; feature branches merge into `develop`. `main` is
-  production and is merged only when stable.
+- **Branches.** `main` is the default branch. Work on a feature branch and merge it into `main` when
+  typecheck and tests pass.
 - **Commits.** Use the repo's configured git identity. Don't add `Co-Authored-By`, "Generated
   with" or other tool attribution lines to commit messages or pull requests.

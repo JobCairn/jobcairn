@@ -2,6 +2,9 @@ import path from "node:path";
 import { defineConfig } from "vitest/config";
 import { brandAlias } from "./packages/brand/alias.mjs";
 
+// Dates in tests are written for the app's home time zone; CI machines run in UTC.
+process.env.TZ = "Australia/Brisbane"; // UTC+10 all year: no daylight saving shifts
+
 const r = (p: string) => path.resolve(import.meta.dirname, p);
 // Workspace packages resolve to this checkout's sources, never through node_modules: a worktree may
 // share node_modules with another checkout, whose @careeros/* links point at that checkout.

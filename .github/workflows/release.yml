@@ -18,4 +18,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.ref_name }}
-        run: gh release create "$TAG" --draft --verify-tag --title "JobCairn ${TAG#v}" --notes-file ".github/release-notes/$TAG.md"
+        # A tag moved onto a newer commit must not make a second, empty release.
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then echo "$TAG already has a release"; exit 0; fi
+          gh release create "$TAG" --draft --verify-tag --title "JobCairn ${TAG#v}" --notes-file ".github/release-notes/$TAG.md"

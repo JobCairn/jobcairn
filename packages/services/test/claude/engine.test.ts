@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { ACTION_RULES, CLAUDE_NOTICE_VERSION, findBudget, type ClaudeEngineState, type ClaudeRunView } from "@careeros/contract";
+import { ACTION_RULES, CLAUDE_NOTICE_VERSION, findBudget, recruiterBudget, type ClaudeEngineState, type ClaudeRunView } from "@careeros/contract";
 import { layout, readRecord } from "@careeros/core";
 import { dispatch } from "../../src/dispatch.js";
 import { saveRun } from "../../src/claude/runs.js";
@@ -458,6 +458,21 @@ describe("Claude engine: runs", () => {
     expect(timeoutMs).toBe(findBudget(150).claudeMs);
     const cfg = JSON.parse(call.args[call.args.indexOf("--mcp-config") + 1]!) as { mcpServers: { careeros: { args: string[] } } };
     expect(cfg.mcpServers.careeros.args.join(" ")).toContain("--jobs 150");
+    await x.call("claude.cancel", r.id);
+  });
+
+  it("find recruiters aims for the chosen number of agencies: in the prompt, Claude's time limit and recruiter_add's cap", async () => {
+    let timeoutMs = 0;
+    const x = setup({ run: (o) => { timeoutMs = o.timeoutMs ?? 0; return untilAborted(o); } });
+    await x.ready;
+    const r = await x.call<ClaudeRunView>("claude.run", "find_recruiters", { kind: "workspace" }, { options: { max_agencies: 60 } });
+    await until(x.call, (rs) => rs.some((v) => v.id === r.id && v.status === "running"));
+    const call = x.f.runner.calls.find((c) => c.args[0] === "-p")!;
+    expect(call.input).toContain("Aim for 60 agencies.");
+    expect(call.input).toContain("Chrome isn't used for this run");
+    expect(timeoutMs).toBe(recruiterBudget(60).claudeMs);
+    const cfg = JSON.parse(call.args[call.args.indexOf("--mcp-config") + 1]!) as { mcpServers: { careeros: { args: string[] } } };
+    expect(cfg.mcpServers.careeros.args.join(" ")).toContain("--agencies 60");
     await x.call("claude.cancel", r.id);
   });
 

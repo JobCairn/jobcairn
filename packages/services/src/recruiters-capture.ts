@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { insideRoot, layout, mergeAgency, readAgency, readRecord, type Clock } from "@careeros/core";
-import { adContacts, localDate } from "@careeros/contract";
+import { adContacts, isSafeHttpsUrl, jobBoardBySite, jobBoardByUrl, localDate } from "@careeros/contract";
 
 // Kept apart from recruiters.ts (which reads mail): the MCP server runs this when Claude saves a job.
 
@@ -31,6 +31,8 @@ export function captureAdRecruiter(root: string, companySlug: string, jobId: str
     if (known?.job_refs.includes(ref)) return false;
     mergeAgency(root, {
       slug: companySlug, name: company.name, job_refs: [ref], contacts: found.contacts,
+      // Where it was found: the job ad, named as jobs name its board ("SEEK", from its address or its site), else "Saved job".
+      sources: isSafeHttpsUrl(job.url) ? [{ name: jobBoardByUrl(job.url)?.name ?? jobBoardBySite(job.source_site)?.name ?? "Saved job", url: job.url, found_at: job.found_at }] : [],
       people: found.person ? [{ name: found.person, source_url: job.url, job_refs: [ref], email: found.contacts.find((x) => x.kind === "email")?.value ?? "", phone: found.contacts.find((x) => x.kind === "phone")?.value ?? "" }] : [],
     }, { event: "Advertised a job", note: job.title }, c);
     return true;

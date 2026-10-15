@@ -12,6 +12,8 @@ import type { TerminalFix } from "./setup.js";
 export const BROWSABLE_BOARD_IDS = ["linkedin", "seek", "indeed", "glassdoor", "jora", "careerone", "workforce"] as const;
 export const BOARD_IDS = BROWSABLE_BOARD_IDS;
 export type BoardId = (typeof BROWSABLE_BOARD_IDS)[number];
+/** The boards a Find recruiters run looks at in Chrome (among the ticked ones): where agencies advertise most. */
+export const RECRUITER_BOARDS: readonly BoardId[] = Object.freeze(["seek", "indeed", "linkedin"] as BoardId[]);
 
 /** On by default (AU). Later this can depend on the profile's country. */
 export const DEFAULT_BOARDS: readonly BoardId[] = ["linkedin", "seek", "indeed", "glassdoor", "jora"];

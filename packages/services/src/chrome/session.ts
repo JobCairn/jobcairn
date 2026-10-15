@@ -1,14 +1,14 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
-import { BOARD_NAMES, type BoardFilters, type BoardId, type BoardRunProgress, type ChromeRunProgress } from "@careeros/contract";
+import { BOARD_NAMES, guessFromAd, type BoardFilters, type BoardId, type BoardRunProgress, type ChromeRunProgress } from "@careeros/contract";
 import { BOARDS, boardForUrl, canonicalAddress, directAddress, pageKind, searchUrl, type PageKind } from "./boards.js";
 import {
   botCheckText, clickRefusal, fillRefusal, findRef, inCookieBox, isCookieAccept, isCookieReject, needsPerson, normName, normRef, parseSnapshot, submitRefusal,
   type NeedsPerson, type RefInfo, type Snapshot,
 } from "./guard.js";
 import type { HelperResult, HelperRun } from "./helper.js";
-import { contactLine, contactLinks } from "./ad-extra.js";
+import { contactLine, contactLinks, readAdExtras, type AdExtras } from "./ad-extra.js";
 
 /**
  * One find-jobs run's browsing, inside jobcairn-chrome (one command per process; state kept in the run folder).
@@ -116,6 +116,39 @@ export function pageAddress(raw: string, id: BoardId): { url: string; ad: boolea
   const u = new URL(canon);
   const jk = id === "indeed" ? u.searchParams.get("jk") : null;
   return { url: `${u.origin}${u.pathname}${jk && /^[0-9a-f]{12,20}$/i.test(jk) ? `?jk=${jk}` : ""}`, ad: true };
+}
+
+/** Recruiters mode: the most ads one results page lists. */
+export const AD_LIST_MAX = 60;
+/** An ad's wording that says an agency placed it ("our client", "on behalf of a client", "labour hire"). */
+export const AGENCY_WORDING = /\b(our client|my client|on behalf of (?:our|a|my) client|recruitment (?:agency|consultan\w*)|labour[- ]hire|we are recruiting for|is partnering with|a client of ours)\b/i;
+/** A value read off a page, made one short plain line (no control or invisible characters). */
+export function factText(s: string, max: number): string {
+  // eslint-disable-next-line no-control-regex
+  return s.replace(/[\u0000-\u001f\u007f-\u009f​-‏‪-‮⁦-⁩﻿]/g, " ").replace(/\s+/g, " ").trim().slice(0, max).trim();
+}
+const LINK_LINE = /^(\s*)- link(?: "((?:[^"\\]|\\.)*)")?(?: \[([^\]]*)\])?/;
+/**
+ * The links in a snapshot taken with addresses (`snapshot -u`): each link's name and address, whether the helper puts
+ * the address in the link's brackets (`url=`) or on an indented `/url:` line under it.
+ */
+export function snapshotLinks(snap: string): { name: string; href: string }[] {
+  const out: { name: string; href: string }[] = [];
+  let pending: { name: string; indent: number } | null = null;
+  for (const line of snap.split("\n")) {
+    const m = LINK_LINE.exec(line);
+    if (m) {
+      const name = (m[2] ?? "").replace(/\\(.)/g, "$1");
+      const inline = /(?:^|,\s*)(?:url|href)=["']?([^\s,\]"']+)/.exec(m[3] ?? "")?.[1];
+      if (inline) { out.push({ name, href: inline }); pending = null; } else pending = { name, indent: m[1]!.length };
+      continue;
+    }
+    const indent = /^\s*/.exec(line)![0].length;
+    const u = /^\s*- \/url:\s*(\S+)/.exec(line);
+    if (u && pending && indent > pending.indent) { out.push({ name: pending.name, href: u[1]! }); pending = null; continue; }
+    if (pending && /^\s*- /.test(line) && indent <= pending.indent) pending = null;
+  }
+  return out;
 }
 
 /** The run's tab for a board is gone (the person closed it). */
@@ -708,6 +741,81 @@ export class BrowserRun {
       return this.look(cmd, id, await this.landing(cmd, id, { back: false }));
     });
     return this.answer(id, l);
+  }
+
+  // ---- recruiters mode (spec 2026-10-16-find-recruiters-sources) ----
+  // A Find recruiters run also has WebFetch, so it never gets a page's own text: only what these read off the page.
+
+  /**
+   * The job ads on the current results page: each ad's address (rebuilt, no tracking) and its link's words, and the
+   * board's other results pages linked from it (next pages). Read from the page's links, nothing else.
+   */
+  async adList(): Promise<string> {
+    const id = this.requireCurrent();
+    this.gate(id, false);
+    const got = await this.step(id, async (cmd) => {
+      await this.focus(cmd, id);
+      const kind = await this.landing(cmd, id);
+      if (kind === "wall") return null;
+      const d = await cmd(["snapshot", "-i", "-c", "-u"]);
+      const at = typeof d.origin === "string" ? d.origin : "";
+      if (!pageKind(at, id)) { await this.landing(cmd, id); throw new BrowseRefused("The page moved while it was being read. Search again."); }
+      return { at, links: snapshotLinks(String(d.snapshot ?? "")) };
+    });
+    if (!got) return `${BOARD_NAMES[id]} shows a sign-in or check page, so no ads were read. Move on to another source.`;
+    const ads: { title: string; url: string }[] = [];
+    const more: string[] = [];
+    const here = pageAddress(got.at, id)?.url ?? "";
+    for (const l of got.links) {
+      let abs: string;
+      try { abs = new URL(l.href, got.at).toString(); } catch { continue; }
+      const a = pageAddress(canonicalAddress(directAddress(abs, id), id) ?? "", id);
+      if (!a) continue;
+      if (a.ad) { if (!ads.some((x) => x.url === a.url) && ads.length < AD_LIST_MAX) ads.push({ url: a.url, title: factText(l.name, 150) }); }
+      else if (a.url !== here && !more.includes(a.url) && more.length < 5) more.push(a.url);
+    }
+    const body = [
+      ads.length ? `Job ads on this page (${ads.length}):` : "No job ads were found on this page.",
+      ...ads.map((x, i) => `${i + 1}. ${x.title || "(no title)"} | ${x.url}`),
+      ...(more.length ? ["Other results pages:", ...more.map((u) => `- ${u}`)] : []),
+    ].join("\n");
+    return this.fence(id, "Ads", body, got.at);
+  }
+
+  /**
+   * The current job ad's facts for Find recruiters: its title, advertiser, place and job type (the ad's JobPosting
+   * data, its page title or its header), whether its wording says it recruits for a client, and the contact links
+   * in the ad. Never the ad's text.
+   */
+  async adFacts(): Promise<string> {
+    const id = this.requireCurrent();
+    const b = this.gate(id, false);
+    const got = await this.step(id, async (cmd, run): Promise<{ need: "login" | "captcha" } | { text: string; url: string; extras: AdExtras }> => {
+      await this.focus(cmd, id);
+      const kind = await this.landing(cmd, id);
+      if (kind === "wall") return { need: "login" };
+      if (kind !== "ad") throw new BrowseRefused("This page isn't a job ad. Open an ad's address from the list first.");
+      const d = await this.readPage(cmd, id);
+      if (typeof d.origin === "string" && !pageKind(d.origin, id)) { await this.landing(cmd, id); throw new BrowseRefused("The page moved while it was being read. Open the ad again."); }
+      const text = dropPrivate(clean(String(d.text ?? "")));
+      if (text.length < 3_000 && botCheckText(text)) return { need: "captcha" };
+      const extras = await readAdExtras(run, id, d.scope === "body" ? "body" : "main");
+      return { text, url: typeof d.origin === "string" ? d.origin : this.seen.get(id)?.snap.url ?? "", extras };
+    });
+    if ("need" in got && got.need === "captcha") throw await this.stopBoard(null, id, "bot_check");
+    if ("need" in got) return `${BOARD_NAMES[id]} shows a sign-in page instead of the ad, so it wasn't read. Move on to another ad or source.`;
+    b.ads_read++;
+    this.publish();
+    const g = guessFromAd(got.text, { site: BOARD_NAMES[id], meta: { pageTitle: got.extras.pageTitle, jsonLd: got.extras.jsonLd } });
+    const body = [
+      `Title: ${factText(g.title, 150) || "(not found)"}`,
+      `Advertiser: ${factText(g.company, 120) || "(not found)"}`,
+      `Place: ${factText(g.location, 120) || "(not found)"}`,
+      ...(g.job_type ? [`Job type: ${factText(g.job_type, 40)}`] : []),
+      `Says it is recruiting for a client: ${AGENCY_WORDING.test(got.text) ? "yes" : "no"}`,
+      `Contact links in the ad: ${got.extras.contacts.length ? got.extras.contacts.join(", ") : "none"}`,
+    ].join("\n");
+    return this.fence(id, "Ad facts", body, got.url);
   }
 
   async closeTab(): Promise<string> {

@@ -42,6 +42,34 @@ export function findBudget(jobs: number): FindBudget {
     searchAdd: clamp(n, 100, BUDGET_MAX.searchAdd),
   };
 }
+/**
+ * How many agencies a Find recruiters run aims to save (owner, 2026-10-16: a run found only 5; "search properly ... find
+ * many more"). Default 25; the top is 100: each agency is found, then checked on its own site (about, team, contact
+ * and live jobs pages), about two minutes each, so 100 is over three hours in one run.
+ */
+export const MAX_AGENCIES = { min: 1, max: 100, default: 25 } as const;
+
+/**
+ * One Find recruiters run's limits, scaled with the agencies it aims for: Claude's whole run, recruiter_add calls
+ * (saving an agency again adds to it, so about three per agency), and, when it uses the person's Chrome, pages per
+ * board (results pages and ads), browsing steps and browsing time. Chrome is one source among several, so its share
+ * of the time is smaller than in Find jobs.
+ */
+export interface RecruiterBudget { pagesPerBoard: number; actions: number; browseMs: number; claudeMs: number; recruiterAdd: number }
+export const RECRUITER_BUDGET_MAX: RecruiterBudget = { pagesPerBoard: 210, actions: 900, browseMs: 60 * MIN, claudeMs: 220 * MIN, recruiterAdd: 300 };
+
+export function recruiterBudget(agencies: number): RecruiterBudget {
+  const n = Number.isFinite(agencies) ? clamp(Math.round(agencies), MAX_AGENCIES.min, MAX_AGENCIES.max) : MAX_AGENCIES.default;
+  const M = RECRUITER_BUDGET_MAX;
+  return {
+    pagesPerBoard: clamp(10 + 2 * n, 25, M.pagesPerBoard),
+    actions: clamp(100 + 8 * n, 300, M.actions),
+    browseMs: clamp((10 + Math.ceil(n / 2)) * MIN, 15 * MIN, M.browseMs),
+    claudeMs: clamp((20 + 2 * n) * MIN, 30 * MIN, M.claudeMs),
+    recruiterAdd: clamp(3 * n, 30, M.recruiterAdd),
+  };
+}
+
 /** A place that gives fewer relevant results than this is "thin": stop adding words there and widen. */
 export const MIN_RELEVANT_PER_PLACE = 5;
 /** A job is relevant when its title matches, or its ad names at least this many of the person's core skills. */

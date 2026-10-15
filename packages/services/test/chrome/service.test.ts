@@ -512,6 +512,74 @@ describe("Search in my Chrome: find-jobs runs", () => {
   });
 });
 
+describe("Find recruiters in Chrome: recruiters mode, web tools kept, web-only fallback (spec 2026-10-16)", () => {
+  async function startRecruiters(x: ReturnType<typeof setup>, options: Record<string, unknown> = {}) {
+    const f = fakeClaude({ run: (o) => untilAborted(o) });
+    x.ctx.host.claude = f.host;
+    await x.call<ClaudeEngineState>("claude.consent");
+    const r = await x.call<ClaudeRunView>("claude.run", "find_recruiters", { kind: "workspace" }, { options });
+    for (let i = 0; i < 200 && !f.runner.calls.some((c) => c.args[0] === "-p"); i++) await new Promise((res) => setTimeout(res, 5));
+    return { f, r, run: f.runner.calls.find((c) => c.args[0] === "-p")! };
+  }
+  const allowedOf = (args: string[]) => args.slice(args.indexOf("--allowedTools") + 1, args.indexOf("--disallowedTools"));
+  const deniedOf = (args: string[]) => args.slice(args.indexOf("--disallowedTools") + 1);
+
+  it("uses Chrome in recruiters mode with WebSearch and WebFetch, only SEEK, Indeed and LinkedIn, and leaves Find jobs' state alone; tabs close at the end", async () => {
+    const x = setup({ helper: "ok" });
+    await x.call("chrome.connect");
+    await x.call("chrome.finish", ["linkedin", "seek", "jora"]);
+    chromeFor(x.ctx).runBoards(["jora"]); // Find jobs' composer chips: not a recruiters run's
+    const before = (await x.call<ChromeSearchState>("chrome.state", false)).last_run;
+    const { r, run } = await startRecruiters(x, { max_agencies: 40 });
+    const allowed = allowedOf(run.args);
+    expect(allowed).toEqual(expect.arrayContaining(["WebSearch", "WebFetch", "Bash(./.careeros/bin/jobcairn-chrome *)"]));
+    expect(allowed).not.toContain("Edit(./**)");
+    expect(deniedOf(run.args)).toEqual(expect.arrayContaining(["WebFetch(domain:seek.com.au)", "WebFetch(domain:*.linkedin.com)"]));
+    expect(deniedOf(run.args)).not.toContain("WebFetch");
+    const runFile = JSON.parse(fs.readFileSync(path.join(x.root, ".careeros/chrome-run.json"), "utf8")) as { run: string; boards: string[]; dir: string; purpose: string; agencies: number };
+    expect(runFile).toMatchObject({ boards: ["linkedin", "seek"], purpose: "recruiters", agencies: 40 });
+    expect(run.input).toContain("Chrome is on for this run: for source (b), search these job boards in the person's own Chrome with ./.careeros/bin/jobcairn-chrome: LinkedIn, SEEK.");
+    expect(run.input).toContain("Aim for 40 agencies.");
+    expect(run.input).not.toContain("job_new");
+    const sys = run.args[run.args.indexOf("--append-system-prompt") + 1]!;
+    expect(sys).toContain("recruiters mode");
+    expect(sys).not.toContain("search_check");
+    expect((await x.call<ChromeSearchState>("chrome.state", false)).last_run).toEqual(before);
+
+    x.fb.tabs.set(`cos-${runFile.run}-seek`, { label: `cos-${runFile.run}-seek`, target: "T71", history: ["https://www.seek.com.au/"] });
+    fs.writeFileSync(path.join(runFile.dir, "progress.json"), JSON.stringify({ tabs: [`cos-${runFile.run}-seek`] }));
+    await x.call("claude.cancel", r.id);
+    for (let i = 0; i < 200 && fs.existsSync(runFile.dir); i++) await new Promise((res) => setTimeout(res, 5));
+    expect(fs.existsSync(runFile.dir)).toBe(false);
+    expect([...x.fb.tabs.keys()]).toEqual(["user-bank", "user-linkedin"]);
+    expect(fs.existsSync(path.join(x.root, ".careeros/chrome-run.json"))).toBe(false);
+    // Find jobs' chips are still there for its next run.
+    const next = await chromeFor(x.ctx).planForRun();
+    expect(next!.boards).toEqual(["jora"]);
+    await chromeFor(x.ctx).endRun(next!);
+  });
+
+  it("falls back to web tools only when Chrome isn't set up, isn't connected, or has no board for it", async () => {
+    const x = setup({ helper: "ok" });
+    let { r, run } = await startRecruiters(x);
+    expect(allowedOf(run.args)).toEqual(expect.arrayContaining(["WebSearch", "WebFetch"]));
+    expect(allowedOf(run.args).some((a) => a.startsWith("Bash"))).toBe(false);
+    expect(deniedOf(run.args)).toEqual(expect.arrayContaining(["WebFetch(domain:linkedin.com)"]));
+    expect(deniedOf(run.args)).not.toContain("WebFetch(domain:seek.com.au)");
+    expect(run.input).toContain("Chrome isn't used for this run");
+    expect(run.input).toContain("Aim for 25 agencies.");
+    expect((await x.call<ChromeSearchState>("chrome.state", false)).last_run).toBeNull();
+    await x.call("claude.cancel", r.id);
+
+    await x.call("chrome.connect");
+    await x.call("chrome.finish", ["jora"]);
+    ({ r, run } = await startRecruiters(x));
+    expect(run.args.join(" ")).not.toContain("jobcairn-chrome");
+    expect(fs.existsSync(path.join(x.root, ".careeros/chrome-run.json"))).toBe(false);
+    await x.call("claude.cancel", r.id);
+  });
+});
+
 describe("Search in my Chrome: app start and quit (I6)", () => {
   it("closes a session left over from a crash at start, and only when it's there", async () => {
     const x = setup({ helper: "ok" });

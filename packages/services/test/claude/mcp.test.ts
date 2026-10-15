@@ -8,7 +8,7 @@ import { readHandlers as R } from "../../src/read.js";
 import { parseMcpArgv } from "../../src/claude/mcp/argv.js";
 import { handleMcp, noAbsPaths, serveMcp } from "../../src/claude/mcp/server.js";
 import { MCP_CAPS, MCP_TOOL_NAMES, MCP_TOOLS, mcpCap, mcpSession, mcpToolsFor, type McpSession, type McpToolName } from "../../src/claude/mcp/tools.js";
-import { findBudget } from "@careeros/contract";
+import { findBudget, recruiterBudget } from "@careeros/contract";
 import { makeCtx, sampleCopy, tmpDir } from "../helpers.js";
 import { openWorkspace } from "../../src/workspace.js";
 import brand from "@careeros/brand/identity.json" with { type: "json" };
@@ -222,6 +222,18 @@ describe("careeros MCP server", () => {
     expect(mcpCap(s, "search_add")).toBe(findBudget(100).searchAdd);
     expect(mcpCap(s, "score_record")).toBe(MCP_CAPS.score_record);
     expect(mcpCap(mcpSession("/w", ["job_new"]), "job_new")).toBe(MCP_CAPS.job_new);
+  });
+
+  it("--agencies: a find-recruiters run's recruiter_add limit grows with the agencies it aims for", () => {
+    const env = { CAREEROS_WORKSPACE: "/w" };
+    expect(parseMcpArgv(["--tools", "recruiter_add,request_access", "--agencies", "100"], env).agencies).toBe(100);
+    for (const bad of ["0", "101", "2.5", "many"]) expect(() => parseMcpArgv(["--tools", "recruiter_add", "--agencies", bad], env), bad).toThrow(/--agencies must be/);
+    expect(() => parseMcpArgv(["--tools", "job_new", "--agencies", "10"], env)).toThrow(/--agencies goes with/);
+    const s = { ...mcpSession("/w", ["recruiter_add"]), agencies: 100 };
+    expect(mcpCap(s, "recruiter_add")).toBe(recruiterBudget(100).recruiterAdd);
+    expect(mcpCap(s, "recruiter_add")).toBe(300);
+    expect(mcpCap({ ...s, agencies: 5 }, "recruiter_add")).toBe(MCP_CAPS.recruiter_add);
+    expect(mcpCap(mcpSession("/w", ["recruiter_add"]), "recruiter_add")).toBe(MCP_CAPS.recruiter_add);
   });
 
   it("--search carries the run's own search choices, checked like the IPC request", () => {

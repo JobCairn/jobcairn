@@ -1,7 +1,7 @@
 import { addEvent, appendSearch, findDuplicateJob, isWorkspace, mergeAgency, newJob, ranRecently, recordScore, requestAccess, writeFileAtomic } from "@careeros/core";
 import fs from "node:fs";
 import path from "node:path";
-import { ArgError, BROWSABLE_BOARD_IDS, cleanAgencyInput, localDate, checkJobPlace, findBudget, jobAdKey, jobBoardBySite, httpsUrl, inboxSuggestArgs, INBOX_SUGGEST_FOLDERS, int, JOB_SOURCES, obj, oneOf, opt, SCORE_ITEM_SCHEMA, SCORE_LIMITS, SCORE_TIERS, scoreRecordArgs, SEARCH_REPORT_MAX_BYTES, searchReportArgs, searchReportRel, slug, str, type ScoreRecordArgs, type V } from "@careeros/contract";
+import { ArgError, BROWSABLE_BOARD_IDS, cleanAgencyInput, localDate, checkJobPlace, findBudget, recruiterBudget, jobAdKey, jobBoardBySite, httpsUrl, inboxSuggestArgs, INBOX_SUGGEST_FOLDERS, int, JOB_SOURCES, obj, oneOf, opt, SCORE_ITEM_SCHEMA, SCORE_LIMITS, SCORE_TIERS, scoreRecordArgs, SEARCH_REPORT_MAX_BYTES, searchReportArgs, searchReportRel, slug, str, type ScoreRecordArgs, type V } from "@careeros/contract";
 import identity from "@careeros/brand/identity.json" with { type: "json" };
 import { checkFoundJob, flagFoundJob, readSearchPrefs, scoreSponsorAtImport } from "../../find-jobs.js";
 import { captureAdRecruiter } from "../../recruiters-capture.js";
@@ -35,13 +35,19 @@ export interface McpSession {
   report?: string | null;
   /** Find jobs: how many new jobs the run aims for (filters.max_jobs); job_new and search_add allow more calls for more. */
   jobs?: number | null;
+  /** Find recruiters: how many agencies the run aims for (max_agencies); recruiter_add allows more calls for more. */
+  agencies?: number | null;
 }
 
 /** Per-run caps, so an injected page can't flood the workspace or the person (F10). */
 export const MCP_CAPS: Partial<Record<McpToolName, number>> = { job_new: 50, search_add: 100, job_event: 5, request_access: 3, score_record: 2, inbox_suggest: 3, search_report: 3, recruiter_add: 30 };
 
-/** A tool's cap in this session: MCP_CAPS, with job_new and search_add grown for a find-jobs run's jobs (findBudget). */
-export function mcpCap(s: Pick<McpSession, "jobs">, name: McpToolName): number | undefined {
+/**
+ * A tool's cap in this session: MCP_CAPS, with job_new and search_add grown for a find-jobs run's jobs (findBudget),
+ * and recruiter_add for a find-recruiters run's agencies (recruiterBudget).
+ */
+export function mcpCap(s: Pick<McpSession, "jobs" | "agencies">, name: McpToolName): number | undefined {
+  if (s.agencies && name === "recruiter_add") return Math.max(MCP_CAPS.recruiter_add!, recruiterBudget(s.agencies).recruiterAdd);
   if (s.jobs && name === "job_new") return Math.max(MCP_CAPS.job_new!, findBudget(s.jobs).jobNew);
   if (s.jobs && name === "search_add") return Math.max(MCP_CAPS.search_add!, findBudget(s.jobs).searchAdd);
   return MCP_CAPS[name];
@@ -230,13 +236,17 @@ export const MCP_TOOLS: Record<McpToolName, McpTool> = {
         name: s("Name as the agency publishes it", 120), title: s("Their title", 120), email: s("Only if published on the source page", 254), phone: s("Only if published on the source page", 40),
         source_url: s("The agency's own page that names them (https)", 500), specialties: { type: "array", items: s("Specialty", 60), maxItems: 20 },
       }, required: ["name", "source_url"], additionalProperties: false } },
+      sources: { type: "array", maxItems: 20, description: "Every place you found this agency. Saving it again adds new ones.", items: { type: "object", properties: {
+        name: s("Where: SEEK, Indeed or LinkedIn (a job ad), Web search, a directory or panel's name (RCSA directory), Saved job, or Agency website", 60),
+        url: s("That page (https): the ad, the search result's page, the directory entry or the agency's own page", 500),
+      }, required: ["name", "url"], additionalProperties: false } },
     }, ["name"]),
     // Throws when there is no name; every other field is checked (and dropped when it breaks a rule) in run.
     validate: (v, at) => { if (!v || typeof v !== "object" || Array.isArray(v)) throw new ArgError(`${at} must be an object`); cleanAgencyInput(v); return v as Record<string, unknown>; },
     run: ({ root }, a) => {
       const { agency, dropped } = cleanAgencyInput(a, localDate(new Date()));
       const saved = mergeAgency(root, agency, { event: "Found by Claude", note: agency.hiring_summary }, undefined);
-      return { saved: true, slug: saved.slug, contacts: agency.contacts.length, people: agency.people.length, left_out: dropped };
+      return { saved: true, slug: saved.slug, contacts: agency.contacts.length, people: agency.people.length, sources: (saved.sources ?? []).length, left_out: dropped };
     },
   },
   request_access: {

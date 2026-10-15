@@ -48,7 +48,8 @@ export function requestSentence(id: ActionId, info: { title?: string; company?: 
     case "interview_prep": return `Claude will prepare likely interview questions and answer outlines for ${job}.`;
     case "research_company": return `Claude will research ${company || "this company"} from public pages and cite every fact.`;
     case "find_jobs": return "Claude will search job sites for new ads that match your target roles.";
-    case "find_recruiters": return "Claude will find recruitment agencies for your roles and cities, with the contact details they publish.";
+    case "find_recruiters":
+      return `Claude will search the web, directories and job boards for ${typeof options.max_agencies === "number" ? `up to ${options.max_agencies} ` : ""}recruitment agencies for your roles and cities, with the contact details they publish and where each was found.`;
     case "chrome_check": return "Claude will open each job board in your Chrome and check whether you're signed in.";
     case "study_topic": return `Claude will write a study guide on ${topic || "this topic"} and check its sources on the web.`;
     case "skill_gap_video": return `Claude will make a short lesson video on ${topic || "this topic"}.`;
@@ -85,6 +86,7 @@ export const NOTE_EXAMPLES: Partial<Record<ActionId, string[]>> = {
   interview_prep: ["Include questions about my career change.", "Keep each outline short."],
   research_company: ["Look for their engineering blog.", "Note any recent layoffs."],
   find_jobs: ["Prefer remote roles.", "Skip recruitment agencies."],
+  find_recruiters: ["Focus on contract roles.", "Include government panels."],
   pitch_video: ["Keep it under a minute.", "Mention why I want this role."],
 };
 export const DEFAULT_EXAMPLES = ["Keep it short.", "Use Australian spelling."];

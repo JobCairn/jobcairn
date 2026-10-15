@@ -5,14 +5,14 @@ import path from "node:path";
 import identity from "@careeros/brand/identity.json" with { type: "json" };
 import { claudeMode, layout, lockedOrAll, setClaudeMode, readMeta, readRecord, writeRecord, type LockableDir } from "@careeros/core";
 import {
-  ACTIONS, CLAUDE_MAX_PARALLEL, CLAUDE_MIN_VERSION, CLAUDE_NOTICE_VERSION, MAX_JOBS, RENDERS, TEMPLATE_ONLY, findBudget,
+  ACTIONS, CLAUDE_MAX_PARALLEL, CLAUDE_MIN_VERSION, CLAUDE_NOTICE_VERSION, MAX_AGENCIES, MAX_JOBS, RENDERS, TEMPLATE_ONLY, findBudget, recruiterBudget,
   actionKey, actionPaths, boardFiltersOf, buildActionPrompt, claudeWrites, isActiveRun, nextVideoFolder, outputNames, ownTarget, prefsMissing, prefsMissingText, searchOverride, withSavedSearchOptions, studioOutputs, validateRequest,
   BOARD_NAMES, SKIPPED_NOT_ALLOWED, type BoardId, type ActionId, type ActionTarget, type ClaudeAuth, type ClaudeEngineState, type ClaudeRefusal, type ClaudeLogin, type ClaudeRunRequest, type ClaudeRunStep, type ClaudeRunView, type RequestChoices,
 } from "@careeros/contract";
 import { actionStatus, folderProbeFor, promptInfo, writableProblem } from "../actions.js";
 import type { ServiceContext } from "../context.js";
 import { claudeArgs, inboxSuggestPlan, testArgs, videoScriptPlan, WEB_ACTIONS, type BrowserPlan, type ToolPlan } from "./args.js";
-import { browserRequest, checkRequest, chromeFor, SCHEDULED_CONNECT_MS } from "../chrome/service.js";
+import { browserRequest, checkRequest, chromeFor, recruiterBrowserRequest, RECRUITER_WEB_ONLY, SCHEDULED_CONNECT_MS } from "../chrome/service.js";
 import { installChromeCli } from "../chrome/cli.js";
 import { ensureWorkspaceSetup, workspaceSetup } from "./workspace-setup.js";
 import { readSearchPrefs, webContext } from "./context.js";
@@ -39,6 +39,11 @@ export const VIDEO_TIMEOUT_MS = 45 * 60_000;
 export function findJobsTarget(request: RequestChoices | null): number {
   const n = request?.options.max_jobs;
   return typeof n === "number" && Number.isInteger(n) && n >= MAX_JOBS.min && n <= MAX_JOBS.max ? n : MAX_JOBS.default;
+}
+/** The agencies a find-recruiters request aims for (its validated max_agencies, else the default). */
+export function findRecruitersTarget(request: RequestChoices | null): number {
+  const n = request?.options.max_agencies;
+  return typeof n === "number" && Number.isInteger(n) && n >= MAX_AGENCIES.min && n <= MAX_AGENCIES.max ? n : MAX_AGENCIES.default;
 }
 export const TEST_TIMEOUT_MS = 2 * 60_000;
 const STATE_TTL_MS = 30_000;
@@ -424,10 +429,15 @@ export class ClaudeEngine {
     // Find jobs: breadth, sponsorship-only and jobs to find are saved search settings, the same ones Settings › Search shows.
     const saved = id === "find_jobs" ? withSavedSearchOptions(picked, readSearchPrefs(root), status) : picked;
     // "Offers sponsorship" read from Find jobs' description box: this run only, and only for someone offered it.
-    const request = id === "find_jobs" && search?.sponsor_only === true && saved && "sponsor_only" in saved.options ? { ...saved, options: { ...saved.options, sponsor_only: true } } : saved;
+    const request = id === "find_jobs" && search?.sponsor_only === true && saved && "sponsor_only" in saved.options ? { ...saved, options: { ...saved.options, sponsor_only: true } }
+      // Find recruiters always says how many agencies to aim for (the default when nothing was chosen).
+      : id === "find_recruiters" ? { options: { ...(saved?.options ?? {}), max_agencies: findRecruitersTarget(saved) }, note: saved?.note ?? "" }
+      : saved;
     // Find jobs: the jobs it aims for set the run's limits (findBudget): the prompt, Claude's time, the MCP caps
     // and the browser's caps all use this one number.
     const jobs = id === "find_jobs" ? findJobsTarget(request) : null;
+    // Find recruiters: the agencies it aims for set its limits the same way (recruiterBudget).
+    const agencies = id === "find_recruiters" ? findRecruitersTarget(request) : null;
     const web = WEB_ACTIONS.includes(id);
     // Web runs can't read the workspace (F2), so main puts what they need in front of the request.
     const base = buildActionPrompt(id, t, { ...info, n }, request);
@@ -435,7 +445,9 @@ export class ClaudeEngine {
     // A scheduled search waits up to 10 minutes for Allow (after a notification says why Chrome is asking).
     const scheduled = o.scheduled ? { waitMs: SCHEDULED_CONNECT_MS, ...(o.scheduled.askAllow ? { askAllow: o.scheduled.askAllow } : {}) } : undefined;
     const browser = id === "find_jobs" ? await chromeFor(this.ctx).planForRun({ jobs: jobs!, filters: boardFiltersOf(readSearchPrefs(root, search)), ...(scheduled ? { scheduled } : {}) })
-      : id === "chrome_check" ? await chromeFor(this.ctx).planForRun({ check: true }) : null;
+      : id === "chrome_check" ? await chromeFor(this.ctx).planForRun({ check: true })
+      // Find recruiters also looks at the boards in Chrome (recruiters mode) when it's on and free; else web tools only.
+      : id === "find_recruiters" ? await chromeFor(this.ctx).planForRun({ recruiters: agencies! }).catch(() => null) : null;
     // A scheduled search with Search in my Chrome on never falls back to the web (poorer, unexpected results): skipped.
     if (id === "find_jobs" && o.scheduled && !browser && chromeFor(this.ctx).chromeOn()) {
       const why = chromeFor(this.ctx).lastWebReason();
@@ -448,11 +460,13 @@ export class ClaudeEngine {
       try { installChromeCli(root, this.host!.mcp); } catch (e) { await chromeFor(this.ctx).endRun(browser); throw e; }
     }
     const ctxText = web ? webContext(root, id, t, this.ctx.now(), search, id === "find_jobs" ? { skills: documentSkills(this.ctx, root), browser: !!browser } : {}) : "";
-    const lead = `${browser ? `${id === "chrome_check" ? checkRequest(browser.boards) : browserRequest(browser.boards)}\n\n` : ""}${retry ? `${retryLine(retry, browser?.boards ?? [])}\n\n` : ""}`;
+    const browserLead = !browser ? (id === "find_recruiters" ? RECRUITER_WEB_ONLY : "")
+      : id === "chrome_check" ? checkRequest(browser.boards) : id === "find_recruiters" ? recruiterBrowserRequest(browser.boards) : browserRequest(browser.boards);
+    const lead = `${browserLead ? `${browserLead}\n\n` : ""}${retry ? `${retryLine(retry, browser?.boards ?? [])}\n\n` : ""}`;
     const prompt = web ? `${lead}${ctxText ? `${ctxText}\n\n` : ""}${base}` : base;
     const video = ACTIONS[id].group === "video";
     const plan: ToolPlan = { action: id, folder: paths.folder, files: video ? undefined : [...paths.outputs, ...paths.extras], web, mcp: mcpToolsFor(id),
-      job: t.kind === "job" ? { company_slug: t.company_slug, id: t.id } : null, browser, search, jobs,
+      job: t.kind === "job" ? { company_slug: t.company_slug, id: t.id } : null, browser, search, jobs, agencies,
       // search_report writes the run's own report file: the expected output named with this run's local date.
       report: mcpToolsFor(id).includes("search_report") ? paths.outputs[0] ?? null : null };
     const h = this.host!;
@@ -465,7 +479,8 @@ export class ClaudeEngine {
       l = this.newLive({
         action: id, target: t, key, root, prompt, cwd: root, tempCwd: false, web,
         args: claudeArgs(plan, lockedOrAll(root, this.ctx.clock()), { root, pluginDir: h.pluginDir, mcp: h.mcp, mode: claudeMode(root) }), folder: paths.folder, files: plan.files ?? null, expected,
-        timeoutMs: video ? VIDEO_TIMEOUT_MS : jobs ? Math.max(CAREER_TIMEOUT_MS, findBudget(jobs).claudeMs) : CAREER_TIMEOUT_MS,
+        timeoutMs: video ? VIDEO_TIMEOUT_MS : jobs ? Math.max(CAREER_TIMEOUT_MS, findBudget(jobs).claudeMs)
+          : agencies ? Math.max(CAREER_TIMEOUT_MS, recruiterBudget(agencies).claudeMs) : CAREER_TIMEOUT_MS,
       });
     } catch (e) {
       if (browser) await chromeFor(this.ctx).endRun(browser);

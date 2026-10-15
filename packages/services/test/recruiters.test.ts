@@ -69,6 +69,54 @@ describe("recruiters", () => {
     expect(readAgency(root, "example-labs")).toBeNull();
   });
 
+  it("records every place an agency was found, named like jobs name their boards, merged by address", () => {
+    const root = sampleCopy();
+    const first = call(root, "recruiter_add", {
+      name: "Example Labs Talent", website: "https://talent.example.com",
+      sources: [
+        { name: "LinkedIn jobs", url: "https://www.linkedin.com/jobs/view/123" },
+        { name: "seek", url: "https://www.seek.com.au/job/100003" },
+        { name: "Web search", url: "https://lists.example.org/it-recruiters-sampletown" },
+        { name: "Bad", url: "http://insecure.example.org/" },
+      ],
+    });
+    expect(first).toMatchObject({ saved: true, sources: 3 });
+    expect(first.left_out).toEqual(["source Bad: no https page"]);
+    call(root, "recruiter_add", { name: "Example Labs Talent", sources: [{ name: "RCSA directory", url: "https://directory.example.org/members/talent" }, { name: "SEEK", url: "https://www.seek.com.au/job/100003" }] });
+    const a = readAgency(root, "example-labs-talent")!;
+    expect(a.sources.map((s) => [s.name, s.url])).toEqual([
+      ["LinkedIn", "https://www.linkedin.com/jobs/view/123"], ["SEEK", "https://www.seek.com.au/job/100003"],
+      ["Web search", "https://lists.example.org/it-recruiters-sampletown"], ["RCSA directory", "https://directory.example.org/members/talent"],
+    ]);
+    for (const s of a.sources) expect(s.found_at).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+    // No source given: its own site is where it was checked.
+    call(root, "recruiter_add", { name: "Acme Talent Partners", website: "https://partners.example.net" });
+    expect(readAgency(root, "acme-talent-partners")!.sources.map((s) => [s.name, s.url])).toEqual([["Agency website", "https://partners.example.net"]]);
+    // An older record without sources still reads (the schema's default), and gets them on the next save.
+    const file = layout(root).agencyFile("acme-recruiting");
+    const raw = JSON.parse(fs.readFileSync(file, "utf8")) as Record<string, unknown>;
+    delete raw.sources;
+    fs.writeFileSync(file, JSON.stringify(raw));
+    expect(readAgency(root, "acme-recruiting")!.sources).toEqual([]);
+    expect(validateWorkspace(root).filter((i) => i.file.startsWith("recruiters"))).toEqual([]);
+  });
+
+  it("an agency's job ad saved by Claude records the ad's board as a source, with the job's found time", () => {
+    const root = sampleCopy();
+    const made = call(root, "job_new", {
+      company: "Acme Recruiting (Example Labs)", title: "Cloud Engineer", url: "https://www.seek.com.au/job/100009", site: "SEEK", jd_text: "Cloud Engineer for our client.",
+    });
+    const job = readRecord("job", layout(root).jobFile(made.company_slug, made.id));
+    expect(readAgency(root, "acme-recruiting")!.sources).toContainEqual({ name: "SEEK", url: "https://www.seek.com.au/job/100009", found_at: job.found_at });
+  });
+
+  it("gives Find recruiters the advertisers of saved job ads that aren't saved agencies yet", () => {
+    const root = sampleCopy();
+    const ctx = webContext(root, "find_recruiters", { kind: "workspace" }, new Date("2026-10-15T00:00:00Z"));
+    expect(ctx).toMatch(/Other advertisers of my saved job ads \(some may be agencies\): .*Acme Corp/);
+    expect(ctx).not.toMatch(/advertisers of my saved job ads[^\n]*Acme Recruiting/);
+  });
+
   it("a reply from the agency's domain after contact sets Replied and shows on its timeline", () => {
     const { ctx, root } = openSample();
     R["recruiters.update"](ctx, "acme-recruiting", { contacted_on: "2026-01-14" });

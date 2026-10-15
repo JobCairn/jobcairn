@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   ACTIONS, actionsFor, adContacts, addBusinessDays, agencyActivity, agencyFacets, recruiterEmailDraft, sponsorshipLine, agencyPatchArgs, applyAgencyPatch, buildActionPrompt, buildAgencyRows, cleanAgencyInput,
-  filterAgencies, PUBLISHED_CONTACT_RULES, type AgencyRecordView, type JobRow,
+  agencySourceName, filterAgencies, MAX_AGENCIES, PUBLISHED_CONTACT_RULES, RECRUITER_BUDGET_MAX, RECRUITER_SEARCH_RULE, recruiterBudget, type AgencyRecordView, type JobRow,
 } from "../src/index.js";
 
 // Built by concatenation so the privacy scan stays meaningful.
@@ -110,6 +110,65 @@ describe("find_recruiters", () => {
     expect(p).toContain("recruiter_add");
     expect(p).toContain("- knowledge/recruiter-searches/2026-10-15.md");
     expect(p.indexOf(PUBLISHED_CONTACT_RULES[0])).toBeGreaterThan(p.indexOf("Rules:"));
+  });
+
+  it("searches every kind of source towards the target, records each agency's sources, and reports counts per source", () => {
+    const p = buildActionPrompt("find_recruiters", { kind: "workspace" }, { now: "2026-10-15T00:00:00.000Z" }, { options: { max_agencies: 40 }, note: "" });
+    expect(p).toContain("Aim for 40 agencies.");
+    expect(p).toContain('"<role> recruitment agency <city>"');
+    expect(p).toContain("government contract recruiters <state>");
+    expect(p).toContain("SEEK, Indeed and LinkedIn job search");
+    expect(p).toContain("RCSA member directory");
+    expect(p).toContain("supplier panels");
+    expect(p).toContain("Agencies named in my saved job ads");
+    expect(p).toContain("Check each agency on its own site before you save it");
+    expect(p).toContain("Give every agency its sources");
+    expect(p).toContain("how many came from each source");
+    expect(p).toContain(RECRUITER_SEARCH_RULE);
+    // The steps come before the target line, and the rules last.
+    expect(p.indexOf("Search every kind of source")).toBeLessThan(p.indexOf("Aim for 40 agencies."));
+    expect(p.indexOf("Aim for 40 agencies.")).toBeLessThan(p.indexOf("Rules:"));
+  });
+
+  it("scales the run's limits with the agencies it aims for, within fixed bounds", () => {
+    const small = recruiterBudget(5);
+    const def = recruiterBudget(MAX_AGENCIES.default);
+    const top = recruiterBudget(MAX_AGENCIES.max);
+    expect(small.recruiterAdd).toBe(30);
+    expect(def.recruiterAdd).toBe(75);
+    expect(top).toEqual(RECRUITER_BUDGET_MAX);
+    for (const k of ["pagesPerBoard", "actions", "browseMs", "claudeMs", "recruiterAdd"] as const) {
+      expect(def[k], k).toBeGreaterThanOrEqual(small[k]);
+      expect(top[k], k).toBeGreaterThanOrEqual(def[k]);
+    }
+    expect(def.claudeMs).toBeGreaterThan(def.browseMs);
+    expect(recruiterBudget(10_000)).toEqual(top);
+    expect(recruiterBudget(0)).toEqual(recruiterBudget(1));
+    expect(recruiterBudget(Number.NaN)).toEqual(def);
+  });
+});
+
+describe("agency sources", () => {
+  it("keeps https sources, names a board's page as jobs name the board, and falls back to the agency's own site", () => {
+    const { agency, dropped } = cleanAgencyInput({
+      name: "Acme Recruiting", website: "https://recruiting.example.com",
+      sources: [
+        { name: "LinkedIn jobs", url: "https://au.linkedin.com/jobs/view/1" },
+        { name: "", url: "https://au.indeed.com/viewjob?jk=abc" },
+        { name: "RCSA directory", url: "https://directory.example.org/acme" },
+        { url: "https://lists.example.net/recruiters" },
+        { name: "Again", url: "https://directory.example.org/acme" },
+        { name: "Unsafe", url: "javascript:alert(1)" },
+      ],
+    });
+    expect(agency.sources).toEqual([
+      { name: "LinkedIn", url: "https://au.linkedin.com/jobs/view/1" }, { name: "Indeed", url: "https://au.indeed.com/viewjob?jk=abc" },
+      { name: "RCSA directory", url: "https://directory.example.org/acme" }, { name: "Web search", url: "https://lists.example.net/recruiters" },
+    ]);
+    expect(dropped).toEqual(["source Unsafe: no https page"]);
+    expect(cleanAgencyInput({ name: "Acme Recruiting", website: "https://recruiting.example.com" }).agency.sources).toEqual([{ name: "Agency website", url: "https://recruiting.example.com" }]);
+    expect(cleanAgencyInput({ name: "Acme Recruiting" }).agency.sources).toEqual([]);
+    expect(agencySourceName("seek", "https://www.seek.com.au/job/1")).toBe("SEEK");
   });
 });
 

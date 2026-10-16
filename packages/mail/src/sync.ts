@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
-import { careerosDir, layout, listJobs, readRecord, RecordError, updateRecord, writeFileAtomic, type Job } from "@careeros/core";
+import { careerosDir, ensureAgencyCompany, layout, listAgencies, listJobs, readRecord, RecordError, updateRecord, writeFileAtomic, type Agency, type Job } from "@careeros/core";
 import { isIgnored, isJobRelated, matchMessage, type CompanyInfo, type HeaderInfo, type IgnoreList } from "./match.js";
 import { parseMessage, type ParsedMessage } from "./parse.js";
 import { explainMailError, type HeaderSummary, type MailProvider, type MailSession } from "./provider.js";
@@ -191,6 +191,29 @@ export function companyIndex(root: string): CompanyInfo[] {
     });
     out.push({ slug, name: c.name, aliases: c.aliases, website: c.website, recruiter_email: c.recruiter.email, email_match: c.email_match, jobs: mine });
   }
+  return withAgencies(out, listAgencies(root));
+}
+
+/**
+ * Recruitment agencies join the index (spec 2026-10-17-add-recruiter-and-mail): an agency's published addresses, its
+ * people's addresses and the addresses and domains the person linked go into the same-slug company's email_match (its
+ * website too when the company has none). An agency with no company folder is its own entry, marked agency_only: it
+ * matches by its website and addresses, never by name. Published addresses match exactly; never their domain.
+ */
+export function withAgencies(companies: CompanyInfo[], agencies: Agency[]): CompanyInfo[] {
+  const out = companies.map((c) => ({ ...c, email_match: [...c.email_match] }));
+  for (const a of agencies) {
+    const extra = [...a.contacts.filter((c) => c.kind === "email").map((c) => c.value), ...a.people.map((p) => p.email), ...(a.email_match ?? [])]
+      .map((x) => x.trim().toLowerCase()).filter(Boolean);
+    const hit = out.find((c) => c.slug === a.slug);
+    if (hit) {
+      const have = new Set(hit.email_match.map((m) => m.toLowerCase()));
+      for (const x of extra) if (!have.has(x)) { have.add(x); hit.email_match.push(x); }
+      if (!hit.website && a.website) hit.website = a.website;
+    } else {
+      out.push({ slug: a.slug, name: a.name, aliases: [], website: a.website, recruiter_email: "", email_match: [...new Set(extra)], jobs: [], agency_only: true });
+    }
+  }
   return out;
 }
 
@@ -300,6 +323,8 @@ export async function syncMail(o: SyncOptions): Promise<SyncResult> {
     }
     const id = messageIdFor(input);
     if (check(id)) { r.duplicates++; repairEvent(id); return; }
+    // An agency's first email: its company folder (same slug, marked a recruiter) is made so the mail can be filed there.
+    if (target !== "triage" && companies.find((c) => c.slug === target.company_slug)?.agency_only) local(() => ensureAgencyCompany(o.root, target.company_slug));
     const stored = store(target, input, id);
     if (input.tooLarge) r.too_large++;
     known.set(id, stored.ref);

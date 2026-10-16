@@ -294,7 +294,8 @@ describe("Recruiter page", () => {
     renderApp(<RecruiterScreen route={{ screen: "recruiter", slug: "example-labs-talent", tab: "contacts" }} />, { bridge: bridgeWith() });
     const people = await screen.findByRole("region", { name: "People" });
     expect(within(people).getByText("Alex Example")).toBeInTheDocument();
-    expect(within(people).getByText("Data recruiter · Data")).toBeInTheDocument();
+    expect(within(people).getByText("Data recruiter")).toBeInTheDocument();
+    expect(within(people).getByRole("list", { name: "Alex Example's specialties" })).toHaveTextContent("Data");
     expect(within(people).getByRole("button", { name: "Found on talent.example.com" })).toBeInTheDocument();
     expect(within(people).getByRole("button", { name: `Email ${at("alex")}` })).toBeInTheDocument();
     expect(screen.getByText(/Best reached through Alex Example/)).toBeInTheDocument();

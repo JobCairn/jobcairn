@@ -90,6 +90,17 @@ export const AD_TERMS: ChipsOption = {
   empty: null,
 };
 
+/** Recruiter emails: whether a resume goes with it (the app always sets it). */
+const ATTACHED: ToggleOption = {
+  kind: "toggle", key: "attached", label: "Resume attached", help: "Set by the app.", default: false,
+  on: "My resume is attached: say so in one line.", off: "No resume is attached: don't say one is, and offer to send it.",
+};
+/** Recruiter emails: the sponsorship question, only for people who need sponsorship. */
+const SPONSOR_ASK: ToggleOption = {
+  kind: "toggle", key: "sponsorship", label: "Ask about sponsorship", help: "Ask whether their clients sponsor visas.", default: true, sponsorship: "prioritise",
+  on: "I need visa sponsorship: ask in one plain line whether their clients sponsor for these roles, naming my visa subclass if settings/profile.json gives one.", off: null,
+};
+
 /** Every action's options. An empty list means the note is the only thing a person can add. */
 export const ACTION_OPTIONS: { readonly [K in ActionId]: readonly ActionOption[] } = {
   find_jobs: [
@@ -215,6 +226,13 @@ export const ACTION_OPTIONS: { readonly [K in ActionId]: readonly ActionOption[]
     // Like Find jobs' max_jobs: the run's limits scale with it (recruiterBudget).
     { kind: "range", key: "max_agencies", label: "Agencies to find", help: "How many agencies Claude aims to save this time.", min: MAX_AGENCIES.min, max: MAX_AGENCIES.max, step: 1, default: MAX_AGENCIES.default, unit: "agencies",
       line: (n) => `Aim for ${n} agencies. Don't stop after the first search: keep going through the sources below, one after another, until you have saved ${n} agencies or run out of sources, and say in the report if you stopped short and why.` },
+  ],
+  recruiter_email: [ATTACHED, SPONSOR_ASK],
+  recruiter_job_email: [
+    ATTACHED, SPONSOR_ASK,
+    // Set by the app: the agency that advertised the job. Main checks it exists and lists this job.
+    { kind: "slug", key: "agency", label: "Agency", help: "Set by the app.", default: "",
+      line: (s) => `The agency's record is recruiters/${s}/agency.json.` },
   ],
   rewrite_resume: [
     sel("scope", "What to rewrite", "The whole resume, one section or one bullet.", "resume", [

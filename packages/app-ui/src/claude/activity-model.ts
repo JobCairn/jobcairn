@@ -71,6 +71,8 @@ export function chipVerb(action: ClaudeRunView["action"]): string {
     case "rewrite_resume": return "Rewriting";
     case "draft_email": return "Drafting";
     case "outreach_note": return "Drafting";
+    case "recruiter_email": return "Drafting";
+    case "recruiter_job_email": return "Drafting";
     case "tailor_resume_variant": return "Writing";
     default: return ACTIONS[action]?.group === "video" ? "Making video" : "Working";
   }

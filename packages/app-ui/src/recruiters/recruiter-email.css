@@ -1,0 +1,6 @@
+/* The agency Email dialog's choices (spec 2026-10-17-recruiter-email-claude). Kept apart from recruiters.css. */
+.recruiter-email__choice { display: flex; flex-direction: column; gap: var(--space-2); margin: 0; padding: 0; border: 0; min-width: 0; }
+.recruiter-email__legend { padding: 0; font-weight: var(--font-weight-medium); }
+.recruiter-email__note { width: 100%; }
+.recruiter-email__run { display: inline-flex; align-items: center; gap: var(--space-2); }
+.recruiter-email__time { font-variant-numeric: tabular-nums; color: var(--color-text-muted); }

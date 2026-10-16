@@ -38,7 +38,7 @@ interface Deps {
 const LABEL: [RegExp, string][] = [
   [/resume\.suggested\.md$/, "Suggested resume"], [/resume\.md$/, "Resume"], [/cover-letter\.md$/, "Cover letter"], [/claims\.json$/, "Claim sources"], [/score\.md$/, "Job score"],
   [/research\.md$/, "Company research"], [/questions\.md$/, "Interview questions"], [/script\.txt$/, "Video script"], [/sources\.md$/, "Sources"],
-  [/notes\.md$/, "Notes"], [/suggested\/draft\.json$/, "Suggested email"], [/pitch\.md$/, "Pitch"], [/job-searches\//, "Search report"], [/\.mp4$/, "Video"],
+  [/notes\.md$/, "Notes"], [/suggested\/(draft|recruiter)\.json$/, "Suggested email"], [/pitch\.md$/, "Pitch"], [/job-searches\//, "Search report"], [/\.mp4$/, "Video"],
 ];
 const label = (p: string) => LABEL.find(([re]) => re.test(p))?.[1] ?? p.split("/").pop()!;
 
@@ -46,6 +46,8 @@ const label = (p: string) => LABEL.find(([re]) => re.test(p))?.[1] ?? p.split("/
 const DEMO_STEPS: Partial<Record<ActionId, string[]>> = {
   tailor_application: ["Starting Claude", "Using the career skill", "Reading the job ad", "Reading your experience", "Writing your resume", "Writing your cover letter", "Checking claims"],
   draft_email: ["Starting Claude", "Using the career skill", "Reading the job ad", "Reading your experience", "Writing the email"],
+  recruiter_email: ["Starting Claude", "Using the career skill", "Reading about the agency", "Reading your experience", "Writing the email"],
+  recruiter_job_email: ["Starting Claude", "Using the career skill", "Reading the job ad", "Reading about the agency", "Reading your experience", "Writing the email"],
   score_job: ["Starting Claude", "Using the career skill", "Reading the job ad", "Reading your experience", "Scoring the job"],
   // Real runs repeat labels (the stream reports each tool call), so the preview does too.
   research_company: ["Starting Claude", "Looking through your files", "Reading your experience", "Looking through your files", "Reading your experience", "Searching the web", "Reading acme.example", "Searching the web", "Writing the company research"],

@@ -28,3 +28,22 @@ dd .agency-tags { flex-wrap: wrap; }
 /* Overview facts read as a two-column list: label on the left, value on the right. */
 .recruiter-overview .company-facts { display: grid; grid-template-columns: max-content minmax(0, 1fr); column-gap: var(--space-6); row-gap: var(--space-3); align-items: baseline; }
 .recruiter-overview .company-facts > div { display: contents; }
+
+/* Contacts: people as cards on the left, the agency's own emails, phones, linked addresses and pages in a card on the right. */
+.agency-contacts { display: grid; grid-template-columns: minmax(0, 1fr) minmax(18rem, 24rem); gap: var(--space-4) var(--space-6); align-items: start; max-width: 80rem; }
+.agency-contacts__intro { grid-column: 1 / -1; }
+@media (max-width: 1100px) { .agency-contacts { grid-template-columns: minmax(0, 1fr); } }
+.agency-contacts .agency-people { display: grid; align-self: stretch; width: 100%; grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr)); gap: var(--space-3); }
+.agency-person { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-3) var(--space-4); }
+.agency-person__head { align-items: center; gap: var(--space-3); }
+.agency-person__who { min-width: 0; }
+.agency-person__name { font-weight: var(--font-weight-medium); }
+.agency-person .agency-tags { flex-wrap: wrap; }
+.agency-person__foot { align-items: center; gap: var(--space-1); margin-top: auto; padding-top: var(--space-2); border-top: var(--size-border) solid var(--color-border); }
+.agency-contacts__reach { padding: var(--space-4); gap: var(--space-5); }
+.agency-contacts .agency-reach { display: flex; flex-direction: column; gap: var(--space-3); }
+.agency-reach__item { display: flex; flex-direction: column; gap: 2px; }
+.agency-reach__line { align-items: center; gap: var(--space-1); min-width: 0; }
+.agency-reach__line .company-contact__address { overflow-wrap: anywhere; }
+.agency-reach__meta > span { white-space: nowrap; }
+.agency-reach__link { min-width: 0; overflow-wrap: anywhere; }

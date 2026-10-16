@@ -73,6 +73,7 @@
 .jobs-filters__row > .field:first-child { flex: 1 1 18rem; max-width: 28rem; }
 .jobs-filters__row > .field { flex: 0 1 12rem; }
 .jobs-filters__views { display: flex; gap: var(--space-2); margin-left: auto; }
+.jobs-filters__toggles { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-5); }
 
 /* Tag lists inside a panel: roles, places in order, words to skip. */
 .qf-tags { display: flex; flex-direction: column; gap: var(--space-2); padding: 0 var(--space-1); }

@@ -233,12 +233,14 @@ export function JobsScreen({ route }: { route: Route }) {
         {views.error ? <Text role="body-sm" muted>Saved views can't be loaded right now.</Text> : null}
         <JobQuickFilters filters={form.filters} onChange={(f) => set("filters", f)} facets={list.data?.facets} showSponsorship={showSponsorship}
           rights={rightsOptions(focus)} hideStatus={isApply} searching={!!form.text.trim()} onClearAll={clearFilters} />
-        {/* Only offered when something is actually hidden (or it's already on, so it can be turned off). */}
-        {hidden || form.showIneligible ? (
-          <Checkbox data-tour="jobs-hidden" label={`Show ads I can't apply for (${hidden} hidden)`} checked={form.showIneligible} onChange={(e) => set("showIneligible", e.target.checked)} />
-        ) : null}
-        <Checkbox label="Hide likely stale" checked={!!form.hideStale} onChange={(e) => set("hideStale", e.target.checked)}
-          title="Hides ads you haven't applied for that were posted over 30 days ago, or posted again by the same company" />
+        <div className="jobs-filters__toggles">
+          {/* Only offered when something is actually hidden (or it's already on, so it can be turned off). */}
+          {hidden || form.showIneligible ? (
+            <Checkbox data-tour="jobs-hidden" label={`Show ads I can't apply for (${hidden} hidden)`} checked={form.showIneligible} onChange={(e) => set("showIneligible", e.target.checked)} />
+          ) : null}
+          <Checkbox label="Hide likely stale" checked={!!form.hideStale} onChange={(e) => set("hideStale", e.target.checked)}
+            title="Hides ads you haven't applied for that were posted over 30 days ago, or posted again by the same company" />
+        </div>
       </div>
   );
   return (

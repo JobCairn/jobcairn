@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Button, cx, Dialog, Icons, Input, Pill, Select, Table, Tabs, Text, Textarea, useToast, type Column } from "@careeros/brand";
+import { Avatar, Button, cx, Dialog, Icons, Input, Pill, Select, Table, Tabs, Text, Textarea, useToast, type Column } from "@careeros/brand";
 import { AGENCY_STATUS_LABELS, AGENCY_STATUSES, linkedinCompanyPage, type AgencyJob, type AgencyPatch, type AgencyRow, type AgencyStatus, type JobStatus } from "@careeros/contract";
 import { errorText, useBridge, useLoad } from "../bridge-context";
 import { CompanyMark, hostOf, openable, useOpenLink } from "../companies/parts";
@@ -216,118 +216,134 @@ function Contacts({ a, onEmail, onUnlink }: { a: AgencyRow; onEmail: (to: string
   const phones = a.contacts.filter((c) => c.kind === "phone");
   const linked = a.email_match ?? [];
   const best = a.best_contact.name && openable(a.best_contact.source_url) ? a.best_contact : null;
-  const found = (url: string, on = "") => (
-    <Text role="body-sm" muted as="div">
-      {openable(url) ? <button type="button" className="company-link company-link--sm" title={url} onClick={() => open(url, "the source page")}>{`Found on ${hostOf(url)}`}</button> : null}
-      {on ? <> · <DateText value={on} /></> : null}
-    </Text>
-  );
   const links = [
     { url: a.website, label: "Website" }, { url: a.about_url, label: "About / team" },
     ...a.city_links.map((c) => ({ url: c.url, label: `${c.city} contact` })),
     ...(linkedinCompanyPage(a.linkedin_url) ? [{ url: a.linkedin_url, label: "LinkedIn" }] : []),
   ].filter((l) => openable(l.url));
 
+  // Where a source line goes: "Brisbane office · Found on clicks.com.au · 16 Oct 2026" on one muted line.
+  const meta = (label: string, url: string, on = "") => {
+    const parts = [
+      label ? <span key="l">{label}</span> : null,
+      openable(url) ? <button key="u" type="button" className="company-link company-link--sm" title={url} onClick={() => open(url, "the source page")}>{`Found on ${hostOf(url)}`}</button> : null,
+      on ? <span key="d"><DateText value={on} /></span> : null,
+    ].filter(Boolean);
+    return <Text role="body-sm" muted as="div" className="agency-reach__meta">{parts.flatMap((x, i) => (i ? [<span key={`s${i}`} aria-hidden="true"> · </span>, x] : [x]))}</Text>;
+  };
+
   return (
-    <div className="stack job-panel" data-tour="recruiter-contacts">
-      <p role="note" className="company-contacts__note"><Text role="body-sm" muted as="span">{RECRUITER_NOTE}</Text></p>
-      {best ? (
-        <Text role="body-sm" as="p">
-          {`Best reached through ${best.name}`}{" "}
-          <button type="button" className="company-link company-link--sm" onClick={() => open(best.source_url, "the page that names them")}>{`(${hostOf(best.source_url)})`}</button>
-        </Text>
-      ) : null}
-      <section aria-label="Emails" className="stack-tight">
-        <h2 className="company-sub">Emails</h2>
-        {emails.length ? (
-          <ul className="list-plain stack-tight">
-            {emails.map((c) => (
-              <li key={c.value} className="row company-contact">
-                <span className="grow">
-                  <Text role="body" as="div" className="company-contact__address">{c.value}</Text>
-                  {c.label ? <Text role="body-sm" as="div">{c.label}</Text> : null}
-                  {found(c.source_url, c.found_on)}
-                </span>
-                {c.confirmed ? null : <Pill tone="warning" title="Claude couldn't confirm this address on the page.">Not confirmed</Pill>}
-                <Button size="sm" variant="ghost" icon={Icons.copy} aria-label={`Copy ${c.value}`} onClick={() => void copy(c.value, "Address")}>Copy</Button>
-                <Button size="sm" icon={Icons.compose} aria-label={`Email ${c.value}`} onClick={() => onEmail(c.value)}>Email</Button>
-              </li>
-            ))}
-          </ul>
-        ) : <Text role="body-sm" muted as="p">{`No agency-wide email published for ${name}.`}</Text>}
-      </section>
-      <section aria-label="Linked email addresses" className="stack-tight" data-tour="recruiter-linked">
-        <h2 className="company-sub">Linked email addresses</h2>
-        {linked.length ? (
-          <ul className="list-plain stack-tight">
-            {linked.map((v) => (
-              <li key={v} className="row company-contact agency-linked">
-                <span className="grow">
-                  <Text role="body" as="div" className="company-contact__address">{v.includes("@") ? v : `Anyone at ${v}`}</Text>
-                  <Text role="body-sm" muted as="div">Linked from Mail. Their mail is filed here.</Text>
-                </span>
-                <Button size="sm" variant="ghost" icon={Icons.close} aria-label={`Unlink ${v}`} onClick={() => onUnlink(v)}>Remove</Button>
-              </li>
-            ))}
-          </ul>
-        ) : <Text role="body-sm" muted as="p">None yet. In Mail, Mail to sort, link a recruiter who writes from another address.</Text>}
-      </section>
-      <section aria-label="Phones" className="stack-tight">
-        <h2 className="company-sub">Phones</h2>
-        {phones.length ? (
-          <ul className="list-plain stack-tight">
-            {phones.map((c) => (
-              <li key={c.value} className="row company-contact">
-                <span className="grow">
-                  <Text role="body" as="div">{c.value}</Text>
-                  {c.label ? <Text role="body-sm" as="div">{c.label}</Text> : null}
-                  {found(c.source_url, c.found_on)}
-                </span>
-                {/* Phone links are blocked in the app, so the number is copied instead. */}
-                <Button size="sm" variant="ghost" icon={Icons.phone} aria-label={`Copy phone number ${c.value}`} onClick={() => void copy(c.value, "Phone number")}>Copy</Button>
-              </li>
-            ))}
-          </ul>
-        ) : <Text role="body-sm" muted as="p">No phone number published.</Text>}
-      </section>
-      <section aria-label="People" className="stack-tight">
-        <h2 className="company-sub">People</h2>
+    <div className="agency-contacts" data-tour="recruiter-contacts">
+      <div className="agency-contacts__intro stack-tight">
+        <p role="note" className="company-contacts__note"><Text role="body-sm" muted as="span">{RECRUITER_NOTE}</Text></p>
+        {best ? (
+          <Text role="body-sm" as="p">
+            {`Best reached through ${best.name}`}{" "}
+            <button type="button" className="company-link company-link--sm" onClick={() => open(best.source_url, "the page that names them")}>{`(${hostOf(best.source_url)})`}</button>
+          </Text>
+        ) : null}
+      </div>
+
+      <section aria-label="People" className="agency-contacts__people stack-tight">
+        <h2 className="company-sub">{a.people.length ? `People (${a.people.length})` : "People"}</h2>
         {a.people.length ? (
-          <ul className="list-plain stack-tight">
+          <ul className="list-plain agency-people">
             {a.people.map((p) => (
-              <li key={p.name} className="row company-contact">
-                <span className="grow">
-                  <Text role="body" as="div">{displayName(p.name)}</Text>
-                  {p.title || p.specialties.length ? <Text role="body-sm" as="div">{[p.title, p.specialties.join(", ")].filter(Boolean).join(" · ")}</Text> : null}
-                  {p.email || p.phone ? <Text role="body-sm" as="div" className="company-contact__address">{[p.email, p.phone].filter(Boolean).join(" · ")}</Text> : null}
-                  {found(p.source_url)}
-                </span>
-                {p.email ? <Button size="sm" variant="ghost" icon={Icons.copy} aria-label={`Copy ${p.email}`} onClick={() => void copy(p.email, "Address")}>Copy</Button> : null}
-                {p.phone ? <Button size="sm" variant="ghost" icon={Icons.phone} aria-label={`Copy phone number ${p.phone}`} onClick={() => void copy(p.phone, "Phone number")}>Copy</Button> : null}
-                {p.email ? <Button size="sm" icon={Icons.compose} aria-label={`Email ${p.email}`} onClick={() => onEmail(p.email)}>Email</Button> : null}
+              <li key={p.name} className="card agency-person">
+                <div className="row agency-person__head">
+                  <Avatar name={displayName(p.name)} />
+                  <span className="grow agency-person__who">
+                    <Text role="body" as="div" className="agency-person__name">{displayName(p.name)}</Text>
+                    {p.title ? <Text role="body-sm" muted as="div">{p.title}</Text> : null}
+                  </span>
+                </div>
+                {p.specialties.length ? (
+                  <ul className="agency-tags list-plain" aria-label={`${displayName(p.name)}'s specialties`}>
+                    {p.specialties.map((t) => <li key={t}><Pill>{t}</Pill></li>)}
+                  </ul>
+                ) : null}
+                {p.email || p.phone ? <Text role="body-sm" as="div" className="company-contact__address">{[p.email, p.phone].filter(Boolean).join(" · ")}</Text> : null}
+                <div className="row agency-person__foot">
+                  <span className="grow">{meta("", p.source_url)}</span>
+                  {p.email ? <Button size="sm" variant="ghost" icon={Icons.copy} aria-label={`Copy ${p.email}`} onClick={() => void copy(p.email, "Address")}>Copy</Button> : null}
+                  {p.phone ? <Button size="sm" variant="ghost" icon={Icons.phone} aria-label={`Copy phone number ${p.phone}`} onClick={() => void copy(p.phone, "Phone number")}>Copy</Button> : null}
+                  {p.email ? <Button size="sm" icon={Icons.compose} aria-label={`Email ${p.email}`} onClick={() => onEmail(p.email)}>Email</Button> : null}
+                </div>
               </li>
             ))}
           </ul>
         ) : <Text role="body-sm" muted as="p">No named recruiters published yet.</Text>}
       </section>
-      <section aria-label="Links" className="stack-tight">
-        <h2 className="company-sub">Links</h2>
-        {links.length ? (
-          <dl className="company-facts">
-            {links.map((l) => (
-              <div key={l.label + l.url}>
-                <dt>{l.label}</dt>
-                <dd>
-                  <span className="row">
-                    <Button size="sm" variant="secondary" icon={Icons.openExternal} title={l.url} aria-label={`Open ${name}'s ${l.label.toLowerCase()}`} onClick={() => open(l.url, `${name}'s ${l.label.toLowerCase()}`)}>{`Open ${hostOf(l.url)}`}</Button>
-                    <Button size="sm" variant="ghost" icon={Icons.copy} aria-label={`Copy the ${l.label.toLowerCase()} link`} onClick={() => void copy(l.url, "Link")}>Copy</Button>
+
+      <div className="card stack agency-contacts__reach">
+        <section aria-label="Emails" className="stack-tight">
+          <h2 className="company-sub">Emails</h2>
+          {emails.length ? (
+            <ul className="list-plain agency-reach">
+              {emails.map((c) => (
+                <li key={c.value} className="agency-reach__item">
+                  <div className="row agency-reach__line">
+                    <Text role="body" as="span" className="grow company-contact__address">{c.value}</Text>
+                    {c.confirmed ? null : <Pill tone="warning" title="Claude couldn't confirm this address on the page.">Not confirmed</Pill>}
+                    <Button size="sm" variant="ghost" icon={Icons.copy} aria-label={`Copy ${c.value}`} onClick={() => void copy(c.value, "Address")}>Copy</Button>
+                    <Button size="sm" icon={Icons.compose} aria-label={`Email ${c.value}`} onClick={() => onEmail(c.value)}>Email</Button>
+                  </div>
+                  {meta(c.label, c.source_url, c.found_on)}
+                </li>
+              ))}
+            </ul>
+          ) : <Text role="body-sm" muted as="p">{`No agency-wide email published for ${name}.`}</Text>}
+        </section>
+        <section aria-label="Phones" className="stack-tight">
+          <h2 className="company-sub">Phones</h2>
+          {phones.length ? (
+            <ul className="list-plain agency-reach">
+              {phones.map((c) => (
+                <li key={c.value} className="agency-reach__item">
+                  <div className="row agency-reach__line">
+                    <Text role="body" as="span" className="grow">{c.value}</Text>
+                    {/* Phone links are blocked in the app, so the number is copied instead. */}
+                    <Button size="sm" variant="ghost" icon={Icons.phone} aria-label={`Copy phone number ${c.value}`} onClick={() => void copy(c.value, "Phone number")}>Copy</Button>
+                  </div>
+                  {meta(c.label, c.source_url, c.found_on)}
+                </li>
+              ))}
+            </ul>
+          ) : <Text role="body-sm" muted as="p">No phone number published.</Text>}
+        </section>
+        <section aria-label="Linked email addresses" className="stack-tight" data-tour="recruiter-linked">
+          <h2 className="company-sub">Linked email addresses</h2>
+          {linked.length ? (
+            <ul className="list-plain agency-reach">
+              {linked.map((v) => (
+                <li key={v} className="agency-reach__item agency-linked">
+                  <div className="row agency-reach__line">
+                    <Text role="body" as="span" className="grow company-contact__address">{v.includes("@") ? v : `Anyone at ${v}`}</Text>
+                    <Button size="sm" variant="ghost" icon={Icons.close} aria-label={`Unlink ${v}`} onClick={() => onUnlink(v)}>Remove</Button>
+                  </div>
+                  <Text role="body-sm" muted as="div">Linked from Mail. Their mail is filed here.</Text>
+                </li>
+              ))}
+            </ul>
+          ) : <Text role="body-sm" muted as="p">None yet. In Mail, Mail to sort, link a recruiter who writes from another address.</Text>}
+        </section>
+        <section aria-label="Links" className="stack-tight">
+          <h2 className="company-sub">Links</h2>
+          {links.length ? (
+            <ul className="list-plain agency-reach">
+              {links.map((l) => (
+                <li key={l.label + l.url} className="row agency-reach__line">
+                  <span className="grow agency-reach__link">
+                    <Text role="body-sm" muted as="div">{l.label}</Text>
+                    <button type="button" className="company-link" title={l.url} aria-label={`Open ${name}'s ${l.label.toLowerCase()}`} onClick={() => open(l.url, `${name}'s ${l.label.toLowerCase()}`)}>{hostOf(l.url)}</button>
                   </span>
-                </dd>
-              </div>
-            ))}
-          </dl>
-        ) : <Text role="body-sm" muted as="p">No pages recorded yet.</Text>}
-      </section>
+                  <Button size="sm" variant="ghost" icon={Icons.copy} aria-label={`Copy the ${l.label.toLowerCase()} link`} onClick={() => void copy(l.url, "Link")}>Copy</Button>
+                </li>
+              ))}
+            </ul>
+          ) : <Text role="body-sm" muted as="p">No pages recorded yet.</Text>}
+        </section>
+      </div>
     </div>
   );
 }

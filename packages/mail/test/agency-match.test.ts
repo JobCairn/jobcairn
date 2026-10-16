@@ -54,8 +54,17 @@ describe("agencies in the company index", () => {
     const company: CompanyInfo = { slug: "acme-recruiting", name: "Acme Recruiting", aliases: [], website: "", recruiter_email: "", email_match: [], jobs: [] };
     const idx = withAgencies([company], [agency({ email_match: ["acme-talent.example.org"] })] as never);
     expect(idx).toHaveLength(1);
-    expect(idx[0]).toMatchObject({ website: "https://www.acmerecruiting.example.com", email_match: [at("jobs", "acme-mail.example.net"), "acme-talent.example.org"] });
+    expect(idx[0]).toMatchObject({ website: "https://www.acmerecruiting.example.com", email_match: ["acme-talent.example.org"], agency_addresses: [at("jobs", "acme-mail.example.net")] });
     expect(idx[0]!.agency_only).toBeUndefined();
+  });
+
+  it("a client's address an agency's ad published still files under the client by its own domain", () => {
+    const client: CompanyInfo = { slug: "acme-corp", name: "Acme Corp", aliases: [], website: "https://acmecorp.example.com", recruiter_email: "", email_match: [], jobs: [] };
+    const contacts = [{ kind: "email" as const, value: at("careers", "acmecorp.example.com"), label: "From a job ad", source_url: "https://www.seek.com.au/job/1", found_on: "", confirmed: true }];
+    const idx = withAgencies([client], [agency({ contacts })] as never);
+    expect(matchMessage(head(at("careers", "acmecorp.example.com")), idx)).toMatchObject({ company_slug: "acme-corp", matched_by: "domain" });
+    // With no company owning that domain, the agency's published address does match.
+    expect(matchMessage(head(at("careers", "acmecorp.example.com")), withAgencies([], [agency({ contacts })] as never))).toMatchObject({ company_slug: "acme-recruiting" });
   });
 });
 

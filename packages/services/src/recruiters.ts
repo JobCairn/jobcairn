@@ -12,14 +12,15 @@ import { allDrafts } from "./mail-read.js";
 import { jobRows, query } from "./read.js";
 
 /**
- * Emails received, for reply detection: those mail sync filed under a company (from the index), and those waiting in
+ * Emails for the timeline and reply detection: those mail sync filed (received and sent, with their folder), and those waiting in
  * Mail to sort (a reply from an agency with no company folder lands there).
  */
 function replies(root: string): OutreachReply[] {
   let filed: OutreachReply[] = [];
   try {
-    filed = query<{ from_addr: string; date: string; subject: string }>(root, "SELECT from_addr, date, subject FROM emails WHERE direction = 'in' ORDER BY date DESC LIMIT 5000")
-      .map((r) => ({ from: r.from_addr ?? "", date: r.date ?? "", subject: r.subject ?? "" }));
+    filed = query<{ from_addr: string; date: string; subject: string; direction: string; company_slug: string }>(root,
+      "SELECT from_addr, date, subject, direction, company_slug FROM emails ORDER BY date DESC LIMIT 5000")
+      .map((r) => ({ from: r.from_addr ?? "", date: r.date ?? "", subject: r.subject ?? "", direction: r.direction === "out" ? "out" as const : "in" as const, company_slug: r.company_slug ?? "" }));
   } catch { /* no index yet */ }
   let waiting: OutreachReply[] = [];
   try {

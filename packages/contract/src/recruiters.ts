@@ -333,7 +333,13 @@ const fromAgency = (addr: string, m: { addresses: Set<string>; domains: Set<stri
 };
 
 export interface OutreachDraft { to: string; subject: string; status: string; updated: string }
-export interface OutreachReply { from: string; date: string; subject: string }
+/**
+ * A filed email: received (`direction` "in" or left out) or sent. `company_slug`: the folder mail sync filed it in, so
+ * mail filed under the agency counts as its own whatever address it came from (or went to).
+ */
+export interface OutreachReply { from: string; date: string; subject: string; direction?: "in" | "out"; company_slug?: string }
+/** A subject without "Re:", "Fwd:" and the like, lower case, for matching a draft with its sent copy and its thread. */
+export const baseSubject = (s: string) => s.replace(/^\s*((re|fw|fwd|aw|sv)\s*(\[\d+\])?\s*:\s*)+/i, "").trim().toLowerCase();
 /** `tab`: an email event links to the agency page's Emails tab. */
 export interface AgencyEvent { at: string; event: string; note: string; tab?: "emails" }
 
@@ -345,14 +351,19 @@ export interface AgencyEvent { at: string; event: string; note: string; tab?: "e
 export function agencyActivity(a: AgencyRecordView, drafts: OutreachDraft[], replies: OutreachReply[], today: string): { events: AgencyEvent[]; patch: AgencyPatch | null } {
   const m = agencyAddresses(a);
   const events: AgencyEvent[] = a.timeline.map((e) => ({ at: e.at, event: e.event, note: e.note ?? "" }));
+  // Mail you sent that sync filed under the agency (from Gmail, or the app's own once synced).
+  const sentMail = replies.filter((r) => r.direction === "out" && r.company_slug === a.slug);
+  const synced = new Set(sentMail.map((r) => baseSubject(r.subject)));
+  for (const r of sentMail) events.push({ at: r.date, event: "Email sent", note: r.subject, tab: "emails" });
   const mine = drafts.filter((d) => d.to.split(",").some((t) => t.trim() && fromAgency(t, m)));
-  for (const d of mine) events.push({ at: d.updated, event: d.status === "sent" ? "Email sent" : d.status === "waiting" ? "Email waiting for approval" : "Email drafted", note: d.subject, tab: "emails" });
-  const theirs = replies.filter((r) => fromAgency(r.from, m));
+  // A draft marked sent whose synced copy is already listed shows once.
+  for (const d of mine) if (!(d.status === "sent" && synced.has(baseSubject(d.subject)))) events.push({ at: d.updated, event: d.status === "sent" ? "Email sent" : d.status === "waiting" ? "Email waiting for approval" : "Email drafted", note: d.subject, tab: "emails" });
+  const theirs = replies.filter((r) => r.direction !== "out" && (fromAgency(r.from, m) || (!!r.company_slug && r.company_slug === a.slug)));
   for (const r of theirs) events.push({ at: r.date, event: "Reply received", note: r.subject, tab: "emails" });
   const t = a.tracking;
   if (t.follow_up_on && t.follow_up_on <= today && (t.status === "contacted" || t.status === "to_contact")) events.push({ at: t.follow_up_on, event: "Follow-up due", note: "" });
   events.sort((x, y) => y.at.localeCompare(x.at));
-  const sent = mine.filter((d) => d.status === "sent").map((d) => d.updated).sort();
+  const sent = [...mine.filter((d) => d.status === "sent").map((d) => d.updated), ...sentMail.map((r) => r.date)].sort();
   const since = t.contacted_on || sent[0] || "";
   const patch: AgencyPatch = {};
   if (!t.contacted_on && sent[0]) patch.contacted_on = sent[0].slice(0, 10);

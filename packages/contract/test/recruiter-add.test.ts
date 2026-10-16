@@ -35,6 +35,11 @@ describe("Add recruiter: one agency", () => {
     expect(a.sources).toEqual([{ name: ADDED_BY_YOU, url: "" }]);
   });
 
+  it("takes the name up to a comma or dash, leaving the details out of it", () => {
+    expect(addRecruiterArgs({ text: `Acme Recruiting, met Sam at the expo ${at("sam", "acmerecruiting.example.com")}` }).slug).toBe("acme-recruiting");
+    expect(addRecruiterArgs({ text: "Acme Recruiting - IT and data" }).name).toBe("Acme Recruiting");
+  });
+
   it("refuses an empty box", () => {
     expect(() => addRecruiterArgs({ text: "  " })).toThrow(ArgError);
   });
@@ -78,6 +83,18 @@ describe("recruiter mail", () => {
     const r = agencyActivity(agency({ email_match: [at("sam.recruiter", "gmail.com")] }), [], [{ from: at("sam.recruiter", "gmail.com"), date: "2026-10-05T01:00:00Z", subject: "Re: roles" }], "2026-10-17");
     expect(r.events[0]).toEqual({ at: "2026-10-05T01:00:00Z", event: "Reply received", note: "Re: roles", tab: "emails" });
     expect(r.patch).toEqual({ status: "replied" });
+  });
+
+  it("mail filed under the agency shows on the timeline both ways, and a sent draft with a synced copy shows once", () => {
+    const r = agencyActivity(agency({ tracking: { status: "to_contact", contacted_on: "", follow_up_on: "", notes: "" } }), [
+      { to: at("kim", "elsewhere.example.net"), subject: "Data roles", status: "sent", updated: "2026-10-02T00:00:00Z" },
+    ], [
+      { from: at("alex"), date: "2026-10-02T00:01:00Z", subject: "Data roles", direction: "out", company_slug: "acme-recruiting" },
+      { from: at("kim", "elsewhere.example.net"), date: "2026-10-03T00:00:00Z", subject: "Re: Data roles", direction: "in", company_slug: "acme-recruiting" },
+      { from: at("kim", "elsewhere.example.net"), date: "2026-10-04T00:00:00Z", subject: "Not theirs", direction: "in", company_slug: "acme-corp" },
+    ], "2026-10-17");
+    expect(r.events.map((e) => [e.event, e.note, e.tab])).toEqual([["Reply received", "Re: Data roles", "emails"], ["Email sent", "Data roles", "emails"]]);
+    expect(r.patch).toEqual({ contacted_on: "2026-10-02", status: "replied" });
   });
 
   it("groups the conversation by thread, oldest first inside, newest thread first, and Reply answers the newest received", () => {

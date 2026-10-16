@@ -1,7 +1,7 @@
 import { isPlainEmail } from "./contacts.js";
 import { jobBoardByUrl } from "./job-boards.js";
 import type { DraftView, MailAddressView, MailRow } from "./mail.js";
-import { agencySlug, type AgencyContactView } from "./recruiters.js";
+import { agencySlug, baseSubject, type AgencyContactView } from "./recruiters.js";
 import { ArgError, isSafeHttpsUrl } from "./validate.js";
 
 /**
@@ -90,7 +90,8 @@ export function addRecruiterArgs(raw: unknown, today = ""): AgencyAddClean {
     const word = rest.split(/\s+/).find((w) => HOST_RE.test(w) && /\.[a-z]{2,}(\/|$)/i.test(w));
     if (word) { url = word; rest = rest.replace(word, " "); }
   }
-  const firstLine = rest.split(/\n/).map((l) => l.replace(/[,;|]+/g, " ").trim()).find(Boolean) ?? "";
+  // The name is the first line up to a comma, semicolon, bar or " - " (details often follow it).
+  const firstLine = rest.split(/\n/).map((l) => l.split(/[,;|]| - /)[0]!.trim()).find(Boolean) ?? "";
   return agencyFromFields({ name: given.trim() || firstLine, url, emails }, today);
 }
 
@@ -165,8 +166,6 @@ export interface AgencyEmails {
   latest_in: string | null;
 }
 
-/** A subject without "Re:", "Fwd:" and the like, lower case, for grouping drafts with their thread. */
-export const baseSubject = (s: string) => s.replace(/^\s*((re|fw|fwd|aw|sv)\s*(\[\d+\])?\s*:\s*)+/i, "").trim().toLowerCase();
 
 /**
  * An agency's conversation: messages grouped by thread, oldest to newest inside a thread, the thread with the newest

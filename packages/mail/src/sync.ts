@@ -203,15 +203,19 @@ export function companyIndex(root: string): CompanyInfo[] {
 export function withAgencies(companies: CompanyInfo[], agencies: Agency[]): CompanyInfo[] {
   const out = companies.map((c) => ({ ...c, email_match: [...c.email_match] }));
   for (const a of agencies) {
-    const extra = [...a.contacts.filter((c) => c.kind === "email").map((c) => c.value), ...a.people.map((p) => p.email), ...(a.email_match ?? [])]
-      .map((x) => x.trim().toLowerCase()).filter(Boolean);
+    const clean = (xs: string[]) => [...new Set(xs.map((x) => x.trim().toLowerCase()).filter(Boolean))];
+    // Published addresses (an ad's text may name the client's own address) rank below every company's own domain;
+    // the addresses and domains the person linked are deliberate, so they rank like a company's email_match.
+    const published = clean([...a.contacts.filter((c) => c.kind === "email").map((c) => c.value), ...a.people.map((p) => p.email)]);
+    const linked = clean(a.email_match ?? []);
     const hit = out.find((c) => c.slug === a.slug);
     if (hit) {
       const have = new Set(hit.email_match.map((m) => m.toLowerCase()));
-      for (const x of extra) if (!have.has(x)) { have.add(x); hit.email_match.push(x); }
+      for (const x of linked) if (!have.has(x)) { have.add(x); hit.email_match.push(x); }
+      hit.agency_addresses = published;
       if (!hit.website && a.website) hit.website = a.website;
     } else {
-      out.push({ slug: a.slug, name: a.name, aliases: [], website: a.website, recruiter_email: "", email_match: [...new Set(extra)], jobs: [], agency_only: true });
+      out.push({ slug: a.slug, name: a.name, aliases: [], website: a.website, recruiter_email: "", email_match: linked, agency_addresses: published, jobs: [], agency_only: true });
     }
   }
   return out;

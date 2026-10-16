@@ -31,7 +31,7 @@ export function AddRecruiterDialog({ open, onClose }: { open: boolean; onClose: 
 
   /** Starts Check recruiters, or says why it can't start now (the agencies stay marked and wait for it). */
   const check = async (): Promise<string> => {
-    if (!engine.data?.ready) return "Claude isn't set up yet, so it can't check them now. They're saved; use Check on the Recruiters screen once Claude is ready.";
+    if (engine.data && !engine.data.ready) return "Claude isn't set up yet, so it can't check them now. They're saved; use Check on the Recruiters screen once Claude is ready.";
     try {
       await bridge.claude.run("check_recruiters", WORKSPACE, {});
       return "Claude is checking it on the agency's own site and will fill in what it publishes.";

@@ -480,7 +480,7 @@ export function createMockMail(h: MockMailHooks): MockMail {
     hasMessage: (slug, id, messageId) => s.messages.some((m) => m.view.company_slug === slug && m.view.job_id === id && m.view.message_id === messageId),
     outreach: () => ({
       drafts: s.drafts.map(draftView).map((d) => ({ to: d.to, subject: d.subject, status: d.status, updated: d.updated })),
-      replies: s.messages.filter((m) => m.view.direction === "in").map((m) => ({ from: m.view.from.address, date: m.view.date, subject: m.view.subject })),
+      replies: s.messages.map((m) => ({ from: m.view.from.address, date: m.view.date, subject: m.view.subject, direction: m.view.direction, company_slug: m.view.company_slug })),
     }),
     everything: () => ({
       rows: s.messages.map((m) => ({ ...row(m.view), ...(m.view.direction === "out" ? { to: m.view.to.slice(0, 1) } : {}) })),

@@ -10,6 +10,11 @@ export interface CompanyInfo {
    * alert naming a big agency must not be filed under it. Sync makes its company folder before filing.
    */
   agency_only?: boolean;
+  /**
+   * The agency's published addresses (its site, its people, its own ads), matched exactly but only after no company
+   * matched by its own website's domain: an ad can name the client's address.
+   */
+  agency_addresses?: string[];
 }
 export interface HeaderInfo { direction: "in" | "out"; from: EmailAddress; to: EmailAddress[]; cc: EmailAddress[]; subject: string }
 export interface MatchResult { company_slug: string; job_id: string; matched_by: EmailMatchKind }
@@ -526,6 +531,9 @@ export function matchCompany(h: HeaderInfo, companies: CompanyInfo[], own = ""):
     return !!d && !isFreemailDomain(d) && !isBoardDomain(d) && normDomains.some((x) => x === d || x.endsWith(`.${d}`));
   });
   if (byDomain) return { company: byDomain, matched_by: "domain" };
+
+  const byAgencyAddress = companies.find((c) => !!c.agency_addresses?.some((a) => people.includes(a)));
+  if (byAgencyAddress) return { company: byAgencyAddress, matched_by: "email_match" };
 
   // Rule 4: a domain or whole-word phrase in email_match. Word-type entries (no "@", no ".") are
   // gathered across *every* company and answered by a single shared phrase scan over the subject

@@ -7,7 +7,7 @@ import { parseMoney, parsePercent } from "../src/jobs/OfferComparison";
 import { renderApp } from "./render";
 
 vi.setConfig({ testTimeout: 20_000 });
-beforeEach(() => { window.location.hash = "#/applications"; sessionStorage.clear(); });
+beforeEach(() => { window.location.hash = "#/applications"; sessionStorage.clear(); localStorage.clear(); });
 
 /** The mock workspace with its first two jobs at Offer. */
 function offersBridge(n = 2): MockBridge {
@@ -15,7 +15,14 @@ function offersBridge(n = 2): MockBridge {
   for (const j of f.jobs.slice(0, n)) j.job.status = "Offer";
   return new MockBridge({ fixture: f });
 }
-const card = () => screen.findByRole("region", { name: "Compare offers" }).catch(() => screen.findByLabelText("Compare offers"));
+const card = () => screen.findByRole("region", { name: "Compare offers" });
+/** The card opened (it starts closed): what the tests below compare in. */
+async function openCard(): Promise<HTMLElement> {
+  const c = await card();
+  const toggle = within(c).getByRole("button", { name: /offer comparison$/ });
+  if (toggle.getAttribute("aria-expanded") !== "true") await userEvent.click(toggle);
+  return c;
+}
 
 describe("parsing what is typed", () => {
   it("reads money and percentages", () => {
@@ -40,7 +47,7 @@ describe("Compare offers", () => {
   it("shows two offers side by side, totals them with 12% super, and saves through the bridge", async () => {
     const user = userEvent.setup();
     const { bridge } = renderApp(<ApplicationsScreen />, { bridge: offersBridge() });
-    const c = await card();
+    const c = await openCard();
     const table = await within(c).findByRole("table", { name: "Offers side by side" });
     const cols = within(table).getAllByRole("columnheader");
     expect(cols).toHaveLength(2);
@@ -62,7 +69,7 @@ describe("Compare offers", () => {
   it("refuses an amount it can't read", async () => {
     const user = userEvent.setup();
     renderApp(<ApplicationsScreen />, { bridge: offersBridge() });
-    const table = await within(await card()).findByRole("table", { name: "Offers side by side" });
+    const table = await within(await openCard()).findByRole("table", { name: "Offers side by side" });
     const base = within(table).getAllByRole("textbox", { name: /^Base: / })[0]!;
     await user.type(base, "lots");
     expect(base).toHaveAttribute("aria-invalid", "true");
@@ -75,8 +82,9 @@ describe("Compare offers", () => {
     f.jobs[0]!.job.status = "Offer";
     f.jobs[1]!.job.status = "Interview";
     renderApp(<ApplicationsScreen />, { bridge: new MockBridge({ fixture: f }) });
-    const c = await card();
+    const c = await openCard();
     expect(within(c).getByText("Tick two or more jobs to compare them side by side.")).toBeInTheDocument();
+    expect(within(c).queryByRole("table")).toBeNull();
     await user.click(within(c).getByRole("checkbox", { name: /\(Interview\)$/ }));
     expect(within(await within(c).findByRole("table", { name: "Offers side by side" })).getAllByRole("columnheader")).toHaveLength(2);
   });
@@ -88,7 +96,7 @@ describe("Compare offers", () => {
     f.jobs[1]!.job.status = "Interview";
     const bridge = new MockBridge({ fixture: f });
     renderApp(<ApplicationsScreen />, { bridge });
-    const c = await card();
+    const c = await openCard();
     await user.click(within(c).getByRole("checkbox", { name: /\(Interview\)$/ }));
     const table = await within(c).findByRole("table", { name: "Offers side by side" });
     const bases = within(table).getAllByRole("textbox", { name: /^Base: / });
@@ -107,7 +115,7 @@ describe("Compare offers", () => {
     const user = userEvent.setup();
     const bridge = offersBridge();
     const first = renderApp(<ApplicationsScreen />, { bridge });
-    const table = await within(await card()).findByRole("table", { name: "Offers side by side" });
+    const table = await within(await openCard()).findByRole("table", { name: "Offers side by side" });
     await user.type(within(table).getAllByRole("textbox", { name: /^Base: / })[0]!, "120000");
     const draft = within(table).getAllByRole("button", { name: /^Draft negotiation email: / })[0]!;
     await waitFor(() => expect(draft).toBeEnabled());
@@ -123,7 +131,7 @@ describe("Compare offers", () => {
   it("Draft negotiation email: saves the offer, asks Claude with numbers only, saves a Mail draft and never sends", async () => {
     const user = userEvent.setup();
     const { bridge } = renderApp(<ApplicationsScreen />, { bridge: offersBridge() });
-    const table = await within(await card()).findByRole("table", { name: "Offers side by side" });
+    const table = await within(await openCard()).findByRole("table", { name: "Offers side by side" });
     const bases = within(table).getAllByRole("textbox", { name: /^Base: / });
     await user.type(bases[0]!, "120000");
     await user.type(bases[1]!, "130000");
@@ -144,5 +152,66 @@ describe("Compare offers", () => {
     await waitFor(() => expect(window.location.hash).toMatch(/^#\/job\/.+\?tab=mail$/));
     expect(bridge.calls.some((x) => x.method === "mail.drafts.propose")).toBe(false);
     expect((await bridge.approvals.list()).filter((a) => a.action === "email_send")).toHaveLength(0);
+  });
+  it("starts as one closed line with the offer count, and remembers when you open it", async () => {
+    const user = userEvent.setup();
+    const bridge = offersBridge();
+    const first = renderApp(<ApplicationsScreen />, { bridge });
+    const c = await card();
+    expect(c).toHaveTextContent("2 offers");
+    const toggle = within(c).getByRole("button", { name: "Show offer comparison" });
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(within(c).queryByRole("group", { name: "Jobs to compare" })).toBeNull();
+    expect(within(c).queryByRole("table")).toBeNull();
+    await user.click(toggle);
+    expect(within(c).getByRole("button", { name: "Hide offer comparison" })).toHaveAttribute("aria-expanded", "true");
+    expect(within(c).getByRole("group", { name: "Jobs to compare" })).toBeInTheDocument();
+    await within(c).findByRole("table", { name: "Offers side by side" });
+    first.unmount();
+    renderApp(<ApplicationsScreen />, { bridge });
+    const again = await card();
+    expect(within(again).getByRole("button", { name: "Hide offer comparison" })).toHaveAttribute("aria-expanded", "true");
+    await user.click(within(again).getByRole("button", { name: "Hide offer comparison" }));
+    expect(within(again).queryByRole("group", { name: "Jobs to compare" })).toBeNull();
+  });
+
+  it("lists one job a row, offers first and ticked, each with its status", async () => {
+    const f = loadFixture();
+    f.jobs[0]!.job.status = "Applied";
+    f.jobs[1]!.job.status = "Offer";
+    f.jobs[2]!.job.status = "Interview";
+    renderApp(<ApplicationsScreen />, { bridge: new MockBridge({ fixture: f }) });
+    const pick = within(await openCard()).getByRole("group", { name: "Jobs to compare" });
+    const boxes = within(pick).getAllByRole("checkbox");
+    expect(boxes.map((b) => b.getAttribute("aria-label")!.replace(/^.*\((\w+)\)$/, "$1"))).toEqual(["Offer", "Interview", "Applied"]);
+    expect(boxes.map((b) => (b as HTMLInputElement).checked)).toEqual([true, false, false]);
+    const items = within(pick).getAllByRole("listitem");
+    expect(items).toHaveLength(3);
+    expect(within(items[0]!).getByText("Offer")).toHaveClass("pill");
+    expect(within(pick).queryByRole("searchbox")).toBeNull();
+  });
+
+  it("with more than eight jobs, a search narrows the list and keeps what you ticked", async () => {
+    const user = userEvent.setup();
+    const f = loadFixture();
+    const base = f.jobs[0]!;
+    for (let i = 0; i < 8; i++) f.jobs.push({ ...structuredClone(base), job: { ...structuredClone(base.job), id: `2026-01-12-extra-role-${i}`, title: `Extra role ${i}`, url: `https://jobs.example.com/extra-${i}` } });
+    f.jobs.forEach((j, i) => { j.job.status = i < 2 ? "Offer" : "Applied"; });
+    const target = "Extra role 5";
+    renderApp(<ApplicationsScreen />, { bridge: new MockBridge({ fixture: f }) });
+    const c = await openCard();
+    const pick = within(c).getByRole("group", { name: "Jobs to compare" });
+    const all = within(pick).getAllByRole("checkbox").length;
+    expect(all).toBe(f.jobs.length);
+    const search = within(pick).getByRole("searchbox", { name: "Search jobs to compare" });
+    await user.type(search, target);
+    const shown = within(pick).getAllByRole("checkbox");
+    expect(shown.length).toBeLessThan(all);
+    expect(shown.every((b) => b.getAttribute("aria-label")!.toLowerCase().includes(target.toLowerCase()))).toBe(true);
+    // The two offers are hidden by the search but still ticked: the comparison still shows them.
+    expect(within(await within(c).findByRole("table", { name: "Offers side by side" })).getAllByRole("columnheader")).toHaveLength(2);
+    await user.clear(search);
+    await user.type(search, "zzz no such job");
+    expect(within(pick).getByText("No jobs match.")).toBeInTheDocument();
   });
 });

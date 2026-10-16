@@ -11,16 +11,56 @@
 .bench-table thead th { color: var(--color-text-muted); }
 .job-dates__row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-2); }
 .job-dates__row > .field { min-width: 14rem; }
-.offer-compare { margin-bottom: var(--space-4); }
-.offer-compare__pick { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-4); border: 0; padding: 0; margin: 0; }
-.offer-table__wrap { overflow-x: auto; }
-.offer-table { border-collapse: collapse; font-size: var(--font-size-14); min-width: 100%; }
-.offer-table th, .offer-table td { text-align: start; vertical-align: top; padding: var(--space-1) var(--space-2); border-bottom: var(--size-border) solid var(--color-border); }
-.offer-table thead th { display: table-cell; min-width: 12rem; }
-.offer-table thead th > * { display: block; }
-.offer-table tbody th { font-weight: normal; color: var(--color-text-muted); white-space: nowrap; }
+/* Compare offers on Applications: one closed line; opened, the job list on the left and the table on the right. */
+.offer-compare { margin-bottom: var(--space-4); padding-block: var(--space-3); }
+.offer-compare__bar { display: flex; align-items: center; gap: var(--space-3); }
+.offer-compare__bar > .section-title { flex: 1; }
+.offer-compare__body {
+  display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--space-4);
+  margin-top: var(--space-3); padding-top: var(--space-4); border-top: var(--size-border) solid var(--color-border);
+}
+.offer-compare__main { flex: 1 1 32rem; min-width: 0; display: flex; flex-direction: column; gap: var(--space-3); }
+.offer-compare__main > p { margin: 0; }
+.offer-compare__hint { padding: var(--space-6) var(--space-4); text-align: center; border: var(--size-border) dashed var(--color-border); border-radius: var(--radius-md); }
+
+.offer-pick { flex: 0 1 20rem; min-width: 16rem; display: flex; flex-direction: column; gap: var(--space-2); border: 0; padding: 0; margin: 0; }
+.offer-pick__legend { float: left; width: 100%; padding: 0; margin-bottom: var(--space-2); font-size: var(--font-size-12); color: var(--color-text-muted); }
+.offer-pick__legend + * { clear: both; }
+.offer-pick__list {
+  list-style: none; margin: 0; padding: var(--space-1); max-height: 22rem; overflow-y: auto;
+  border: var(--size-border) solid var(--color-border); border-radius: var(--radius-md);
+}
+.offer-pick__row {
+  display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2); border-radius: var(--radius-sm); cursor: pointer;
+}
+.offer-pick__row:hover { background: var(--color-surface-hover); }
+.offer-pick__row:has(input:focus-visible) { outline: var(--size-focus-ring) solid var(--color-focus); outline-offset: calc(var(--size-focus-ring) * -1); }
+.offer-pick__row input { flex: none; width: var(--size-icon-sm); height: var(--size-icon-sm); margin: 0; accent-color: var(--color-accent); }
+.offer-pick__row input:focus-visible { outline: none; }
+.offer-pick__text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.offer-pick__title, .offer-pick__company { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.offer-pick__title { font-size: var(--font-size-14); }
+.offer-pick__company { font-size: var(--font-size-12); color: var(--color-text-muted); }
+.offer-pick__row .pill { flex: none; }
+.offer-pick__none { margin: 0; padding: var(--space-2); }
+
+.offer-table__wrap { overflow-x: auto; border: var(--size-border) solid var(--color-border); border-radius: var(--radius-md); }
+.offer-table { border-collapse: collapse; font-size: var(--font-size-14); width: 100%; }
+.offer-table th, .offer-table td { text-align: start; vertical-align: top; padding: var(--space-2) var(--space-3); border-bottom: var(--size-border) solid var(--color-border); }
+.offer-table tr:last-child > * { border-bottom: 0; }
+.offer-table thead th { min-width: 13rem; vertical-align: bottom; font-weight: var(--font-weight-regular); border-bottom-color: var(--color-border-strong); }
+.offer-table thead th .pill { margin-top: var(--space-1); }
+.offer-table__job { display: block; font-weight: var(--font-weight-medium); color: var(--color-text); text-decoration: none; }
+.offer-table__job:hover { text-decoration: underline; }
+.offer-table__company { display: block; font-size: var(--font-size-12); color: var(--color-text-muted); }
+.offer-table tbody th { width: 1%; font-weight: var(--font-weight-regular); color: var(--color-text-muted); white-space: nowrap; vertical-align: middle; }
 .offer-table__input { width: 100%; min-width: 9rem; }
-.offer-table__total td { font-variant-numeric: tabular-nums; }
-.offer-table__best { margin-inline-start: var(--space-2); }
+.offer-table__note { display: block; margin-top: var(--space-1); font-size: var(--font-size-12); color: var(--color-text-muted); font-variant-numeric: tabular-nums; }
+.offer-table__total > * { background: var(--color-surface-hover); border-bottom-color: var(--color-border-strong); }
+.offer-table__total th { color: var(--color-text); font-weight: var(--font-weight-medium); }
+.offer-table__sum { display: inline-flex; align-items: center; flex-wrap: wrap; gap: var(--space-2); font-size: var(--font-size-16); font-variant-numeric: tabular-nums; }
+/* The column with the highest total. */
+.offer-table .is-best { background: color-mix(in srgb, var(--color-success-soft) 55%, transparent); }
+.offer-table__total .is-best { background: var(--color-success-soft); }
 .offer-table__actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .bench-table .num { text-align: end; font-variant-numeric: tabular-nums; }

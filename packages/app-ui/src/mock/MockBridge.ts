@@ -28,6 +28,7 @@ import { isLockedKind, LOCKABLE_DIRS,
   buildCompanyDetail, buildCompanyRows, COMPANY_SKIP, CONTACTS_FILE, readCompanyContacts, type CompanyFile,
   agencyActivity, agencyAddresses, agencyPatchArgs, agencyThreads, addRecruiterArgs, applyAgencyPatch, buildAgencyRows, localDate, parseAgencyLines, type AddRecruiterInput, type AgencyAddClean,
   type AgencyAddResult, type AgencyEmails, type AgencyImportResult, type AgencyPatch, type AgencyRecordView, type AgencyRow, type CompanyRow, type VideoListItem, type VideoSubjectArg,
+  parseDraftSuggestion, RECRUITER_EMAIL_IDS, SUGGESTION_UNREADABLE, type DraftSuggestion,
 } from "@careeros/contract";
 import { DEMO_SCORE, DEMO_SCORE_MD } from "../score/demo";
 import { ALEX_LONG_RESUME, ALEX_RESUME, mockRewrite, RESUME_JOB } from "./resume-fixture";
@@ -775,10 +776,38 @@ export class MockBridge implements CareerosBridge {
   /** Main's mapping of Resume Studio's positions to rewrite_resume's ids, against the saved resume. */
   private mapRequest(id: ActionId, t: ActionTarget, req: ClaudeRunRequest): ClaudeRunRequest {
     if (id === "draft_email") return this.mapEmailRequest(t, req);
+    if (RECRUITER_EMAIL_IDS.includes(id)) return this.mapRecruiterEmail(id, t, req);
     if (id !== "rewrite_resume" || t.kind !== "job" || !Object.keys(req.options ?? {}).length) return req;
     let o;
     try { o = rewriteOptions(req.options, "options"); } catch { throw new Error("Choose what to rewrite in Resume Studio."); }
     return { ...req, options: studioRewriteOptions(parseResume(this.resumeOf({ kind: "job", company_slug: t.company_slug, id: t.id }, SUGGESTED_FOR).md), o) };
+  }
+  /** Main's recruiter email check (services recruiterEmailRequest): the agency is saved (and lists the job); a general enquiry gets its company folder. */
+  private mapRecruiterEmail(id: ActionId, t: ActionTarget, req: ClaudeRunRequest): ClaudeRunRequest {
+    const agency = (slug: unknown) => (this.f.agencies ?? []).find((x) => x.slug === slug);
+    if (id === "recruiter_email") {
+      if (t.kind !== "company") throw new Error("Pick the recruiter to write to.");
+      this.recruiters.mailbox(t.company_slug);
+      return req;
+    }
+    if (t.kind !== "job") throw new Error("Pick the job to write about.");
+    const a = agency(req.options?.agency);
+    if (!a) throw new Error("Pick the recruiter to write to.");
+    if (![...a.job_refs, ...a.people.flatMap((p) => p.job_refs)].includes(`${t.company_slug}/${t.id}`)) throw new Error("That recruiter didn't advertise this job.");
+    return req;
+  }
+  /** Pretend a recruiter email run wrote its suggestion (fictional text, with the run's note and options). */
+  private writeRecruiterSuggestion(id: ActionId, t: ActionTarget, path: string): void {
+    const last = [...this.claudeSim.requests].reverse().find((r) => r.action === id && actionKey(r.action, r.target) === actionKey(id, t));
+    const o = last?.request.options ?? {};
+    const note = last?.request.note ?? "";
+    const job = t.kind === "job" ? this.find(t.company_slug, t.id).job : null;
+    const agency = (this.f.agencies ?? []).find((a) => a.slug === (t.kind === "company" ? t.company_slug : o.agency));
+    const lines = ["Hi,", "", job ? `I'd like to apply for the ${job.title} role you advertised.` : `I'm looking for data and AI roles, and ${agency?.name ?? "your agency"} recruits for the kind of work I do.`];
+    if (note) lines.push("", `(Your note: ${note})`);
+    if (o.sponsorship === true) lines.push("", "I would need visa sponsorship. Do your clients sponsor for these roles?");
+    lines.push("", o.attached === true ? "My resume is attached." : "I'm happy to send my resume.", "", "Regards,", "Alex");
+    this.f.texts[path] = JSON.stringify({ subject: job ? `${job.title}: Alex Example (written by Claude)` : "Data and AI roles: Alex Example (written by Claude)", body: lines.join("\n") });
   }
   /** Main's draft_email mapping (services mail-ai emailRequest): check the saved draft, and set `thread` itself. */
   private mapEmailRequest(t: ActionTarget, req: ClaudeRunRequest): ClaudeRunRequest {
@@ -840,6 +869,7 @@ export class MockBridge implements CareerosBridge {
     for (const o of this.actionView(id, target).outputs) {
       this.actionOutputs.set(o.path, this.iso());
       if (id === "draft_email") { this.writeEmailSuggestion(target, o.path); continue; }
+      if (RECRUITER_EMAIL_IDS.includes(id)) { this.writeRecruiterSuggestion(id, target, o.path); continue; }
       // rewrite_resume: the whole resume with a fictional rewrite in place, like the real action.
       if (o.path.endsWith(`/${STUDIO_DIR}/${SUGGESTED_NAME}`) && target.kind === "job") {
         const md = this.f.texts[`companies/${target.company_slug}/jobs/${target.id}/application/${SUGGESTED_FOR}`];
@@ -1472,6 +1502,21 @@ export class MockBridge implements CareerosBridge {
         this.emit("jobs");
       }
       return { company_slug: slug };
+    }),
+    suggestion: (slug: string, id: string) => this.rec("recruiters.suggestion", [slug, id], (): { suggestion: DraftSuggestion | null; problem: string } => {
+      if (id) this.find(slug, id);
+      const rel = id ? actionPaths("recruiter_job_email", { kind: "job", company_slug: slug, id }, {}).outputs[0]! : actionPaths("recruiter_email", { kind: "company", company_slug: slug }, {}).outputs[0]!;
+      if (!Object.hasOwn(this.f.texts, rel)) return { suggestion: null, problem: "" };
+      try { return { suggestion: { ...parseDraftSuggestion(this.f.texts[rel]!), at: this.actionOutputs.get(rel) ?? this.iso() }, problem: "" }; } catch { return { suggestion: null, problem: SUGGESTION_UNREADABLE }; }
+    }),
+    attachVariant: (slug: string, variant: string) => this.rec("recruiters.attachVariant", [slug, variant], (): { rel: string } => {
+      this.recruiters.mailbox(slug);
+      const m = this.variantMeta.get(variant);
+      if (!m || !Object.hasOwn(this.f.texts, `${VARIANTS_DIR}/${variant}/resume.md`)) throw new Error("That resume version isn't written yet.");
+      const dest = `companies/${slug}/emails/outgoing/Alex Example - Resume - ${m.name.replace(/[^\p{L}\p{N} &,()'-]/gu, " ").replace(/\s+/g, " ").trim()}.pdf`;
+      this.f.texts[dest] = "%PDF-1.7 (fictional)";
+      this.emit("jobs");
+      return { rel: dest };
     }),
     add: (input: AddRecruiterInput) => this.rec("recruiters.add", [input], (): AgencyAddResult => {
       const r = this.saveAdded(addRecruiterArgs(input, localDate(this.now)));

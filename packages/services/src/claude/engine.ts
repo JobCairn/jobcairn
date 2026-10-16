@@ -20,6 +20,7 @@ import { documentSkills } from "../learn-hub.js";
 import { savedRequest } from "../request-store.js";
 import { studioRequest } from "../resume.js";
 import { emailRequest } from "../mail-ai.js";
+import { recruiterEmailRequest } from "../recruiters.js";
 import { mcpToolsFor } from "./mcp/tools.js";
 import { checkAuth, checkCli, isAuthError, type ClaudeHost, type ClaudeLaunch } from "./detect.js";
 import { bundledPlugin, type BundledPlugin } from "./plugin.js";
@@ -385,6 +386,8 @@ export class ClaudeEngine {
   private async start(id: ActionId, t: ActionTarget, key: string, root: string, req: ClaudeRunRequest, retry: RetryInfo | null = null, o: RunOptions = {}): Promise<ClaudeRunView> {
     await this.readyOrThrow(true);
 
+    // A recruiter email: the agency is checked (and its company folder made) before anything about the target is read.
+    const agencyReq = recruiterEmailRequest(root, id, t, req);
     const now = this.ctx.now().toISOString();
     const check = (rels: string[], studio: readonly string[]) => {
       for (const rel of rels) {
@@ -420,7 +423,7 @@ export class ClaudeEngine {
     // Resume Studio sends positions in the saved resume; main maps them to the catalogue's ids (no resume text
     // comes from the renderer).
     // The email composer names its saved draft; main checks it and decides whether it answers a stored email.
-    const own = id === "rewrite_resume" ? studioRequest(this.ctx, root, t, req) : id === "draft_email" ? emailRequest(root, t, req) : req;
+    const own = id === "rewrite_resume" ? studioRequest(this.ctx, root, t, req) : id === "draft_email" ? emailRequest(root, t, req) : agencyReq;
     // A find-jobs run's own search choices were checked above; the rest is lane G's request.
     const { search: _search, ...rest } = id === "find_jobs" ? own : { ...own, search: undefined };
     const choices = validateRequest(id, id === "find_jobs" ? rest : own, outputNames(id), status);

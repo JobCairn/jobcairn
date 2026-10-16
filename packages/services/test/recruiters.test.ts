@@ -11,7 +11,9 @@ import { connectMail, GOOD_PASSWORD } from "./mail-helpers.js";
 import { handleMcp } from "../src/claude/mcp/server.js";
 import { mcpSession, mcpToolsFor } from "../src/claude/mcp/tools.js";
 import { webContext } from "../src/claude/context.js";
-import { recruiterHandlers as R } from "../src/recruiters.js";
+import { recruiterEmailRequest, recruiterHandlers as R } from "../src/recruiters.js";
+import { resumesHandlers as RS } from "../src/resumes.js";
+import { runMode } from "../src/claude/args.js";
 import { openSample, sampleCopy } from "./helpers.js";
 
 // Built by concatenation so the privacy scan stays meaningful.
@@ -200,5 +202,69 @@ describe("recruiters", () => {
     fs.writeFileSync(path.join(layout(root).recruitersDir, "acme-recruiting", "agency.json"), "{ broken");
     expect(readAgency(root, "acme-recruiting")).toBeNull();
     expect(validateWorkspace(root).some((i) => i.file.startsWith("recruiters"))).toBe(true);
+  });
+
+  it("recruiter emails: main checks the agency (and that it lists the job), and makes its company folder for a general enquiry", () => {
+    const { root } = openSample();
+    mergeAgency(root, { slug: "example-labs-talent", name: "Example Labs Talent", website: "https://talent.example.com" }, null);
+    const general = { kind: "company", company_slug: "example-labs-talent" } as const;
+    expect(fs.existsSync(layout(root).companyFile("example-labs-talent"))).toBe(false);
+    const req = { options: { attached: true }, note: "Mention I'm available from November." };
+    expect(recruiterEmailRequest(root, "recruiter_email", general, req)).toEqual(req);
+    expect(readRecord("company", layout(root).companyFile("example-labs-talent"))).toMatchObject({ name: "Example Labs Talent", type: "recruiter" });
+    expect(() => recruiterEmailRequest(root, "recruiter_email", { kind: "company", company_slug: "acme-corp" }, req)).toThrow(/isn't in this workspace/);
+    const job = { kind: "job", company_slug: "acme-recruiting", id: "2026-01-12-ai-developer" } as const;
+    const ok = { options: { agency: "acme-recruiting", attached: false }, note: "" };
+    expect(recruiterEmailRequest(root, "recruiter_job_email", job, ok)).toEqual(ok);
+    expect(() => recruiterEmailRequest(root, "recruiter_job_email", job, { options: { attached: false }, note: "" })).toThrow(/Pick the recruiter/);
+    expect(() => recruiterEmailRequest(root, "recruiter_job_email", job, { options: { agency: "example-labs-talent" }, note: "" })).toThrow(/didn't advertise this job/);
+    // Other actions pass through untouched.
+    expect(recruiterEmailRequest(root, "score_job", job, ok)).toBe(ok);
+  });
+
+  it("recruiters.suggestion reads Claude's email with mail-ai's checks, and only from the agency's own file", () => {
+    const { ctx, root } = openSample();
+    R["recruiters.mailbox"](ctx, "acme-recruiting");
+    expect(R["recruiters.suggestion"](ctx, "acme-recruiting", "")).toEqual({ suggestion: null, problem: "" });
+    const rel = "companies/acme-recruiting/emails/suggested/recruiter.json";
+    fs.mkdirSync(path.dirname(path.join(root, rel)), { recursive: true });
+    fs.writeFileSync(path.join(root, rel), JSON.stringify({ subject: "Data roles in Sampletown", body: "Hi,\n\nI'm looking for data roles.\n\nRegards,\nAlex" }));
+    expect(R["recruiters.suggestion"](ctx, "acme-recruiting", "").suggestion).toMatchObject({ subject: "Data roles in Sampletown", body: "Hi,\n\nI'm looking for data roles.\n\nRegards,\nAlex" });
+    fs.writeFileSync(path.join(root, rel), "not json");
+    expect(R["recruiters.suggestion"](ctx, "acme-recruiting", "")).toMatchObject({ suggestion: null, problem: expect.stringMatching(/couldn't be read/) });
+    fs.rmSync(path.join(root, rel));
+    fs.symlinkSync(path.join(root, "settings", "profile.json"), path.join(root, rel));
+    expect(R["recruiters.suggestion"](ctx, "acme-recruiting", "").suggestion).toBeNull();
+    const jobRel = "companies/acme-recruiting/jobs/2026-01-12-ai-developer/emails/suggested/recruiter.json";
+    fs.mkdirSync(path.dirname(path.join(root, jobRel)), { recursive: true });
+    fs.writeFileSync(path.join(root, jobRel), JSON.stringify({ subject: "AI Developer", body: "Hi,\n\nI'd like to apply." }));
+    expect(R["recruiters.suggestion"](ctx, "acme-recruiting", "2026-01-12-ai-developer").suggestion?.subject).toBe("AI Developer");
+    expect(() => R["recruiters.suggestion"](ctx, "acme-recruiting", "no-such-job")).toThrow();
+  });
+
+  it("attachVariant renders a general resume version as a PDF into the agency's emails/outgoing, and a draft sends it", async () => {
+    const mail = fakeMailHost({ goodPassword: GOOD_PASSWORD });
+    const { ctx, root } = openSample({ mail });
+    connectMail(ctx, root);
+    const { variant } = RS["resumes.newVariant"](ctx, "For Acme Recruiting");
+    await expect(R["recruiters.attachVariant"](ctx, "acme-recruiting", variant)).rejects.toThrow();
+    fs.writeFileSync(path.join(root, "resume-variants", variant, "resume.md"), "# Alex Example\n\n## Summary\n\nData engineer (fictional).\n");
+    const r = await R["recruiters.attachVariant"](ctx, "acme-recruiting", variant);
+    expect(r.rel).toMatch(/^companies\/acme-recruiting\/emails\/outgoing\/[^/]+\.pdf$/);
+    expect(fs.readFileSync(path.join(root, r.rel), "latin1").startsWith("%PDF-")).toBe(true);
+    const d = MR["mail.drafts.save"](ctx, "acme-recruiting", "", "", {
+      to: at("jobs"), cc: "", subject: "Data roles", body: "Hi,\n\nMy resume is attached.", attach: [r.rel], in_reply_to: "", references: [], purpose: "",
+    });
+    const approval = MR["mail.drafts.propose"](ctx, "acme-recruiting", "", d.view.draft_id);
+    expect(await AP["approvals.approve"](ctx, approval.id, approvalDigest(readApproval(root, approval.id)))).toMatchObject({ status: "done" });
+    // The download name has spaces: it goes out as a PDF attachment under that name (folded by the MIME builder).
+    expect(mail.fake.sent[0]!.raw.toString("latin1")).toMatch(/Content-Disposition: attachment; filename="Alex Example - Resume - For Acme/);
+    expect(mail.fake.sent[0]!.raw.toString("latin1")).toContain("Content-Type: application/pdf");
+    await expect(R["recruiters.attachVariant"](ctx, "acme-recruiting", "no-such-version")).rejects.toThrow();
+    await expect(R["recruiters.attachVariant"](ctx, "no-such-agency", variant)).rejects.toThrow(/isn't in this workspace/);
+  });
+
+  it("recruiter email runs never get auto mode: they read text from public pages", () => {
+    for (const action of ["recruiter_email", "recruiter_job_email"] as const) expect(runMode({ action, folder: "companies/x/emails/suggested", web: false, mcp: [] }, "auto")).toBe("dontAsk");
   });
 });

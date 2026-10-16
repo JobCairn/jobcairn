@@ -14,7 +14,7 @@ import type { ScheduleView, SearchSchedule } from "./schedule.js";
 import type { JobAddStatus, JobAdded, JobDraft, JobPreviewResult } from "./job-link.js";
 import type { GuideState, LearnHub, LearnProgress, SetupStepId } from "./learn.js";
 import type {
-  BackgroundStatus, DraftAssist, DraftDetail, DraftInput, DraftView, MailList, MailMessageView, MailQuery, MailStatus, MailTarget, MailTestResult, PruneResult, RecheckPreview, RecheckResult, TriageItem,
+  BackgroundStatus, DraftAssist, DraftDetail, DraftSuggestion, DraftInput, DraftView, MailList, MailMessageView, MailQuery, MailStatus, MailTarget, MailTestResult, PruneResult, RecheckPreview, RecheckResult, TriageItem,
 } from "./mail.js";
 import type { MethodName } from "./methods.js";
 import type { CalendarKind } from "./ics.js";
@@ -178,6 +178,13 @@ export interface CareerosBridge {
     attachResume(slug: string, id: string, rel: string): Promise<{ rel: string }>;
     /** Makes sure the agency has a company folder (same slug) so a general enquiry can be drafted and filed there. */
     mailbox(slug: string): Promise<{ company_slug: string }>;
+    /**
+     * Claude's latest email to the agency (recruiter_email, or recruiter_job_email when `id` names the job), read with
+     * the same checks as mail.drafts.assist, or null with `problem` saying why. Who it goes to never comes from Claude.
+     */
+    suggestion(slug: string, id: string): Promise<{ suggestion: DraftSuggestion | null; problem: string }>;
+    /** A general resume version (resume-variants/<variant>) as a PDF (Word when PDF isn't available) in the agency's emails/outgoing, for a general enquiry. */
+    attachVariant(slug: string, variant: string): Promise<{ rel: string }>;
     /** Add recruiter: saves an agency from a pasted site, job ad link or name and email (merged into one already saved). */
     add(input: AddRecruiterInput): Promise<AgencyAddResult>;
     /** Saves a pasted list (one agency per line: name, website, email), or a picked CSV file of the same. */
@@ -511,6 +518,7 @@ export function createRemoteBridge(t: Transport): CareerosBridge {
     companies: { list: () => c("companies.list"), get: (k) => c("companies.get", k) },
     recruiters: {
       list: () => c("recruiters.list"), update: (s, p) => c("recruiters.update", s, p), attachResume: (s, i, r) => c("recruiters.attachResume", s, i, r), mailbox: (s) => c("recruiters.mailbox", s),
+      suggestion: (s, i) => c("recruiters.suggestion", s, i), attachVariant: (s, v) => c("recruiters.attachVariant", s, v),
       add: (i) => c("recruiters.add", i), importList: (t) => c("recruiters.importList", t), importFile: (p) => c("recruiters.importFile", p),
       unlink: (s, v) => c("recruiters.unlink", s, v), emails: (s) => c("recruiters.emails", s),
     },

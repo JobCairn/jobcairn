@@ -222,6 +222,8 @@ export const METHODS = {
   "recruiters.update": [slug, agencyPatchArgs as V<unknown>],
   "recruiters.attachResume": [slug, jobOrCompany, str({ min: 12, max: 220, pattern: BASE_RESUME_REL })],
   "recruiters.mailbox": [slug],
+  "recruiters.suggestion": [slug, jobOrCompany],
+  "recruiters.attachVariant": [slug, variantSlug],
   "recruiters.add": [obj({ text: note(4000), name: opt(text(200)) })],
   "recruiters.importList": [note(AGENCY_IMPORT_MAX_CHARS)],
   "recruiters.importFile": [absPath],

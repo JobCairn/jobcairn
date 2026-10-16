@@ -61,7 +61,7 @@ export const MUTATION_AREAS: Partial<Record<MethodName, ChangeArea[]>> = {
   "workspace.switchTo": ALL, "workspace.startNew": ALL,
   "workspace.forget": ["workspace"], "workspace.trash": ["workspace"], "workspace.locate": ["workspace"], "workspace.addRecent": ["workspace"],
   "jobs.setStatus": ["jobs", "home"], "jobs.addNote": ["jobs"], "jobs.attach": ["jobs"], "jobs.saveView": ["jobs"], "jobs.deleteView": ["jobs"],
-  "jobs.add": ["jobs", "home", "sponsors", "recruiters"], "recruiters.update": ["recruiters"], "recruiters.attachResume": ["jobs"], "recruiters.mailbox": ["jobs", "sponsors"],
+  "jobs.add": ["jobs", "home", "sponsors", "recruiters"], "recruiters.update": ["recruiters"], "recruiters.attachResume": ["jobs"], "recruiters.mailbox": ["jobs", "sponsors"], "recruiters.attachVariant": ["jobs"],
   "recruiters.add": ["recruiters"], "recruiters.importList": ["recruiters"], "recruiters.importFile": ["recruiters"], "recruiters.unlink": ["recruiters"],
   "jobs.setInterview": ["jobs", "home"], "jobs.setOffer": ["jobs"],
   "apply.prepare": ["jobs", "home"], "apply.requestApproval": ["approvals", "home", "jobs"], "apply.markApplied": ["jobs", "home"],

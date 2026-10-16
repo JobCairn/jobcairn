@@ -63,7 +63,12 @@ function recipient(root: string, slug: string, id: string): MailAddressView | nu
 
 /** Claude's suggestion, read only if it is a plain, small, single-named file inside the workspace. */
 function suggestion(root: string, slug: string, id: string): { suggestion: DraftSuggestion | null; problem: string } {
-  const abs = path.join(root, ...suggestionRel(slug, id).split("/"));
+  return suggestionAt(root, suggestionRel(slug, id));
+}
+
+/** A suggestion file Claude wrote (workspace-relative), with the same checks: also used by the recruiter email. */
+export function suggestionAt(root: string, rel: string): { suggestion: DraftSuggestion | null; problem: string } {
+  const abs = path.join(root, ...rel.split("/"));
   let st: fs.Stats;
   try { st = fs.lstatSync(abs); } catch { return { suggestion: null, problem: "" }; }
   if (!st.isFile() || st.nlink > 1 || st.size > SUGGESTION_MAX_BYTES || !insideRoot(root, abs)) return { suggestion: null, problem: SUGGESTION_UNREADABLE };

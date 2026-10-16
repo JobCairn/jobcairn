@@ -68,6 +68,8 @@ export function requestSentence(id: ActionId, info: { title?: string; company?: 
     case "draft_email":
       return options.mode && options.mode !== "new" ? "Claude will rework your email, keeping its facts." : `Claude will draft an email about ${job} from your own files.`;
     case "tailor_resume_variant": return `Claude will write a version of your resume aimed at ${topic || "this focus"}, from your own files only.`;
+    case "recruiter_email": return "Claude will draft a general enquiry to this recruiter from your own files. You review and send it.";
+    case "recruiter_job_email": return `Claude will draft an email to the recruiter about ${job} from your own files. You review and send it.`;
     case "outreach_note": return `Claude will draft a short note to the hiring manager for ${job}, naming one real result from your files. You send it yourself.`;
   }
 }

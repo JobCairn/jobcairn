@@ -136,8 +136,11 @@ export interface RunPlace {
   mode?: "auto" | "ask";
 }
 
-/** Actions that read emails other people wrote (draft_email reads the email it answers). They never get auto mode. */
-export const MAIL_READING_ACTIONS: readonly ActionId[] = Object.freeze(["draft_email"] as ActionId[]);
+/**
+ * Actions that read text other people wrote: draft_email reads the email it answers, the recruiter emails read the
+ * agency's record (from public pages) and the ad. They never get auto mode.
+ */
+export const MAIL_READING_ACTIONS: readonly ActionId[] = Object.freeze(["draft_email", "recruiter_email", "recruiter_job_email"] as ActionId[]);
 
 /** The permission mode a run gets: auto only for a workspace in auto mode and a run without Bash. */
 export function runMode(plan: ToolPlan, mode: RunPlace["mode"]): "auto" | "dontAsk" {

@@ -210,6 +210,7 @@ export const ACTION_OPTIONS: { readonly [K in ActionId]: readonly ActionOption[]
     ]),
   ],
   chrome_check: [],
+  check_recruiters: [],
   find_recruiters: [
     // Like Find jobs' max_jobs: the run's limits scale with it (recruiterBudget).
     { kind: "range", key: "max_agencies", label: "Agencies to find", help: "How many agencies Claude aims to save this time.", min: MAX_AGENCIES.min, max: MAX_AGENCIES.max, step: 1, default: MAX_AGENCIES.default, unit: "agencies",

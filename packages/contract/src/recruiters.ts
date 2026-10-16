@@ -47,6 +47,10 @@ export interface AgencyRecordView {
   timeline: { at: string; event: string; note: string }[];
   /** Where it was found, oldest first (merged by url). Records read through the store always have it ([] by default). */
   sources?: AgencySource[];
+  /** Addresses (exact) and domains linked from Mail for recruiters writing from elsewhere. Older records have none. */
+  email_match?: string[];
+  /** Added by the person and not yet checked by Claude (Check recruiters). */
+  needs_check?: boolean;
 }
 export interface AgencyJob { company_slug: string; id: string; title: string; location: string; job_type: string; status: string; open: boolean; sponsor_friendly: boolean }
 /** One card on the Recruiters screen. */
@@ -313,10 +317,13 @@ export function adContacts(text: string, url: string, today = ""): { contacts: A
  * (and subdomains). Address domains never widen the match: an address from an ad may belong to the client, or to
  * web mail, so "Replied" (which saves) only follows mail that is really from the agency.
  */
-export function agencyAddresses(a: Pick<AgencyRecordView, "contacts" | "people" | "website">): { addresses: Set<string>; domains: Set<string> } {
-  const addresses = new Set([...a.contacts.filter((c) => c.kind === "email").map((c) => c.value), ...a.people.map((p) => p.email)].filter(Boolean).map((x) => x.toLowerCase()));
+export function agencyAddresses(a: Pick<AgencyRecordView, "contacts" | "people" | "website" | "email_match">): { addresses: Set<string>; domains: Set<string> } {
+  const linked = (a.email_match ?? []).map((x) => x.trim().toLowerCase()).filter(Boolean);
+  const addresses = new Set([...a.contacts.filter((c) => c.kind === "email").map((c) => c.value), ...a.people.map((p) => p.email), ...linked.filter((x) => x.includes("@"))].filter(Boolean).map((x) => x.toLowerCase()));
   const domains = new Set<string>();
   try { if (a.website) domains.add(new URL(a.website).hostname.replace(/^www\./, "").toLowerCase()); } catch { /* no site */ }
+  // Domains the person linked from Mail (never a free-mail domain: services refuse those).
+  for (const d of linked) if (!d.includes("@") && d.includes(".")) domains.add(d.replace(/^www\./, ""));
   return { addresses, domains };
 }
 const fromAgency = (addr: string, m: { addresses: Set<string>; domains: Set<string> }) => {
@@ -327,7 +334,8 @@ const fromAgency = (addr: string, m: { addresses: Set<string>; domains: Set<stri
 
 export interface OutreachDraft { to: string; subject: string; status: string; updated: string }
 export interface OutreachReply { from: string; date: string; subject: string }
-export interface AgencyEvent { at: string; event: string; note: string }
+/** `tab`: an email event links to the agency page's Emails tab. */
+export interface AgencyEvent { at: string; event: string; note: string; tab?: "emails" }
 
 /**
  * An agency's timeline: its own events (tracking changes, Claude's finds, ads), emails drafted and sent to its
@@ -338,9 +346,9 @@ export function agencyActivity(a: AgencyRecordView, drafts: OutreachDraft[], rep
   const m = agencyAddresses(a);
   const events: AgencyEvent[] = a.timeline.map((e) => ({ at: e.at, event: e.event, note: e.note ?? "" }));
   const mine = drafts.filter((d) => d.to.split(",").some((t) => t.trim() && fromAgency(t, m)));
-  for (const d of mine) events.push({ at: d.updated, event: d.status === "sent" ? "Email sent" : d.status === "waiting" ? "Email waiting for approval" : "Email drafted", note: d.subject });
+  for (const d of mine) events.push({ at: d.updated, event: d.status === "sent" ? "Email sent" : d.status === "waiting" ? "Email waiting for approval" : "Email drafted", note: d.subject, tab: "emails" });
   const theirs = replies.filter((r) => fromAgency(r.from, m));
-  for (const r of theirs) events.push({ at: r.date, event: "Reply received", note: r.subject });
+  for (const r of theirs) events.push({ at: r.date, event: "Reply received", note: r.subject, tab: "emails" });
   const t = a.tracking;
   if (t.follow_up_on && t.follow_up_on <= today && (t.status === "contacted" || t.status === "to_contact")) events.push({ at: t.follow_up_on, event: "Follow-up due", note: "" });
   events.sort((x, y) => y.at.localeCompare(x.at));

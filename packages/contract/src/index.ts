@@ -39,6 +39,7 @@ export * from "./trash.js";
 export * from "./setup.js";
 export * from "./contacts.js";
 export * from "./recruiters.js";
+export * from "./recruiter-add.js";
 export * from "./updates.js";
 export * from "./ghost.js";
 export * from "./salary-benchmark.js";

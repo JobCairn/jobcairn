@@ -12,7 +12,7 @@ export const ACTION_IDS = [
   "find_jobs", "score_job", "tailor_application", "interview_prep", "research_company", "study_topic",
   "skill_gap_video", "jd_walkthrough_video", "company_background_video", "interview_prep_video",
   "pitch_video", "application_summary_video", "weekly_recap_video", "rewrite_resume", "suggest_targets", "tailor_resume_variant",
-  "chrome_check", "draft_email", "outreach_note", "find_recruiters",
+  "chrome_check", "draft_email", "outreach_note", "find_recruiters", "check_recruiters",
 ] as const;
 export type ActionId = (typeof ACTION_IDS)[number];
 /** Skills shipped in the CareerOS plugin (plugin/skills/<name>/SKILL.md). */
@@ -305,6 +305,20 @@ export const ACTIONS: { readonly [K in ActionId]: ActionDef & { id: K } } = {
       "In the report, start with how many new agencies you saved against the number asked for, then how many came from each source (web search, each job board, each directory or panel, saved job ads). Then list each agency you saved, what it is hiring for and where you found it. End with anything you could not confirm, and the sources you didn't get to if you stopped short.",
     ],
   },
+  check_recruiters: {
+    id: "check_recruiters", group: "career", target: "workspace", label: "Check recruiters you added", button: "Check", done: "Recruiters checked", skills: ["career"], surface: "recruiters",
+    // Add recruiter (spec 2026-10-17-add-recruiter-and-mail): a web run like Find recruiters, on only the agencies the
+    // person added and Claude hasn't checked yet (main lists them, with what the person gave, in front of the request).
+    // Records go in only through recruiter_add, so the same published-contact rules apply; saving clears the check.
+    folder: "knowledge/recruiter-checks", outputs: ["{folder}/{date}.md"],
+    steps: [
+      "Check each recruitment agency listed with this request as one I added myself and fill in what is missing, from the agency's own pages. Use the website, page and email given for it only to find the agency.",
+      "For each one, find its own site if none is given (by web search for its name), then read its about or team page, its contact page and its live job listings. If a page given is a job ad on a job board, the advertiser is the agency: find its own site from there.",
+      "Save each agency with recruiter_add under the name its own site uses, with its website, the year it started if its site says, specialties, a few short tags, cities, a one-line summary of what it is hiring for now, its about or team page, a contact page per city, its LinkedIn company page if its site links to it, and the email addresses and phone numbers it publishes, each with the https page it appears on. Give it the source \"Agency website\" with its own page.",
+      "Add named recruiters (people) only when the agency's own team page or its own job ad publishes them, with that page as the source. If an agency doesn't recruit for other employers, or you can't find it, don't save it: say so in the report.",
+      "In the report, list each agency: what you saved, what it is hiring for, and anything you could not confirm.",
+    ],
+  },
   outreach_note: {
     id: "outreach_note", group: "career", target: "job", label: "Draft a note to the hiring manager", button: "Draft note", done: "Note ready", skills: ["career"],
     // A draft for the person to send themselves (Mail or LinkedIn), never a message: the app only shows and copies it.
@@ -337,7 +351,7 @@ for (const d of Object.values(ACTIONS)) {
 Object.freeze(ACTIONS);
 
 /** Actions that read public web pages. They get no workspace reads, so their prompts never point at workspace files. */
-export const WEB_ACTION_IDS: readonly ActionId[] = Object.freeze(["find_jobs", "research_company", "study_topic", "chrome_check", "find_recruiters"] as ActionId[]);
+export const WEB_ACTION_IDS: readonly ActionId[] = Object.freeze(["find_jobs", "research_company", "study_topic", "chrome_check", "find_recruiters", "check_recruiters"] as ActionId[]);
 /** Actions that browse the person's Chrome (jobcairn-chrome). chrome_check never falls back to web search; find_recruiters browses only in recruiters mode (no raw page text) and falls back to web only. */
 export const BROWSER_ACTION_IDS: readonly ActionId[] = Object.freeze(["find_jobs", "chrome_check", "find_recruiters"] as ActionId[]);
 /** The no-fabrication rule for web runs: facts come from the request and from public pages, cited. */
@@ -628,7 +642,7 @@ export function buildActionPrompt(id: ActionId, target: ActionTarget, info: Prom
   // Research company writes contacts.json only with the Contacts chip (on by default, so also with no request).
   const contacts = id === "research_company" && (!req || ((req.options.focus as string[] | undefined) ?? []).includes("contacts"));
   if (contacts) rules.splice(rules.length - 1, 0, ...CONTACTS_RULES);
-  if (id === "find_recruiters") rules.splice(rules.length - 1, 0, ...PUBLISHED_CONTACT_RULES, RECRUITER_SEARCH_RULE);
+  if (id === "find_recruiters" || id === "check_recruiters") rules.splice(rules.length - 1, 0, ...PUBLISHED_CONTACT_RULES, RECRUITER_SEARCH_RULE);
   const also = id === "research_company" && !contacts ? extras.filter((o) => !o.endsWith("/contacts.json")) : extras;
   return [
     `${identity.name} request: ${def.label}.`,

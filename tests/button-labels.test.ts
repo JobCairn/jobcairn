@@ -15,7 +15,7 @@ const SRC = path.join(ROOT, "packages/app-ui/src");
 const MAX_WORDS = 2;
 
 /** Rich rows and cards: a title plus help text in one big target, not an action label. */
-const ROW_CLASSES = ["mail-row", "stepper__button", "folder-tile", "rs-add__item", "onboard__other", "vscene__read"];
+const ROW_CLASSES = ["mail-row", "agency-msg__body", "stepper__button", "folder-tile", "rs-add__item", "onboard__other", "vscene__read"];
 /** The command palette lists searchable commands, not buttons. */
 const SKIP_OBJECTS = new Set(["Shell.tsx"]);
 

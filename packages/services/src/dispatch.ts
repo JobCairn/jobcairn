@@ -28,6 +28,7 @@ import { readHandlers } from "./read.js";
 import { jobExtraHandlers } from "./job-extras.js";
 import { companyHandlers } from "./companies.js";
 import { recruiterHandlers } from "./recruiters.js";
+import { recruiterAddHandlers } from "./recruiters-add.js";
 import { networkHandlers } from "./network.js";
 import { resumeHandlers } from "./resume.js";
 import { resumesHandlers } from "./resumes.js";
@@ -45,7 +46,7 @@ import { workspaceHandlers } from "./workspace.js";
 export { plainError } from "./errors.js";
 
 export const HANDLERS: HandlerTable = {
-  ...workspaceHandlers, ...switcherHandlers, ...readHandlers, ...companyHandlers, ...recruiterHandlers, ...settingsHandlers, ...fileHandlers, ...filePreviewHandlers, ...inboxHandlers, ...learnHandlers, ...learnHubHandlers, ...guideHandlers,
+  ...workspaceHandlers, ...switcherHandlers, ...readHandlers, ...companyHandlers, ...recruiterHandlers, ...recruiterAddHandlers, ...settingsHandlers, ...fileHandlers, ...filePreviewHandlers, ...inboxHandlers, ...learnHandlers, ...learnHubHandlers, ...guideHandlers,
   ...applyHandlers, ...privacyHandlers, ...approvalHandlers, ...secretHandlers, ...linkHandlers, ...actionHandlers,
   ...docsHandlers, ...claudeEngineHandlers, ...composerHandlers, ...ttsHandlers, ...resumeHandlers, ...tourHandlers, ...videoHandlers, ...videoLearnHandlers, ...chromeHandlers, ...scheduleHandlers,
   ...resumeFillHandlers, ...jobLinkHandlers, ...resumesHandlers, ...trashHandlers,
@@ -61,6 +62,7 @@ export const MUTATION_AREAS: Partial<Record<MethodName, ChangeArea[]>> = {
   "workspace.forget": ["workspace"], "workspace.trash": ["workspace"], "workspace.locate": ["workspace"], "workspace.addRecent": ["workspace"],
   "jobs.setStatus": ["jobs", "home"], "jobs.addNote": ["jobs"], "jobs.attach": ["jobs"], "jobs.saveView": ["jobs"], "jobs.deleteView": ["jobs"],
   "jobs.add": ["jobs", "home", "sponsors", "recruiters"], "recruiters.update": ["recruiters"], "recruiters.attachResume": ["jobs"], "recruiters.mailbox": ["jobs", "sponsors"],
+  "recruiters.add": ["recruiters"], "recruiters.importList": ["recruiters"], "recruiters.importFile": ["recruiters"], "recruiters.unlink": ["recruiters"],
   "jobs.setInterview": ["jobs", "home"], "jobs.setOffer": ["jobs"],
   "apply.prepare": ["jobs", "home"], "apply.requestApproval": ["approvals", "home", "jobs"], "apply.markApplied": ["jobs", "home"],
   "inbox.add": ["inbox", "home"], "inbox.file": ["inbox", "home", "jobs"],
@@ -83,7 +85,7 @@ export const MUTATION_AREAS: Partial<Record<MethodName, ChangeArea[]>> = {
   "mail.get": ["home"], "mail.saveAccount": ["mail", "settings", "home"], "mail.disconnect": ["mail", "settings", "home"],
   "mail.setSignature": ["mail", "settings"], "mail.syncNow": ["mail", "jobs", "home"], "mail.loadImages": ["mail"],
   "mail.saveAttachment": ["mail", "jobs"], "mail.move": ["mail", "jobs", "home"], "mail.prune": ["mail"], "mail.recheck.apply": ["mail", "jobs", "home"], "mail.recheck.dismiss": ["mail"],
-  "mail.triage.assign": ["mail", "jobs", "home"], "mail.triage.createCompany": ["mail", "jobs", "home", "sponsors"], "mail.triage.ignore": ["mail"],
+  "mail.triage.assign": ["mail", "jobs", "home"], "mail.triage.createCompany": ["mail", "jobs", "home", "sponsors"], "mail.triage.ignore": ["mail"], "mail.triage.linkAgency": ["mail", "recruiters", "jobs"],
   "mail.drafts.save": ["mail"], "mail.drafts.propose": ["mail", "approvals", "home"], "mail.background.set": ["mail"],
   "mail.send.markSent": ["mail", "approvals", "jobs", "home"], "mail.send.again": ["mail", "approvals", "jobs", "home"],
   "secrets.set": ["mail"], "secrets.remove": ["mail"],

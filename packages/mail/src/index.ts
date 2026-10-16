@@ -16,7 +16,7 @@ export type { CompanyInfo, HeaderInfo, IgnoreList, JobInfo, JobSenders, MatchRes
 export { RECHECK_VERSION, recheckFiled, type FiledEmail, type RecheckOutcome } from "./recheck.js";
 export {
   JOB_SENDERS, coreName, counterparts, domainMatches, domainOf, isIgnored, isJobRelated,
-  isSystemAddress, matchCompany, matchMessage, pickJob, suggestCompany, websiteDomain,
+  isSystemAddress, linkableDomain, matchCompany, matchMessage, pickJob, suggestCompany, websiteDomain,
 } from "./match.js";
 // Task 9: named re-exports, matching the rule above.
 export type {

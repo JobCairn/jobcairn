@@ -50,6 +50,7 @@ export function requestSentence(id: ActionId, info: { title?: string; company?: 
     case "find_jobs": return "Claude will search job sites for new ads that match your target roles.";
     case "find_recruiters":
       return `Claude will search the web, directories and job boards for ${typeof options.max_agencies === "number" ? `up to ${options.max_agencies} ` : ""}recruitment agencies for your roles and cities, with the contact details they publish and where each was found.`;
+    case "check_recruiters": return "Claude will check the recruiters you added on their own sites and fill in the contact details they publish.";
     case "chrome_check": return "Claude will open each job board in your Chrome and check whether you're signed in.";
     case "study_topic": return `Claude will write a study guide on ${topic || "this topic"} and check its sources on the web.`;
     case "skill_gap_video": return `Claude will make a short lesson video on ${topic || "this topic"}.`;

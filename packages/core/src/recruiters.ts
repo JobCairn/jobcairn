@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import path from "node:path";
 import { iso, type Clock } from "./clock.js";
 import { assertSegment, insideRoot, layout } from "./paths.js";
 import { defaults } from "./schema.js";
@@ -12,7 +13,7 @@ import type { Agency, AgencyContact, AgencyPerson, AgencySource } from "./types.
  */
 
 const SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/;
-const CAP = { list: 20, contacts: 40, people: 40, jobs: 500, timeline: 500, sources: 100 } as const;
+const CAP = { list: 20, contacts: 40, people: 40, jobs: 500, timeline: 500, sources: 100, email_match: 50 } as const;
 
 /** What a caller may add to an agency: anything left out (or empty) keeps what is there. */
 export interface AgencyInput {
@@ -24,7 +25,15 @@ export interface AgencyInput {
   people?: AgencyPersonInput[]; job_refs?: string[];
   /** Where it was found: merged by url (the first time an address was seen is kept). */
   sources?: AgencySourceInput[];
+  /** Addresses or domains the person linked from Mail (already checked: never a free-mail or board domain). */
+  email_match?: string[];
+  /** true when the person added it and Claude hasn't checked it; false once Claude saves it. Left out: unchanged. */
+  needs_check?: boolean;
+  /** Replace the saved name (Claude's checked name for an agency the person added). */
+  rename?: boolean;
 }
+/** The one source name allowed without a page: an agency the person typed in themselves (name and email). */
+export const ADDED_BY_YOU = "Added by you";
 export interface AgencySourceInput { name: string; url: string; found_at?: string }
 export interface AgencyPersonInput { name?: string; title?: string; email?: string; phone?: string; source_url?: string; specialties?: string[]; job_refs?: string[] }
 export interface AgencyContactInput { kind: "email" | "phone"; value: string; source_url: string; label?: string; found_on?: string; confirmed?: boolean }
@@ -90,7 +99,7 @@ export function mergeAgency(root: string, input: AgencyInput, event: { event: st
     writeRecord("agency", file, defaults("agency", { name: input.name || input.slug, slug: input.slug }));
   }
   return updateRecord("agency", file, (a) => {
-    if (input.name && a.name === a.slug) a.name = input.name;
+    if (input.name && (a.name === a.slug || input.rename)) a.name = input.name;
     for (const k of ["website", "hiring_summary", "about_url", "linkedin_url"] as const) if (input[k]) a[k] = input[k]!;
     if (input.since) a.since = input.since;
     if (input.team_note?.text) a.team_note = { ...input.team_note };
@@ -110,9 +119,13 @@ export function mergeAgency(root: string, input: AgencyInput, event: { event: st
     a.job_refs = union(a.job_refs, input.job_refs, CAP.jobs);
     a.sources ??= [];
     for (const x of input.sources ?? []) {
-      if (!x.url || !x.name || a.sources.some((y) => y.url === x.url) || a.sources.length >= CAP.sources) continue;
+      // Sources merge by page; the person's own "Added by you" with no page merges by name.
+      if (!x.name || (!x.url && x.name !== ADDED_BY_YOU) || a.sources.length >= CAP.sources) continue;
+      if (a.sources.some((y) => (x.url ? y.url === x.url : !y.url && y.name === x.name))) continue;
       a.sources.push({ name: x.name, url: x.url, found_at: x.found_at || at } satisfies AgencySource);
     }
+    a.email_match = union((a.email_match ?? []).map((x) => x.toLowerCase()), input.email_match?.map((x) => x.trim().toLowerCase()), CAP.email_match);
+    if (input.needs_check !== undefined) a.needs_check = input.needs_check;
     if (event) a.timeline = [...a.timeline, { at, event: event.event, note: event.note ?? "" }].slice(-CAP.timeline);
   });
 }
@@ -122,4 +135,38 @@ export function updateAgency(root: string, slug: string, fn: (a: Agency) => void
   const file = agencyPath(root, slug);
   if (!fs.existsSync(file)) throw new Error("That recruiter isn't in this workspace.");
   return updateRecord("agency", file, fn);
+}
+
+/** A site's host without "www.", lower case, or "" when it isn't a web address. */
+export function siteHost(url: string): string {
+  const u = url.trim();
+  if (!u) return "";
+  try { return new URL(/^[a-z][a-z0-9+.-]*:\/\//i.test(u) ? u : `https://${u}`).hostname.replace(/^www\./, "").replace(/\.$/, "").toLowerCase(); }
+  catch { return ""; }
+}
+
+/**
+ * The saved agency an incoming one is the same as: the one with this slug, else one whose website has the same host
+ * (www. ignored). Callers never pass a job board or web-mail address as `website`.
+ */
+export function findSameAgency(root: string, slug: string, website: string): Agency | null {
+  const bySlug = readAgency(root, slug);
+  if (bySlug) return bySlug;
+  const host = siteHost(website);
+  if (!host.includes(".")) return null;
+  return listAgencies(root).find((a) => !!a.website && siteHost(a.website) === host) ?? null;
+}
+
+/**
+ * Makes sure an agency has a company folder with the same slug, so its mail can be filed and drafted there. A new one
+ * is marked a recruiter and carries the agency's name and website. A company that is already there is never changed.
+ */
+export function ensureAgencyCompany(root: string, slug: string): void {
+  const a = readAgency(root, slug);
+  if (!a) throw new Error("That recruiter isn't in this workspace.");
+  const file = layout(root).companyFile(slug);
+  if (fs.existsSync(file)) return;
+  if (!insideRoot(root, file)) throw new Error("refusing to write outside the workspace");
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  writeRecord("company", file, defaults("company", { name: a.name, slug, website: a.website, type: "recruiter" }));
 }

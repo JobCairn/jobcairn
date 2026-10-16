@@ -10,7 +10,7 @@ describe("mail methods", () => {
       "mail.background.set", "mail.background.status", "mail.disconnect", "mail.drafts.all", "mail.drafts.assist", "mail.drafts.get", "mail.drafts.list", "mail.drafts.propose",
       "mail.drafts.save", "mail.get", "mail.list", "mail.loadImages", "mail.move", "mail.prune", "mail.recheck.apply", "mail.recheck.dismiss", "mail.recheck.preview", "mail.saveAccount", "mail.saveAttachment",
       "mail.send.again", "mail.send.markSent",
-      "mail.setSignature", "mail.status", "mail.syncNow", "mail.testConnection", "mail.triage.assign", "mail.triage.createCompany", "mail.triage.ignore", "mail.triage.list",
+      "mail.setSignature", "mail.status", "mail.syncNow", "mail.testConnection", "mail.triage.assign", "mail.triage.createCompany", "mail.triage.ignore", "mail.triage.linkAgency", "mail.triage.list",
     ]);
   });
   it("takes only a 64-character token to apply a re-check", () => {

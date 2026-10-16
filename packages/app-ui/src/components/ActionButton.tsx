@@ -68,7 +68,7 @@ export function ActionButton(props: ActionButtonProps) {
 }
 
 /** Actions you run again and again: when one is done, its own button stays (not "Redo") next to its last result. */
-const REPEATABLE: ReadonlySet<string> = new Set(["find_jobs", "chrome_check"]);
+const REPEATABLE: ReadonlySet<string> = new Set(["find_jobs", "chrome_check", "check_recruiters"]);
 
 function ClaudeActionButton({ action, target, label, ariaLabel, variant = "secondary", size = "sm", before, autoStart }: ActionButtonProps) {
   const bridge = useBridge();

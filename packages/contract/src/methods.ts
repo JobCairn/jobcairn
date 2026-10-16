@@ -21,6 +21,7 @@ import {
 } from "./validate.js";
 import { trashId, trashTarget } from "./trash.js";
 import { agencyPatchArgs } from "./recruiters.js";
+import { AGENCY_IMPORT_MAX_CHARS } from "./recruiter-add.js";
 import { SETUP_TOOLS } from "./setup.js";
 import { INSTALLABLE_TOOLS, VIDEO_SCREENS, videoFolder, videoListFilter, videoOptions, videoRunId, videoScriptEdits, videoSubject, videoTypeId } from "./video.js";
 
@@ -221,6 +222,11 @@ export const METHODS = {
   "recruiters.update": [slug, agencyPatchArgs as V<unknown>],
   "recruiters.attachResume": [slug, jobOrCompany, str({ min: 12, max: 220, pattern: BASE_RESUME_REL })],
   "recruiters.mailbox": [slug],
+  "recruiters.add": [obj({ text: note(4000), name: opt(text(200)) })],
+  "recruiters.importList": [note(AGENCY_IMPORT_MAX_CHARS)],
+  "recruiters.importFile": [absPath],
+  "recruiters.unlink": [slug, required(254)],
+  "recruiters.emails": [slug],
   "network.status": [],
   "network.importLinkedIn": [absPath],
   "network.people": [required(200)],
@@ -262,6 +268,7 @@ export const METHODS = {
   "mail.triage.assign": [triageId, mailTarget, bool],
   "mail.triage.createCompany": [triageId, required(120), required(200)],
   "mail.triage.ignore": [triageId, oneOf(["sender", "domain"] as const)],
+  "mail.triage.linkAgency": [triageId, slug, oneOf(["address", "domain"] as const)],
   "mail.drafts.all": [],
   // A draft belongs to a job, or (job id "") to the company itself: a general enquiry to a recruiter.
   "mail.drafts.list": [slug, jobOrCompany],

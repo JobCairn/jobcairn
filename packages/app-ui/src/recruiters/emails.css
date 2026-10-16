@@ -1,0 +1,22 @@
+/* An agency's Emails tab (spec 2026-10-17-add-recruiter-and-mail): each conversation as a card, its messages like a
+   chat, yours on the right, theirs on the left. Kept apart from recruiters.css. */
+.agency-emails { max-width: 60rem; }
+.agency-thread { display: flex; flex-direction: column; gap: var(--space-2); }
+.agency-thread__subject { margin: 0; }
+.agency-thread__list { display: flex; flex-direction: column; gap: var(--space-2); }
+.agency-msg { display: flex; flex-direction: column; gap: var(--space-2); max-width: 85%; }
+.agency-msg--in { align-self: flex-start; }
+.agency-msg--out { align-self: flex-end; }
+.agency-msg.is-open { max-width: 100%; align-self: stretch; }
+.agency-msg__body {
+  display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; text-align: left; cursor: pointer;
+  padding: var(--space-2) var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-md);
+  background: var(--color-surface); color: inherit; font: inherit;
+}
+.agency-msg--out .agency-msg__body { background: var(--color-surface-hover); }
+.agency-msg__body:hover { border-color: var(--color-accent); }
+.agency-msg__body:focus-visible { outline: var(--size-focus-ring) solid var(--color-focus); outline-offset: 2px; }
+.agency-msg__head { gap: var(--space-2); min-width: 0; }
+.agency-msg__dir { font-weight: 600; }
+.agency-msg__viewer { min-height: 20rem; }
+.agency-linked { gap: var(--space-2); }

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button, Checkbox, Dialog, Input, Pill, Select, Table, Text, useToast, type Column } from "@careeros/brand";
+import { Button, Checkbox, Dialog, Icons, Input, Pill, Select, Table, Text, useToast, type Column } from "@careeros/brand";
 import { AGENCY_STATUS_LABELS, AGENCY_STATUSES, agencyFacets, filterAgencies, localDate, type AgencyPatch, type AgencyRow } from "@careeros/contract";
 import { errorText, useAction, useBridge, useLoad } from "../bridge-context";
 import { ActionButton } from "../components/ActionButton";
@@ -12,6 +12,7 @@ import { EmptyState, ErrorState, Loading, ScreenHead } from "../components/State
 import { plural } from "../format";
 import { useKept } from "../nav";
 import { navigate } from "../router";
+import { AddRecruiterDialog } from "../recruiters/AddRecruiter";
 import { BulkEmail } from "../recruiters/BulkEmail";
 import { AgencyStatusPill, RECRUITER_NOTE, SourcesCell, sourcesOf, sourcesText, StarButton } from "../recruiters/parts";
 import { useSponsorshipFocus } from "../useSponsorshipFocus";
@@ -82,13 +83,22 @@ export function RecruitersScreen() {
   const [sponsor, setSponsor] = useKept("recruiters:sponsor", () => false);
   const [picked, setPicked] = useState<Set<string>>(new Set());
   const [bulk, setBulk] = useState(false);
+  const [adding, setAdding] = useState(false);
 
+  const waiting = (data ?? []).filter((r) => r.needs_check).length;
   const head = <ScreenHead title="Recruiters" sub="Recruitment agencies that place people in your roles. Click one to see everything about it."
-    right={<span data-tour="recruiters-find"><ActionButton action="find_recruiters" target={WORKSPACE} variant="primary" size="md" /></span>} />;
-  if (error && !data) return <>{head}<ErrorState title="Recruiters can't be shown" text={errorSentence(error)} /></>;
-  if (!data) return <>{head}<Loading /></>;
+    right={(
+      <span className="row">
+        {waiting ? <ActionButton action="check_recruiters" target={WORKSPACE} size="md" ariaLabel={`Check the ${plural(waiting, "recruiter")} you added with Claude`} /> : null}
+        <Button icon={Icons.add} data-tour="recruiters-add" aria-label="Add a recruiter you know" onClick={() => setAdding(true)}>Add recruiter</Button>
+        <span data-tour="recruiters-find"><ActionButton action="find_recruiters" target={WORKSPACE} variant="primary" size="md" /></span>
+      </span>
+    )} />;
+  const addDialog = <AddRecruiterDialog open={adding} onClose={() => setAdding(false)} />;
+  if (error && !data) return <>{head}<ErrorState title="Recruiters can't be shown" text={errorSentence(error)} />{addDialog}</>;
+  if (!data) return <>{head}<Loading />{addDialog}</>;
   if (!data.length) {
-    return <>{head}<EmptyState boxed text="No recruiters yet. Find recruiters asks Claude to look up agencies for your roles and cities. Agencies also appear here when you save a job a recruiter advertised." /></>;
+    return <>{head}<EmptyState boxed text="No recruiters yet. Find recruiters asks Claude to look up agencies for your roles and cities, or add ones you know with Add recruiter. Agencies also appear here when you save a job a recruiter advertised." />{addDialog}</>;
   }
 
   const facets = agencyFacets(data);
@@ -161,6 +171,7 @@ export function RecruitersScreen() {
       <Dialog open={bulk} onClose={() => setBulk(false)} title={`Email ${plural(chosen.length, "recruiter")}`}>
         {bulk ? <BulkEmail agencies={chosen} onDone={() => { setBulk(false); setPicked(new Set()); }} /> : null}
       </Dialog>
+      {addDialog}
     </>
   );
 }

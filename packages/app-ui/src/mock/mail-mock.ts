@@ -49,6 +49,8 @@ export interface MockMailHooks {
   recruiter?(slug: string): { name: string; email: string } | null;
   /** The open workspace is the example: its made-up mail shows without Gmail. Default false. */
   example?: () => boolean;
+  /** Link recruiter: records the address or domain on the agency, or throws when there is no such agency. */
+  linkAgency?: (slug: string, value: string) => { name: string };
 }
 export interface MockMail {
   api: CareerosBridge["mail"];
@@ -71,7 +73,12 @@ export interface MockMail {
   hasMessage(slug: string, id: string, messageId: string): boolean;
   /** Drafts and received mail, for the Recruiters timeline and reply detection. */
   outreach(): { drafts: OutreachDraft[]; replies: OutreachReply[] };
+  /** Every filed message (mail out with its first recipient) and every draft, for a recruiter's Emails tab. */
+  everything(): { rows: (MailRow & { to?: MailAddressView[] })[]; drafts: DraftView[] };
 }
+
+/** Free-mail domains the mock knows (the services use the mail module's full list). */
+const MOCK_FREE_MAIL = /(^|\.)(gmail|googlemail|outlook|hotmail|live|yahoo|icloud|me|proton|aol|bigpond)\.(com|me)(\.[a-z]{2})?$/i;
 
 interface Msg { view: MailMessageView; snippet: string; /** `?maildemo`: what "Re-check filed mail" would do with it. */ recheck?: "sort" | "unfile" }
 interface Draft { draft_id: string; slug: string; id: string; input: DraftInput; status: DraftView["status"]; updated: string; approval_id: string; note: string }
@@ -227,7 +234,8 @@ export function createMockMail(h: MockMailHooks): MockMail {
     };
   };
   const detail = (d: Draft): DraftDetail => ({ view: draftView(d), draft: { ...d.input }, preview: d.status === "sent" ? null : preview(d) });
-  const triageLeft = () => s.triage.filter((t) => !ignored.some((x) => t.from.address.toLowerCase() === x || t.from.address.toLowerCase().endsWith(`@${x}`)));
+  const triageLeft = () => s.triage.filter((t) => !ignored.some((x) => t.from.address.toLowerCase() === x || t.from.address.toLowerCase().endsWith(`@${x}`)))
+    .map((t) => ({ ...t, free_mail: MOCK_FREE_MAIL.test(t.from.address.slice(t.from.address.lastIndexOf("@") + 1)) }));
   const backgroundView = (): BackgroundStatus => ({ supported: true, on: background.on, minutes: background.minutes, installed: background.on, detail: background.on ? "Scheduled (mock)." : "Not scheduled.", log: [] });
   /** Same rule as the services' normalizePassword: four groups of four letters. True when it is the mock's good password. */
   const checkPassword = (password: string): boolean => {
@@ -375,6 +383,21 @@ export function createMockMail(h: MockMailHooks): MockMail {
         h.emit("mail");
         return triageLeft();
       }),
+      linkAgency: (id: string, slug: string, scope: "address" | "domain") => h.rec("mail.triage.linkAgency", [id, slug, scope], () => {
+        const t = s.triage.find((x) => x.id === id);
+        if (!t) throw new Error(NOT_FOUND);
+        const a = t.from.address.toLowerCase();
+        const domain = a.slice(a.lastIndexOf("@") + 1);
+        if (scope === "domain" && MOCK_FREE_MAIL.test(domain)) throw new Error(`${domain} is shared by many people, so only this exact address can be linked.`);
+        const value = scope === "domain" ? domain : a;
+        const agency = h.linkAgency ? h.linkAgency(slug, value) : { name: slug };
+        // This message and every other waiting one from that sender (or domain) is filed under the agency.
+        const mine = s.triage.filter((x) => (scope === "domain" ? x.from.address.toLowerCase().endsWith(`@${domain}`) : x.from.address.toLowerCase() === a));
+        s.triage = s.triage.filter((x) => !mine.includes(x));
+        for (const m of mine) s.messages.push(message({ base: m.id, job: { slug, id: "", company: agency.name, title: "" }, from: m.from, subject: m.subject, date: m.date }));
+        h.emit("mail", "recruiters", "jobs");
+        return triageLeft();
+      }),
     },
     drafts: {
       all: () => h.rec("mail.drafts.all", [], () => s.drafts.map(draftView).sort((a, b) => b.updated.localeCompare(a.updated))),
@@ -457,7 +480,11 @@ export function createMockMail(h: MockMailHooks): MockMail {
     hasMessage: (slug, id, messageId) => s.messages.some((m) => m.view.company_slug === slug && m.view.job_id === id && m.view.message_id === messageId),
     outreach: () => ({
       drafts: s.drafts.map(draftView).map((d) => ({ to: d.to, subject: d.subject, status: d.status, updated: d.updated })),
-      replies: s.messages.filter((m) => m.view.direction === "in").map((m) => ({ from: m.view.from.address, date: m.view.date, subject: m.view.subject })),
+      replies: s.messages.map((m) => ({ from: m.view.from.address, date: m.view.date, subject: m.view.subject, direction: m.view.direction, company_slug: m.view.company_slug })),
+    }),
+    everything: () => ({
+      rows: s.messages.map((m) => ({ ...row(m.view), ...(m.view.direction === "out" ? { to: m.view.to.slice(0, 1) } : {}) })),
+      drafts: s.drafts.map(draftView),
     }),
     companyStats: () => {
       const by = new Map<string, { company_slug: string; count: number; last: string }>();

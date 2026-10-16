@@ -4,6 +4,17 @@ import senders from "../data/job-senders.json" with { type: "json" };
 export interface JobInfo { id: string; title: string; status: string; last_activity: string }
 export interface CompanyInfo {
   slug: string; name: string; aliases: string[]; website: string; recruiter_email: string; email_match: string[]; jobs: JobInfo[];
+  /**
+   * A recruitment agency with no company folder yet (recruiters/<slug>/agency.json only). It matches by its website's
+   * domain and its addresses like a company, but never by its name in a subject (rule 5) or as a suggestion: a job
+   * alert naming a big agency must not be filed under it. Sync makes its company folder before filing.
+   */
+  agency_only?: boolean;
+  /**
+   * The agency's published addresses (its site, its people, its own ads), matched exactly but only after no company
+   * matched by its own website's domain: an ad can name the client's address.
+   */
+  agency_addresses?: string[];
 }
 export interface HeaderInfo { direction: "in" | "out"; from: EmailAddress; to: EmailAddress[]; cc: EmailAddress[]; subject: string }
 export interface MatchResult { company_slug: string; job_id: string; matched_by: EmailMatchKind }
@@ -205,7 +216,7 @@ export function websiteDomain(website: string): string {
  * re-normalizes these 29-ish strings on every call -- see the module doc comment on `matchCompany`
  * for why that matters at scale. */
 const JOB_BOARD_DOMAINS = JOB_SENDERS.domains.map(toAsciiDomain).filter(Boolean);
-const isBoardDomain = (normalizedDomain: string): boolean =>
+export const isBoardDomain = (normalizedDomain: string): boolean =>
   JOB_BOARD_DOMAINS.some((d) => normalizedDomain === d || normalizedDomain.endsWith(`.${d}`));
 
 // --- free-mail hosts (fix round 1, item 7) -------------------------------------------------------
@@ -237,7 +248,7 @@ function endsWithAny(domain: string, list: string[]): boolean {
 /** A domain counts as free-mail if it equals a `FREEMAIL` entry, is a subdomain of one (e.g.
  * "mail.yahoo.com"), or is that entry's common country-TLD variant (e.g. "yahoo.com.au"). `domain`
  * is assumed already normalized (via `toAsciiDomain`/`websiteDomain`). */
-function isFreemailDomain(domain: string): boolean {
+export function isFreemailDomain(domain: string): boolean {
   if (!domain) return false;
   if (endsWithAny(domain, FREEMAIL_LIST)) return true;
   const asDotCom = domain.replace(COUNTRY_TLD_TAIL, ".com");
@@ -521,6 +532,9 @@ export function matchCompany(h: HeaderInfo, companies: CompanyInfo[], own = ""):
   });
   if (byDomain) return { company: byDomain, matched_by: "domain" };
 
+  const byAgencyAddress = companies.find((c) => !!c.agency_addresses?.some((a) => people.includes(a)));
+  if (byAgencyAddress) return { company: byAgencyAddress, matched_by: "email_match" };
+
   // Rule 4: a domain or whole-word phrase in email_match. Word-type entries (no "@", no ".") are
   // gathered across *every* company and answered by a single shared phrase scan over the subject
   // (fix round 1, items 1 and 2); domain-type entries are checked per company, but each is
@@ -537,14 +551,16 @@ export function matchCompany(h: HeaderInfo, companies: CompanyInfo[], own = ""):
     return !system && c.email_match.some((m) => {
       if (m.includes("@") || !m.includes(".")) return false;
       const mb = toAsciiDomain(m);
-      return !!mb && normDomains.some((x) => x === mb || x.endsWith(`.${mb}`));
+      // A whole free-mail or job-board domain never counts: only an exact address there can (rule 2).
+      return !!mb && normDomains.some((x) => x === mb || x.endsWith(`.${mb}`)) && !isFreemailDomain(mb) && !isBoardDomain(mb);
     });
   });
   if (byWord) return { company: byWord, matched_by: "email_match" };
 
-  const candidates = system ? companies.filter((c) => !ownsDomain(c, normDomains) || jobByTitle(c, h.subject) !== "") : companies;
-  const named = bestNameMatch(candidates, h.subject);
-  return named ? { company: named.company, matched_by: "subject" } : null;
+  const named = companies.filter((c) => !c.agency_only);
+  const candidates = system ? named.filter((c) => !ownsDomain(c, normDomains) || jobByTitle(c, h.subject) !== "") : named;
+  const byName = bestNameMatch(candidates, h.subject);
+  return byName ? { company: byName.company, matched_by: "subject" } : null;
 }
 
 /**
@@ -635,7 +651,8 @@ export function isJobRelated(h: HeaderInfo, list: JobSenders = JOB_SENDERS): boo
  * small, deliberate deviation from a simpler "first mention wins" reading of the original spec --
  * accepted so there is exactly one phrase-matching implementation (and one complexity story) in
  * this module rather than a second, parallel one just for suggestions. */
-export function suggestCompany(h: HeaderInfo, companies: CompanyInfo[]): { company_slug: string; company_name: string; reason: string } | null {
+export function suggestCompany(h: HeaderInfo, all: CompanyInfo[]): { company_slug: string; company_name: string; reason: string } | null {
+  const companies = all.filter((c) => !c.agency_only);
   const domain = domainOf(h.from.address).replace(/[^a-z0-9]/g, "");
   for (const c of companies) {
     const squashed = coreName(c.name).toLowerCase().replace(/[^a-z0-9]/g, "");
@@ -654,4 +671,14 @@ export function isIgnored(address: string, ignore: IgnoreList): boolean {
   if (ignore.senders.some((s) => lc(s) === a)) return true;
   const d = domainOf(a);
   return ignore.domains.some((base) => domainMatches(d, base));
+}
+
+/**
+ * Whether a domain (or an address's domain) may be linked to a company or agency as a whole: not free mail (gmail,
+ * outlook, yahoo, icloud and the rest, with country variants) and not a job board. Only an exact address may be
+ * linked there.
+ */
+export function linkableDomain(domainOrAddress: string): boolean {
+  const d = domainOrAddress.includes("@") ? domainOf(domainOrAddress) : toAsciiDomain(domainOrAddress);
+  return !!d && d.includes(".") && !isFreemailDomain(d) && !isBoardDomain(d);
 }

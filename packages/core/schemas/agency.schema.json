@@ -58,6 +58,8 @@
         "properties": { "name": { "type": "string", "maxLength": 60 }, "url": { "type": "string", "maxLength": 500 }, "found_at": { "type": "string", "maxLength": 40, "default": "" } }
       }
     },
+    "email_match": { "type": "array", "items": { "type": "string", "maxLength": 254 }, "maxItems": 50, "default": [] },
+    "needs_check": { "type": "boolean", "default": false },
     "favourite": { "type": "boolean", "default": false },
     "tracking": {
       "type": "object", "default": {},

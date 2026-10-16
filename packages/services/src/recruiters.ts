@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { attachFile, defaults, draftOwnerFile, insideRoot, layout, listAgencies, readAgency, updateAgency, writeFileAtomic, writeRecord } from "@careeros/core";
+import { attachFile, draftOwnerFile, ensureAgencyCompany, insideRoot, layout, listAgencies, updateAgency, writeFileAtomic } from "@careeros/core";
 import { listTriage } from "@careeros/mail";
 import {
   agencyActivity, applyAgencyPatch, BASE_RESUME_REL, buildAgencyRows, localDate, type AgencyPatch, type AgencyRecordView, type AgencyRow,
@@ -12,14 +12,15 @@ import { allDrafts } from "./mail-read.js";
 import { jobRows, query } from "./read.js";
 
 /**
- * Emails received, for reply detection: those mail sync filed under a company (from the index), and those waiting in
+ * Emails for the timeline and reply detection: those mail sync filed (received and sent, with their folder), and those waiting in
  * Mail to sort (a reply from an agency with no company folder lands there).
  */
 function replies(root: string): OutreachReply[] {
   let filed: OutreachReply[] = [];
   try {
-    filed = query<{ from_addr: string; date: string; subject: string }>(root, "SELECT from_addr, date, subject FROM emails WHERE direction = 'in' ORDER BY date DESC LIMIT 5000")
-      .map((r) => ({ from: r.from_addr ?? "", date: r.date ?? "", subject: r.subject ?? "" }));
+    filed = query<{ from_addr: string; date: string; subject: string; direction: string; company_slug: string }>(root,
+      "SELECT from_addr, date, subject, direction, company_slug FROM emails ORDER BY date DESC LIMIT 5000")
+      .map((r) => ({ from: r.from_addr ?? "", date: r.date ?? "", subject: r.subject ?? "", direction: r.direction === "out" ? "out" as const : "in" as const, company_slug: r.company_slug ?? "" }));
   } catch { /* no index yet */ }
   let waiting: OutreachReply[] = [];
   try {
@@ -94,15 +95,7 @@ function attachResume(ctx: ServiceContext, slug: string, id: string, rel: string
  * job is saved: its website lets mail sync file its replies. Never changes a company that is already there.
  */
 function mailbox(ctx: ServiceContext, slug: string): { company_slug: string } {
-  const root = ctx.requireRoot();
-  const a = readAgency(root, slug);
-  if (!a) throw new Error("That recruiter isn't in this workspace.");
-  const file = layout(root).companyFile(slug);
-  if (!fs.existsSync(file)) {
-    if (!insideRoot(root, file)) throw new Error("refusing to write outside the workspace");
-    fs.mkdirSync(path.dirname(file), { recursive: true });
-    writeRecord("company", file, defaults("company", { name: a.name, slug, website: a.website, type: "recruiter" }));
-  }
+  ensureAgencyCompany(ctx.requireRoot(), slug);
   return { company_slug: slug };
 }
 

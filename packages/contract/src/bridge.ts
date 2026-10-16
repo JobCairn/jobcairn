@@ -4,6 +4,7 @@ import type { BoardId, ChromeRunProgress, ChromeSearchState } from "./chrome.js"
 import type { ComposeView, OptionValue } from "./request.js";
 import type { CompanyDetail, CompanyRow } from "./companies.js";
 import type { AgencyPatch, AgencyRow } from "./recruiters.js";
+import type { AddRecruiterInput, AgencyAddResult, AgencyEmails, AgencyImportResult, AgencyLinkScope } from "./recruiter-add.js";
 import type { NetworkPerson, NetworkStatus } from "./network.js";
 import type { JobStatus, JobSubdir, LockableDir, SecretName, SettingsKind } from "./constants.js";
 import type { ExportFormat, ExportSource, ExportState } from "./exports.js";
@@ -177,6 +178,15 @@ export interface CareerosBridge {
     attachResume(slug: string, id: string, rel: string): Promise<{ rel: string }>;
     /** Makes sure the agency has a company folder (same slug) so a general enquiry can be drafted and filed there. */
     mailbox(slug: string): Promise<{ company_slug: string }>;
+    /** Add recruiter: saves an agency from a pasted site, job ad link or name and email (merged into one already saved). */
+    add(input: AddRecruiterInput): Promise<AgencyAddResult>;
+    /** Saves a pasted list (one agency per line: name, website, email), or a picked CSV file of the same. */
+    importList(text: string): Promise<AgencyImportResult>;
+    importFile(path: string): Promise<AgencyImportResult>;
+    /** Removes an address or domain linked from Mail. Mail filed already stays where it is. */
+    unlink(slug: string, value: string): Promise<AgencyRow>;
+    /** The agency's conversation for its Emails tab: filed mail and drafts to it, by thread. */
+    emails(slug: string): Promise<AgencyEmails>;
   };
   /**
    * The person's own LinkedIn connections (Connections.csv from LinkedIn's data export), kept on this computer.
@@ -256,6 +266,11 @@ export interface CareerosBridge {
       assign(id: string, target: MailTarget, addMatch: boolean): Promise<TriageItem[]>;
       createCompany(id: string, name: string, jobTitle: string): Promise<TriageItem[]>;
       ignore(id: string, scope: "sender" | "domain"): Promise<TriageItem[]>;
+      /**
+       * "This is from a recruiter": links the sender's exact address, or their whole domain (never a free-mail or job
+       * board domain), to an agency, and files this message and every other waiting one that now matches under it.
+       */
+      linkAgency(id: string, slug: string, scope: AgencyLinkScope): Promise<TriageItem[]>;
     };
     drafts: {
       all(): Promise<DraftView[]>;
@@ -494,7 +509,11 @@ export function createRemoteBridge(t: Transport): CareerosBridge {
     files: { readText: (r) => c("files.readText", r), reveal: (r) => c("files.reveal", r), pick: () => c("files.pick"), preview: (r) => c("files.preview", r), open: (r) => c("files.open", r) },
     sponsors: { list: () => c("sponsors.list") },
     companies: { list: () => c("companies.list"), get: (k) => c("companies.get", k) },
-    recruiters: { list: () => c("recruiters.list"), update: (s, p) => c("recruiters.update", s, p), attachResume: (s, i, r) => c("recruiters.attachResume", s, i, r), mailbox: (s) => c("recruiters.mailbox", s) },
+    recruiters: {
+      list: () => c("recruiters.list"), update: (s, p) => c("recruiters.update", s, p), attachResume: (s, i, r) => c("recruiters.attachResume", s, i, r), mailbox: (s) => c("recruiters.mailbox", s),
+      add: (i) => c("recruiters.add", i), importList: (t) => c("recruiters.importList", t), importFile: (p) => c("recruiters.importFile", p),
+      unlink: (s, v) => c("recruiters.unlink", s, v), emails: (s) => c("recruiters.emails", s),
+    },
     network: {
       status: () => c("network.status"), importLinkedIn: (p) => c("network.importLinkedIn", p),
       people: (co) => c("network.people", co), forget: () => c("network.forget"),
@@ -525,6 +544,7 @@ export function createRemoteBridge(t: Transport): CareerosBridge {
       triage: {
         list: () => c("mail.triage.list"), assign: (id, tg, add) => c("mail.triage.assign", id, tg, add),
         createCompany: (id, n, t) => c("mail.triage.createCompany", id, n, t), ignore: (id, s) => c("mail.triage.ignore", id, s),
+        linkAgency: (id, s, sc) => c("mail.triage.linkAgency", id, s, sc),
       },
       drafts: {
         all: () => c("mail.drafts.all"), list: (s, i) => c("mail.drafts.list", s, i), get: (s, i, d) => c("mail.drafts.get", s, i, d),

@@ -238,7 +238,7 @@ describe("Recruiter page", () => {
     expect(await screen.findByRole("heading", { name: "Acme Recruiting", level: 1 })).toBeInTheDocument();
     expect(screen.getByText("Sampletown · since 2009 · 1 open job")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "recruiting.example.com" })).toBeInTheDocument();
-    expect(within(screen.getByRole("tablist", { name: "Recruiter sections" })).getAllByRole("tab").map((t) => t.textContent)).toEqual(["Overview", "Contacts2", "Jobs1", "Timeline1"]);
+    expect(within(screen.getByRole("tablist", { name: "Recruiter sections" })).getAllByRole("tab").map((t) => t.textContent)).toEqual(["Overview", "Contacts2", "Emails", "Jobs1", "Timeline1"]);
     expect(screen.getByText(/Has a live AI Developer role/)).toBeInTheDocument();
     expect(screen.getByRole("note")).toHaveTextContent("Team page names a technology recruitment lead");
     expect(within(screen.getByRole("list", { name: "Tags" })).getAllByRole("listitem").map((li) => li.textContent)).toEqual(["IT specialist", "Government", "AI"]);

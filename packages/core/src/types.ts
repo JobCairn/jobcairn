@@ -199,6 +199,13 @@ export interface Agency extends Extra {
   job_refs: string[];
   /** Every place it was found, like a job's source: the board's name as jobs show it ("SEEK") or a kind of page ("Web search"), the https page, when. */
   sources: AgencySource[];
+  /**
+   * Extra addresses (exact) and domains (with subdomains) the person linked to this agency from Mail, for recruiters
+   * who write from an address the agency doesn't publish. Never a free-mail or job-board domain.
+   */
+  email_match: string[];
+  /** Added by the person and not yet checked by Claude on the agency's own site (Check recruiters clears it). */
+  needs_check: boolean;
   favourite: boolean;
   tracking: { status: AgencyStatus; contacted_on: string; follow_up_on: string; notes: string } & Extra;
   timeline: TimelineEvent[];

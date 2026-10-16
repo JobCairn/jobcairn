@@ -13,13 +13,14 @@ import { plural } from "../format";
 import { BackLink, usePageName } from "../nav";
 import { fmtWhen } from "../reading/dates";
 import { navigate, type Route } from "../router";
+import { AgencyEmailsPanel } from "../recruiters/AgencyEmails";
 import { RecruiterEmail } from "../recruiters/RecruiterEmail";
 import { emailBlocker, RECRUITER_NOTE, SourcesList, StarButton } from "../recruiters/parts";
 import { useSponsorshipFocus } from "../useSponsorshipFocus";
 import "../styles/tables.css";
 import "../recruiters/recruiters.css";
 
-const TABS = ["overview", "contacts", "jobs", "timeline"] as const;
+const TABS = ["overview", "contacts", "emails", "jobs", "timeline"] as const;
 type Tab = (typeof TABS)[number];
 
 export function RecruiterScreen({ route }: { route: Route }) {
@@ -54,6 +55,7 @@ function RecruiterView({ slug, tab }: { slug: string; tab: Tab }) {
   const { showSponsorship } = useSponsorshipFocus();
   const { data, error } = useLoad((b) => b.recruiters.list(), [], ["recruiters", "jobs", "claude", "mail"]);
   const a = data?.find((r) => r.slug === slug);
+  const mail = useLoad((b) => b.recruiters.emails(slug), [slug], ["recruiters", "mail", "approvals"]);
   const [emailTo, setEmailTo] = useState<string | null>(null);
   usePageName(a ? displayName(a.name) : undefined);
 
@@ -69,6 +71,8 @@ function RecruiterView({ slug, tab }: { slug: string; tab: Tab }) {
   const why = emailBlocker(a);
   const contactCount = a.contacts.length + a.people.length;
   const facts = headerFacts(a);
+  const unlink = (value: string) => void bridge.recruiters.unlink(a.slug, value)
+    .then(() => toast({ tone: "success", text: `${value} unlinked. Mail already filed stays where it is.` }), (e: unknown) => toast({ tone: "danger", text: `Couldn't unlink: ${errorText(e)}` }));
 
   return (
     <>
@@ -81,6 +85,7 @@ function RecruiterView({ slug, tab }: { slug: string; tab: Tab }) {
             <div className="row job-head__meta">
               {site ? <button type="button" className="company-link" title={`Open ${site}`} onClick={() => openLink(site, "the website")}>{hostOf(site)}</button> : null}
               {facts ? <Text role="body" muted as="span">{facts}</Text> : null}
+              {a.needs_check ? <Pill tone="warning" title="You added it; Check recruiters fills in what its own site publishes.">Not checked yet</Pill> : null}
             </div>
           </div>
         </div>
@@ -100,11 +105,19 @@ function RecruiterView({ slug, tab }: { slug: string; tab: Tab }) {
         tabs={[
           { id: "overview", label: "Overview" },
           { id: "contacts", label: "Contacts", count: contactCount },
+          { id: "emails", label: "Emails", count: mail.data?.total ?? 0 },
           { id: "jobs", label: "Jobs", count: a.jobs.length },
           { id: "timeline", label: "Timeline", count: a.activity.length },
         ]}>
         {tab === "overview" ? <Overview a={a} showSponsorship={showSponsorship} onChange={change} /> : null}
-        {tab === "contacts" ? <Contacts a={a} onEmail={setEmailTo} /> : null}
+        {tab === "contacts" ? <Contacts a={a} onEmail={setEmailTo} onUnlink={unlink} /> : null}
+        {tab === "emails" ? (
+          <div className="stack job-panel">
+            {mail.error && !mail.data ? <ErrorState title="Emails can't be shown" text={errorSentence(mail.error)} /> : !mail.data ? <Loading /> : (
+              <AgencyEmailsPanel name={name} emails={mail.data} onNew={() => (why ? toast({ tone: "neutral", text: why }) : setEmailTo(a.email))} />
+            )}
+          </div>
+        ) : null}
         {tab === "jobs" ? (
           <div className="stack job-panel" data-tour="recruiter-jobs">
             {a.jobs.length ? (
@@ -124,6 +137,10 @@ function RecruiterView({ slug, tab }: { slug: string; tab: Tab }) {
                     <span>
                       <Text role="body" as="div">{e.event}</Text>
                       {e.note ? <Text role="body-sm" muted as="div">{e.note}</Text> : null}
+                      {e.tab === "emails" ? (
+                        <button type="button" className="company-link company-link--sm" aria-label={`Show this email in ${name}'s Emails tab`}
+                          onClick={() => navigate({ screen: "recruiter", slug, tab: "emails" })}>Open email</button>
+                      ) : null}
                     </span>
                   </li>
                 ))}
@@ -191,12 +208,13 @@ function Overview({ a, showSponsorship, onChange }: { a: AgencyRow; showSponsors
 }
 
 /** Published emails and phones (each with the page it's on), named recruiters, and the agency's own pages. */
-function Contacts({ a, onEmail }: { a: AgencyRow; onEmail: (to: string) => void }) {
+function Contacts({ a, onEmail, onUnlink }: { a: AgencyRow; onEmail: (to: string) => void; onUnlink: (value: string) => void }) {
   const open = useOpenLink();
   const copy = useCopy();
   const name = displayName(a.name);
   const emails = a.contacts.filter((c) => c.kind === "email");
   const phones = a.contacts.filter((c) => c.kind === "phone");
+  const linked = a.email_match ?? [];
   const best = a.best_contact.name && openable(a.best_contact.source_url) ? a.best_contact : null;
   const found = (url: string, on = "") => (
     <Text role="body-sm" muted as="div">
@@ -237,6 +255,22 @@ function Contacts({ a, onEmail }: { a: AgencyRow; onEmail: (to: string) => void 
             ))}
           </ul>
         ) : <Text role="body-sm" muted as="p">{`No agency-wide email published for ${name}.`}</Text>}
+      </section>
+      <section aria-label="Linked email addresses" className="stack-tight" data-tour="recruiter-linked">
+        <h2 className="company-sub">Linked email addresses</h2>
+        {linked.length ? (
+          <ul className="list-plain stack-tight">
+            {linked.map((v) => (
+              <li key={v} className="row company-contact agency-linked">
+                <span className="grow">
+                  <Text role="body" as="div" className="company-contact__address">{v.includes("@") ? v : `Anyone at ${v}`}</Text>
+                  <Text role="body-sm" muted as="div">Linked from Mail. Their mail is filed here.</Text>
+                </span>
+                <Button size="sm" variant="ghost" icon={Icons.close} aria-label={`Unlink ${v}`} onClick={() => onUnlink(v)}>Remove</Button>
+              </li>
+            ))}
+          </ul>
+        ) : <Text role="body-sm" muted as="p">None yet. In Mail, Mail to sort, link a recruiter who writes from another address.</Text>}
       </section>
       <section aria-label="Phones" className="stack-tight">
         <h2 className="company-sub">Phones</h2>

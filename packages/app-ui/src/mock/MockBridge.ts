@@ -26,7 +26,8 @@ import { isLockedKind, LOCKABLE_DIRS,
   RESUME_FIELD_KEYS, RESUME_FIELD_PATHS, SUGGESTIONS_REL, type ResumeFieldKey, type ResumeFields, type ResumeFillState, type ResumeRead, type ResumeValues,
   type TargetSuggestions, compareBoardSites, type SearchRow, type TrashCheck, type TrashItem, type TrashTarget, type TrashTargetKind, isActiveRun,
   buildCompanyDetail, buildCompanyRows, COMPANY_SKIP, CONTACTS_FILE, readCompanyContacts, type CompanyFile,
-  agencyActivity, agencyPatchArgs, applyAgencyPatch, buildAgencyRows, localDate, type AgencyPatch, type AgencyRow, type CompanyRow, type VideoListItem, type VideoSubjectArg,
+  agencyActivity, agencyAddresses, agencyPatchArgs, agencyThreads, addRecruiterArgs, applyAgencyPatch, buildAgencyRows, localDate, parseAgencyLines, type AddRecruiterInput, type AgencyAddClean,
+  type AgencyAddResult, type AgencyEmails, type AgencyImportResult, type AgencyPatch, type AgencyRecordView, type AgencyRow, type CompanyRow, type VideoListItem, type VideoSubjectArg,
 } from "@careeros/contract";
 import { DEMO_SCORE, DEMO_SCORE_MD } from "../score/demo";
 import { ALEX_LONG_RESUME, ALEX_RESUME, mockRewrite, RESUME_JOB } from "./resume-fixture";
@@ -419,6 +420,13 @@ export class MockBridge implements CareerosBridge {
       sendUnsure: this.mailSendUnsure,
       file: (rel) => (Object.hasOwn(this.f.texts, rel) ? { text: this.f.texts[rel]!, at: this.actionOutputs.get(rel) ?? this.iso() } : null),
       recruiter: (slug) => (this.f.companies.find((c) => c.slug === slug) as { recruiter?: { name: string; email: string } } | undefined)?.recruiter ?? null,
+      linkAgency: (slug, value) => {
+        const a = (this.f.agencies ?? []).find((x) => x.slug === slug);
+        if (!a) throw new Error("That recruiter isn't in this workspace.");
+        if (!(a.email_match ?? []).includes(value)) a.email_match = [...(a.email_match ?? []), value];
+        a.timeline.push({ at: this.iso(), event: "Email linked", note: value });
+        return { name: a.name };
+      },
     };
     this.mailMock = createMockMail({ ...this.mailHooks, connected: opts.mailConnected ?? true, demo: !!opts.mailDemo });
     // The dev server's mock-mail-frames plugin answers /__mock-mail/<token>, so the sandboxed frame has a body to show.
@@ -1465,7 +1473,61 @@ export class MockBridge implements CareerosBridge {
       }
       return { company_slug: slug };
     }),
+    add: (input: AddRecruiterInput) => this.rec("recruiters.add", [input], (): AgencyAddResult => {
+      const r = this.saveAdded(addRecruiterArgs(input, localDate(this.now)));
+      this.emit("recruiters");
+      return r;
+    }),
+    importList: (text: string) => this.rec("recruiters.importList", [text], (): AgencyImportResult => this.importAgencies(text)),
+    // The mock has no files on disk: a picked "file" is read from the fixture's texts by its path.
+    importFile: (path: string) => this.rec("recruiters.importFile", [path], (): AgencyImportResult => {
+      const text = this.f.texts[path];
+      if (text === undefined) throw new Error("That file can't be read.");
+      return this.importAgencies(text);
+    }),
+    unlink: (slug: string, value: string) => this.rec("recruiters.unlink", [slug, value], (): AgencyRow => {
+      const a = (this.f.agencies ?? []).find((x) => x.slug === slug);
+      if (!a) throw new Error("That recruiter isn't in this workspace.");
+      a.email_match = (a.email_match ?? []).filter((x) => x !== value.toLowerCase());
+      this.emit("recruiters");
+      return this.agencyRows().find((r) => r.slug === slug)!;
+    }),
+    emails: (slug: string) => this.rec("recruiters.emails", [slug], (): AgencyEmails => {
+      const a = (this.f.agencies ?? []).find((x) => x.slug === slug);
+      if (!a) throw new Error("That recruiter isn't in this workspace.");
+      const m = agencyAddresses(a);
+      const theirs = (addr: string) => { const x = addr.toLowerCase(); const d = x.slice(x.lastIndexOf("@") + 1); return m.addresses.has(x) || [...m.domains].some((y) => d === y || d.endsWith(`.${y}`)); };
+      const all = this.mailMock.everything();
+      const rows = all.rows.filter((r) => r.company_slug === slug || (r.direction === "in" && theirs(r.from.address)));
+      return agencyThreads(rows, all.drafts.filter((d) => d.company_slug === slug || d.to.split(",").some((t) => t.trim() && theirs(t.trim()))));
+    }),
   };
+
+  /** Like the services' saveAdded: merged into the same agency (by slug, else website host), else a new one waiting for a check. */
+  private saveAdded(x: AgencyAddClean): AgencyAddResult {
+    const host = (u: string) => { try { return new URL(u).hostname.replace(/^www\./, ""); } catch { return ""; } };
+    const list = (this.f.agencies ??= []);
+    const same = list.find((a) => a.slug === x.slug) ?? (x.website ? list.find((a) => a.website && host(a.website) === host(x.website)) : undefined);
+    const at = this.iso();
+    const a: AgencyRecordView = same ?? {
+      name: x.name, slug: x.slug, website: "", since: null, specialties: [], tags: [], cities: [], hiring_summary: "", about_url: "", city_links: [], linkedin_url: "",
+      team_note: { text: "", source_url: "" }, best_contact: { name: "", source_url: "" }, contacts: [], people: [], job_refs: [], favourite: false,
+      tracking: { status: "to_contact", contacted_on: "", follow_up_on: "", notes: "" }, timeline: [], sources: [], email_match: [], needs_check: true,
+    };
+    if (!same) list.push(a);
+    if (!a.website && x.website) a.website = x.website;
+    for (const c of x.contacts) if (!a.contacts.some((y) => y.value === c.value)) a.contacts.push(c);
+    for (const s of x.sources) if (!(a.sources ??= []).some((y) => y.url === s.url && y.name === s.name)) a.sources.push({ ...s, found_at: at });
+    a.timeline.push({ at, event: same ? "Added to by you" : "Added by you", note: x.website });
+    return { slug: a.slug, name: a.name, created: !same };
+  }
+  private importAgencies(text: string): AgencyImportResult {
+    const { rows, skipped } = parseAgencyLines(text, localDate(this.now));
+    const out: AgencyImportResult = { added: [], merged: [], skipped };
+    for (const r of rows) { const x = this.saveAdded(r); (x.created ? out.added : out.merged).push(x); }
+    this.emit("recruiters");
+    return out;
+  }
 
   searches = {
     list: () => this.rec("searches.list", [], (): SearchList => {

@@ -1,11 +1,22 @@
 import fs from "node:fs";
 import path from "node:path";
-import { insideRoot, layout, mergeAgency, readAgency, readRecord, type Clock } from "@careeros/core";
+import { findSameAgency, insideRoot, layout, mergeAgency, readAgency, readRecord, type Clock } from "@careeros/core";
 import { adContacts, isSafeHttpsUrl, jobBoardBySite, jobBoardByUrl, localDate } from "@careeros/contract";
 
 // Kept apart from recruiters.ts (which reads mail): the MCP server runs this when Claude saves a job.
 
 const AD_MAX_BYTES = 256 * 1024;
+
+/**
+ * recruiter_add's same-agency rule (spec 2026-10-17-add-recruiter-and-mail): the agency already saved under this slug,
+ * else one with the same website host (a job board is never a website), gets the save. When it is one the person
+ * added and Claude hasn't checked, Claude's save is the check: its name replaces the stand-in.
+ */
+export function sameAgencyFor(root: string, slug: string, website: string): { slug: string; rename: boolean } {
+  const site = website && !jobBoardByUrl(website) ? website : "";
+  const same = findSameAgency(root, slug, site);
+  return { slug: same?.slug ?? slug, rename: !!same?.needs_check };
+}
 
 /**
  * After a job is saved: when its ad came from a recruiter (the company is marked a recruiter, or the ad names a client

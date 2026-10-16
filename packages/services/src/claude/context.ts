@@ -145,6 +145,26 @@ function recruiterLines(root: string): string[] {
   if (others.length) out.push(`- Other advertisers of my saved job ads (some may be agencies): ${others.slice(0, 60).join(", ")}`);
   return out;
 }
+/**
+ * Check recruiters' context: each agency the person added that Claude hasn't checked yet, with what they gave (its
+ * website, the page it came from, the emails they typed). Data only, inside the fence.
+ */
+function checkLines(root: string): string[] {
+  const out: string[] = [];
+  for (const a of listAgencies(root).filter((x) => x.needs_check).slice(0, CHECK_MAX)) {
+    const parts = [`- Agency: ${v(a.name, 120)}`];
+    if (/^https:\/\//i.test(a.website)) parts.push(`website ${v(a.website, 300)}`);
+    const pages = (a.sources ?? []).map((s) => s.url).filter((u) => /^https:\/\//i.test(u) && u !== a.website).slice(0, 2);
+    if (pages.length) parts.push(`page given ${pages.map((u) => v(u, 300)).join(", ")}`);
+    const emails = a.contacts.filter((c) => c.kind === "email" && !c.source_url).map((c) => v(c.value, 120)).slice(0, 3);
+    if (emails.length) parts.push(`email given ${emails.join(", ")}`);
+    out.push(parts.join("; "));
+  }
+  return out;
+}
+/** Agencies one Check recruiters run looks at; the rest wait for the next run. */
+const CHECK_MAX = 30;
+
 /** Saved agency names given to Find recruiters, so a run aiming for up to 100 new ones knows which to skip. */
 const KNOWN_AGENCIES = 150;
 
@@ -236,6 +256,7 @@ export function webContext(root: string, id: ActionId, t: ActionTarget, now: Dat
   else if (id === "research_company" && t.kind === "company") lines = companyLines(root, t.company_slug);
   else if (id === "study_topic" && t.kind === "topic") lines = topicLines(root, t);
   else if (id === "find_recruiters") lines = recruiterLines(root);
+  else if (id === "check_recruiters") lines = checkLines(root);
   else return "";
   let body = lines.join("\n");
   if (body.length > MAX_CONTEXT_CHARS) body = `${body.slice(0, MAX_CONTEXT_CHARS)}\n- (cut short)`;

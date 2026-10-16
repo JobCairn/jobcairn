@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { attachFile, defaults, draftOwnerFile, insideRoot, layout, listAgencies, readAgency, updateAgency, writeFileAtomic, writeRecord } from "@careeros/core";
+import { attachFile, draftOwnerFile, ensureAgencyCompany, insideRoot, layout, listAgencies, updateAgency, writeFileAtomic } from "@careeros/core";
 import { listTriage } from "@careeros/mail";
 import {
   agencyActivity, applyAgencyPatch, BASE_RESUME_REL, buildAgencyRows, localDate, type AgencyPatch, type AgencyRecordView, type AgencyRow,
@@ -94,15 +94,7 @@ function attachResume(ctx: ServiceContext, slug: string, id: string, rel: string
  * job is saved: its website lets mail sync file its replies. Never changes a company that is already there.
  */
 function mailbox(ctx: ServiceContext, slug: string): { company_slug: string } {
-  const root = ctx.requireRoot();
-  const a = readAgency(root, slug);
-  if (!a) throw new Error("That recruiter isn't in this workspace.");
-  const file = layout(root).companyFile(slug);
-  if (!fs.existsSync(file)) {
-    if (!insideRoot(root, file)) throw new Error("refusing to write outside the workspace");
-    fs.mkdirSync(path.dirname(file), { recursive: true });
-    writeRecord("company", file, defaults("company", { name: a.name, slug, website: a.website, type: "recruiter" }));
-  }
+  ensureAgencyCompany(ctx.requireRoot(), slug);
   return { company_slug: slug };
 }
 

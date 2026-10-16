@@ -89,6 +89,8 @@ export interface MailTarget { company_slug: string; id?: string }
 export interface TriageItem {
   id: string; ref: string; from: MailAddressView; subject: string; date: string;
   suggestion: { company_slug: string; company_name: string; reason: string } | null;
+  /** The sender's domain is free mail or a job board, so only the exact address can be linked to a recruiter. */
+  free_mail?: boolean;
 }
 export interface DraftInput { to: string; cc: string; subject: string; body: string; attach: string[]; in_reply_to: string; references: string[]; purpose: "" | "apply" }
 /** "unsure": a send was tried but there was no final reply, so it may have gone. Check Gmail's Sent folder. */

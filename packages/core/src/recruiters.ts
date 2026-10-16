@@ -29,6 +29,8 @@ export interface AgencyInput {
   email_match?: string[];
   /** true when the person added it and Claude hasn't checked it; false once Claude saves it. Left out: unchanged. */
   needs_check?: boolean;
+  /** Replace the saved name (Claude's checked name for an agency the person added). */
+  rename?: boolean;
 }
 /** The one source name allowed without a page: an agency the person typed in themselves (name and email). */
 export const ADDED_BY_YOU = "Added by you";
@@ -97,7 +99,7 @@ export function mergeAgency(root: string, input: AgencyInput, event: { event: st
     writeRecord("agency", file, defaults("agency", { name: input.name || input.slug, slug: input.slug }));
   }
   return updateRecord("agency", file, (a) => {
-    if (input.name && a.name === a.slug) a.name = input.name;
+    if (input.name && (a.name === a.slug || input.rename)) a.name = input.name;
     for (const k of ["website", "hiring_summary", "about_url", "linkedin_url"] as const) if (input[k]) a[k] = input[k]!;
     if (input.since) a.since = input.since;
     if (input.team_note?.text) a.team_note = { ...input.team_note };

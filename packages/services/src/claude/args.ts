@@ -219,7 +219,7 @@ export function toolArgs(plan: ToolPlan, locked: readonly string[], pluginDir?: 
   if (recruiters) denied.push(...BOARD_FETCH_DENY, ...RAW_BROWSER_DENY);
   else if (plan.browser) denied.push("WebSearch", "WebFetch", ...RAW_BROWSER_DENY);
   // Find recruiters never fetches LinkedIn (people's profiles live there; its job search is read in Chrome only).
-  if (plan.action === "find_recruiters" && plan.web) denied.push(...LINKEDIN_FETCH_DENY);
+  if ((plan.action === "find_recruiters" || plan.action === "check_recruiters") && plan.web) denied.push(...LINKEDIN_FETCH_DENY);
   return { tools, allowed, denied: [...new Set(denied)] };
 }
 

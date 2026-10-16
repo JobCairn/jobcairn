@@ -6,7 +6,7 @@ import {
   type Clock, type Draft, type EmailRecord, type MessageStamp,
 } from "@careeros/core";
 import {
-  companyIndex, deleteStored, domainMatches, domainOf, isIgnored, isRisky, linkWarning, listTriage, MAIL_FRAME_CSP, markdownBody, moveMessage,
+  companyIndex, deleteStored, domainMatches, domainOf, isIgnored, isRisky, linkableDomain, linkWarning, listTriage, MAIL_FRAME_CSP, markdownBody, moveMessage,
   parseMessage, pruneRaw, readMailState, readSnippet, readStored, sniffImageType, renderMailDocument, sanitizeEmailHtml, saveAttachmentFile, suggestCompany, textToHtml,
   updateStored, writeMailState, type MailPaths, type ParsedMessage,
 } from "@careeros/mail";
@@ -244,6 +244,7 @@ export function triageItems(ctx: ServiceContext): TriageItem[] {
   return listTriage(root).map((t) => ({
     id: t.id, ref: t.ref, from: t.email.from, subject: t.email.subject, date: t.email.date,
     suggestion: suggestCompany({ direction: t.email.direction, from: t.email.from, to: t.email.to, cc: t.email.cc, subject: t.email.subject }, companies),
+    free_mail: !linkableDomain(t.email.from.address),
   }));
 }
 

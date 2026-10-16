@@ -4,7 +4,7 @@ import path from "node:path";
 import { ArgError, BROWSABLE_BOARD_IDS, cleanAgencyInput, localDate, checkJobPlace, findBudget, recruiterBudget, jobAdKey, jobBoardBySite, httpsUrl, inboxSuggestArgs, INBOX_SUGGEST_FOLDERS, int, JOB_SOURCES, obj, oneOf, opt, SCORE_ITEM_SCHEMA, SCORE_LIMITS, SCORE_TIERS, scoreRecordArgs, SEARCH_REPORT_MAX_BYTES, searchReportArgs, searchReportRel, slug, str, type ScoreRecordArgs, type V } from "@careeros/contract";
 import identity from "@careeros/brand/identity.json" with { type: "json" };
 import { checkFoundJob, flagFoundJob, readSearchPrefs, scoreSponsorAtImport } from "../../find-jobs.js";
-import { captureAdRecruiter } from "../../recruiters-capture.js";
+import { captureAdRecruiter, sameAgencyFor } from "../../recruiters-capture.js";
 
 /**
  * The CareerOS operations a Claude Code run may call, as typed MCP tools (spec 2026-10-10, ruling R1). They
@@ -245,7 +245,10 @@ export const MCP_TOOLS: Record<McpToolName, McpTool> = {
     validate: (v, at) => { if (!v || typeof v !== "object" || Array.isArray(v)) throw new ArgError(`${at} must be an object`); cleanAgencyInput(v); return v as Record<string, unknown>; },
     run: ({ root }, a) => {
       const { agency, dropped } = cleanAgencyInput(a, localDate(new Date()));
-      const saved = mergeAgency(root, agency, { event: "Found by Claude", note: agency.hiring_summary }, undefined);
+      // The same agency already saved (by slug, else by its website's host) gets this save, so an agency the person
+      // added isn't saved twice; Claude's save is the check (needs_check cleared, its checked name kept).
+      const same = sameAgencyFor(root, agency.slug, agency.website);
+      const saved = mergeAgency(root, { ...agency, slug: same.slug, rename: same.rename, needs_check: false }, { event: same.rename ? "Checked by Claude" : "Found by Claude", note: agency.hiring_summary }, undefined);
       return { saved: true, slug: saved.slug, contacts: agency.contacts.length, people: agency.people.length, sources: (saved.sources ?? []).length, left_out: dropped };
     },
   },
@@ -292,7 +295,7 @@ export function mcpToolsFor(action: string): McpToolName[] {
   if (action === "chrome_check") return ["search_report", "request_access"];
   if (action === "score_job") return ["job_event", "score_record", "request_access"];
   if (action === "inbox_suggest") return ["inbox_suggest"];
-  if (action === "find_recruiters") return ["recruiter_add", "request_access"];
+  if (action === "find_recruiters" || action === "check_recruiters") return ["recruiter_add", "request_access"];
   return ["request_access"];
 }
 

@@ -95,9 +95,9 @@ const ATTACHED: ToggleOption = {
   kind: "toggle", key: "attached", label: "Resume attached", help: "Set by the app.", default: false,
   on: "My resume is attached: say so in one line.", off: "No resume is attached: don't say one is, and offer to send it.",
 };
-/** Recruiter emails: the sponsorship question, only for people who need sponsorship. */
+/** Recruiter emails: the sponsorship question, only for people who need sponsorship. Off unless the dialog sends it on. */
 const SPONSOR_ASK: ToggleOption = {
-  kind: "toggle", key: "sponsorship", label: "Ask about sponsorship", help: "Ask whether their clients sponsor visas.", default: true, sponsorship: "prioritise",
+  kind: "toggle", key: "sponsorship", label: "Ask about sponsorship", help: "Ask whether their clients sponsor visas.", default: false, sponsorship: "prioritise",
   on: "I need visa sponsorship: ask in one plain line whether their clients sponsor for these roles, naming my visa subclass if settings/profile.json gives one.", off: null,
 };
 

@@ -71,6 +71,10 @@ describe("recruiter email actions", () => {
     expect(on).not.toContain("Don't mention visas");
     const off = buildActionPrompt("recruiter_email", AGENCY, NEEDS, { options: { attached: true, sponsorship: false }, note: "" }, NONCE);
     expect(off).toContain("Don't mention visas, sponsorship or work rights.");
+    // Left out (an older dialog, or none chosen): no question.
+    const missing = buildActionPrompt("recruiter_email", AGENCY, NEEDS, { options: { attached: true }, note: "" }, NONCE);
+    expect(missing).toContain("Don't mention visas, sponsorship or work rights.");
+    expect(missing).not.toMatch(/clients sponsor/);
     const other = buildActionPrompt("recruiter_email", AGENCY, GENERAL_INFO, { options: { attached: true }, note: "" }, NONCE);
     expect(other).toContain("Don't mention visas, sponsorship or work rights.");
     expect(other).not.toMatch(/clients sponsor/);

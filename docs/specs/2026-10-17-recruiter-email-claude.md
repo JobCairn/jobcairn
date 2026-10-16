@@ -19,7 +19,7 @@ resume part, the sponsorship checkbox, then **Write email** and **Cancel**.
   job, the job ad. An optional box **Anything to add or ask?** (for example "mention I'm available from November, ask
   about contract roles") goes to Claude as your note, with the same checks and fencing as every other note
   (`noteProblems`, `requestSection`, `noteRule`). Help text: "Claude uses your profile, your resume and what's saved
-  about this agency." While Claude works the dialog shows "Claude is writing…" with the time and Cancel. When it's
+  about this agency." While Claude works the dialog shows "Claude is writing…" with the time and Stop. When it's
   done the usual draft editor opens with Claude's subject and body. Without Claude set up, the choice says so and
   offers **Claude setup**.
 
@@ -38,8 +38,8 @@ the signature; nothing is sent without Review and send and an approval.
   until it's attached.
 - **No resume**: nothing attached; the template and Claude both offer to send it instead.
 
-**Sponsorship:** the checkbox stays, shown only to people who need sponsorship. It goes to Claude as an option;
-for everyone else Claude is told not to mention visas or sponsorship.
+**Sponsorship:** the checkbox stays, shown only to people who need sponsorship. It goes to Claude as an option
+(off unless the dialog sends it on); otherwise Claude is told not to mention visas or sponsorship.
 
 ## Data and actions
 

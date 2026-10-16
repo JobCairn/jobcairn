@@ -242,14 +242,24 @@ describe("recruiters", () => {
     expect(() => R["recruiters.suggestion"](ctx, "acme-recruiting", "no-such-job")).toThrow();
   });
 
-  it("attachVariant renders a general resume version as a PDF into the agency's emails/outgoing", async () => {
-    const { ctx, root } = openSample();
+  it("attachVariant renders a general resume version as a PDF into the agency's emails/outgoing, and a draft sends it", async () => {
+    const mail = fakeMailHost({ goodPassword: GOOD_PASSWORD });
+    const { ctx, root } = openSample({ mail });
+    connectMail(ctx, root);
     const { variant } = RS["resumes.newVariant"](ctx, "For Acme Recruiting");
     await expect(R["recruiters.attachVariant"](ctx, "acme-recruiting", variant)).rejects.toThrow();
     fs.writeFileSync(path.join(root, "resume-variants", variant, "resume.md"), "# Alex Example\n\n## Summary\n\nData engineer (fictional).\n");
     const r = await R["recruiters.attachVariant"](ctx, "acme-recruiting", variant);
     expect(r.rel).toMatch(/^companies\/acme-recruiting\/emails\/outgoing\/[^/]+\.pdf$/);
     expect(fs.readFileSync(path.join(root, r.rel), "latin1").startsWith("%PDF-")).toBe(true);
+    const d = MR["mail.drafts.save"](ctx, "acme-recruiting", "", "", {
+      to: at("jobs"), cc: "", subject: "Data roles", body: "Hi,\n\nMy resume is attached.", attach: [r.rel], in_reply_to: "", references: [], purpose: "",
+    });
+    const approval = MR["mail.drafts.propose"](ctx, "acme-recruiting", "", d.view.draft_id);
+    expect(await AP["approvals.approve"](ctx, approval.id, approvalDigest(readApproval(root, approval.id)))).toMatchObject({ status: "done" });
+    // The download name has spaces: it goes out as a PDF attachment under that name (folded by the MIME builder).
+    expect(mail.fake.sent[0]!.raw.toString("latin1")).toMatch(/Content-Disposition: attachment; filename="Alex Example - Resume - For Acme/);
+    expect(mail.fake.sent[0]!.raw.toString("latin1")).toContain("Content-Type: application/pdf");
     await expect(R["recruiters.attachVariant"](ctx, "acme-recruiting", "no-such-version")).rejects.toThrow();
     await expect(R["recruiters.attachVariant"](ctx, "no-such-agency", variant)).rejects.toThrow(/isn't in this workspace/);
   });

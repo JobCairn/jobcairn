@@ -107,10 +107,41 @@ export function readChromeProfiles(file: string | null | undefined, read: (f: st
  */
 export const FOCUS_PAGE_CLOSE_MS = 15_000;
 /**
+ * A small, self-contained page Chrome shows while the app brings it forward: the app's colours (light or dark, as
+ * the system is), no scripts or fonts from anywhere else, and it closes itself after `closeMs`.
+ * PRIVACY: fixed text only, never the person's data.
+ */
+export function infoPage(o: { title: string; heading: string; lead: string; steps: string[]; foot: string; closeMs: number }): string {
+  const css = [
+    ":root{color-scheme:light dark;--bg:#f6f2ea;--card:#fffdf8;--text:#1d1b18;--muted:#6b665d;--line:#e5dfd3;--accent:#c2552d;--soft:#f3e1d6}",
+    "@media (prefers-color-scheme:dark){:root{--bg:#0e0f11;--card:#17181b;--text:#ecebe7;--muted:#9a978f;--line:#2a2b2f;--accent:#e8a35c;--soft:#2d2219}}",
+    "*{box-sizing:border-box}html,body{height:100%;margin:0}",
+    "body{display:grid;place-items:center;padding:32px;background:var(--bg);color:var(--text);font:15px/1.55 -apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif}",
+    "main{width:min(560px,100%);background:var(--card);border:1px solid var(--line);border-radius:16px;padding:32px 36px;box-shadow:0 10px 30px rgba(0,0,0,.08)}",
+    ".brand{display:flex;align-items:center;gap:10px;font-weight:600;letter-spacing:.01em;color:var(--muted)}",
+    ".mark{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#f2c46d,#e07a4f 55%,#7fb59a)}",
+    "h1{font:500 26px/1.2 Georgia,'Times New Roman',serif;margin:20px 0 8px}",
+    ".lead{margin:0 0 20px;color:var(--muted)}",
+    "ol{list-style:none;margin:0;padding:0;display:grid;gap:12px}",
+    "li{display:grid;grid-template-columns:28px 1fr;gap:12px;align-items:start}",
+    ".n{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--soft);color:var(--accent);font-weight:600;font-size:13px}",
+    "b{color:var(--text)}",
+    "footer{margin-top:24px;padding-top:16px;border-top:1px solid var(--line);color:var(--muted);font-size:13px}",
+  ].join("");
+  const steps = o.steps.map((t, i) => `<li><span class="n">${i + 1}</span><span>${t}</span></li>`).join("");
+  return `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>${o.title}</title><style>${css}</style>` +
+    `<main><div class="brand"><span class="mark" aria-hidden="true"></span>${identity.name}</div><h1>${o.heading}</h1><p class="lead">${o.lead}</p><ol>${steps}</ol><footer>${o.foot}</footer></main>` +
+    `<script>setTimeout(function(){window.close()},${o.closeMs})</script></html>\n`;
+}
+
+/**
  * A tiny local page that closes itself: the address handed to Chrome's own program so it switches profile.
  * PRIVACY: fixed text, no person's data; written to the temp folder each time (cheap, and survives temp cleanups).
  */
-export const FOCUS_PAGE_HTML = `<!doctype html><meta charset="utf-8"><title>Switching profile</title><p>Switching to your job-search profile. This tab closes itself.</p><script>setTimeout(function(){window.close()},${FOCUS_PAGE_CLOSE_MS})</script>\n`;
+export const FOCUS_PAGE_HTML = infoPage({
+  title: "Switching profile", heading: "Switching to your job-search profile", lead: `${identity.name} is bringing your job-search Chrome profile to the front.`,
+  steps: ["Nothing to do here. Chrome switches by itself."], foot: "This tab closes itself.", closeMs: FOCUS_PAGE_CLOSE_MS,
+});
 export function focusPageUrl(dir = os.tmpdir()): string {
   const file = path.join(dir, "jobcairn-switch-profile.html");
   try { fs.writeFileSync(file, FOCUS_PAGE_HTML, { mode: 0o644 }); } catch { /* an old copy still works */ }
@@ -156,7 +187,15 @@ export const spawnLaunch: Launch = (cmd, args) => new Promise((resolve) => {
  * "Allow remote debugging?" prompt over it. It closes itself after two minutes (the app's connect waits as long).
  * PRIVACY: fixed text, no person's data.
  */
-export const START_PAGE_HTML = `<!doctype html><meta charset="utf-8"><title>${identity.name} search</title><p>${identity.name} is about to open job sites in this Chrome profile.</p><p>If Chrome asks to allow remote debugging, click Allow. This tab closes itself.</p><script>setTimeout(function(){window.close()},120000)</script>\n`;
+export const START_PAGE_HTML = infoPage({
+  title: `${identity.name} search`, heading: "Starting your job search in Chrome", lead: `${identity.name} is about to open job sites in this Chrome profile, where you're already signed in.`,
+  steps: [
+    "If Chrome asks <b>“Allow remote debugging?”</b>, click <b>Allow</b>. That lets " + identity.name + " open and read job ads in tabs it opens.",
+    "Job sites open in new tabs. You can keep using Chrome; please leave those tabs open until the search finishes.",
+    identity.name + " only reads job ads. It never applies, posts or messages anyone, and you can stop the search in " + identity.name + " at any time.",
+  ],
+  foot: "This tab closes itself in two minutes.", closeMs: 120000,
+});
 export function startPageUrl(dir = os.tmpdir()): string {
   const file = path.join(dir, "jobcairn-search-start.html");
   try { fs.writeFileSync(file, START_PAGE_HTML, { mode: 0o644 }); } catch { /* an old copy still works */ }

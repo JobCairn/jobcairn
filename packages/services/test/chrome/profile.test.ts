@@ -425,9 +425,10 @@ describe("Find jobs brings Chrome to the front before it connects (11 Oct)", () 
   });
 
   it("the start page names the app, says what to click, and closes itself", () => {
-    expect(START_PAGE_HTML).toContain("click Allow");
+    expect(START_PAGE_HTML.replace(/<[^>]+>/g, "")).toContain("click Allow");
+    expect(START_PAGE_HTML).not.toMatch(/https?:\/\//); // self-contained: nothing loads from the network
     expect(START_PAGE_HTML).toContain("window.close()");
-    expect(START_PAGE_HTML).not.toMatch(/Alex|@/);
+    expect(START_PAGE_HTML).not.toMatch(/Alex|[\w.+-]+@[\w-]+\.[a-z]/i); // no person, no email address
   });
 });
 

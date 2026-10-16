@@ -26,35 +26,35 @@ Link recruiter in Mail to sort, Linked addresses, Emails tab, timeline links.
 
 ### Task 1: agency record
 Files: `packages/core/schemas/agency.schema.json`, `packages/core/src/{types,recruiters}.ts`, core tests.
-- [ ] Failing tests: mergeAgency keeps email_match and needs_check, an "Added by you" source with no url;
+- [x] Failing tests: mergeAgency keeps email_match and needs_check, an "Added by you" source with no url;
       agencyByDomain finds an agency by its website's domain; ensureAgencyCompany makes the company folder once.
-- [ ] Implement; tests pass.
+- [x] Implement; tests pass.
 
 ### Task 2: contract
 Files: `packages/contract/src/{recruiters,actions,request,bridge}.ts`, contract tests.
-- [ ] Failing tests: parseAgencyLines (header, bare hosts, bad lines), addRecruiterArgs (site, board link needs a name,
+- [x] Failing tests: parseAgencyLines (header, bare hosts, bad lines), addRecruiterArgs (site, board link needs a name,
       name and email), agencyAddresses with email_match, agencyThreads (grouping, order, latest received),
       check_recruiters prompt carries the published-contact rules.
-- [ ] Implement; tests pass.
+- [x] Implement; tests pass.
 
 ### Task 3: mail matching
 Files: `packages/mail/src/{match,sync}.ts`, mail tests.
-- [ ] Failing tests: agency website, contact email and linked address match; linked free-mail domain never matches;
+- [x] Failing tests: agency website, contact email and linked address match; linked free-mail domain never matches;
       agency-only entries never match by subject; sync files an agency's mail and makes its company folder.
-- [ ] Implement; tests pass.
+- [x] Implement; tests pass.
 
 ### Task 4: services
 Files: `packages/services/src/{recruiters,mail-read,dispatch}.ts`, `claude/{context,args}.ts`, `claude/mcp/tools.ts`,
 services tests.
-- [ ] Failing tests: add (site, board, name+email, dedupe by domain), importList, unlink, emails, linkAgency (address,
+- [x] Failing tests: add (site, board, name+email, dedupe by domain), importList, unlink, emails, linkAgency (address,
       domain, free-mail refused, other waiting mail re-filed), recruiter_add merges by domain and clears needs_check,
       check_recruiters context and tools.
-- [ ] Implement; tests pass.
+- [x] Implement; tests pass.
 
 ### Task 5: UI
 Files: `packages/app-ui/src/recruiters/AddRecruiter.tsx`, `recruiters/emails.css`, `screens/{Recruiters,Recruiter,Mail}.tsx`,
 mock bridge, `packages/app-ui/test/recruiters.test.tsx`, `mail-screen.test.tsx`.
-- [ ] Failing dom tests: Add recruiter saves and starts Check recruiters; list import reports skipped lines; Contacts
+- [x] Failing dom tests: Add recruiter saves and starts Check recruiters; list import reports skipped lines; Contacts
       shows linked addresses with Remove; Emails tab shows threads and Reply; Link recruiter offers domain only when
       not free mail.
-- [ ] Implement; tests pass; `npm run typecheck`; commit.
+- [x] Implement; tests pass; `npm run typecheck`; commit.

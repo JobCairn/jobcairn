@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Button, Card, Checkbox, Dialog, Icons, Input, Pill, Select, Tabs, Text, type PillTone } from "@careeros/brand";
-import type { DraftInput, DraftStatus, MailQuery, TriageItem } from "@careeros/contract";
+import type { AgencyLinkScope, DraftInput, DraftStatus, MailQuery, TriageItem } from "@careeros/contract";
 import { useAction, useBridge, useLoad } from "../bridge-context";
 import { DraftEditor } from "../components/DraftEditor";
 import { formatWhen } from "../components/MailSetup";
@@ -111,6 +111,7 @@ function SortItem({ item }: { item: TriageItem }) {
   const [target, setTarget] = useState<string | null>(null);
   const [always, setAlways] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [linking, setLinking] = useState(false);
   const [name, setName] = useState("");
   const [title, setTitle] = useState("");
   const value = target ?? (suggested ? `${suggested.company_slug}/${suggested.id}` : "");
@@ -137,9 +138,13 @@ function SortItem({ item }: { item: TriageItem }) {
       </div>
       <div className="row">
         <Button variant="ghost" icon={Icons.add} title="New company and job" onClick={() => setCreating(true)}>New job</Button>
+        {item.from.address ? (
+          <Button variant="ghost" icon={Icons.recruiters} aria-label="This is from a recruiter: link the sender to an agency" onClick={() => setLinking(true)}>Recruiter</Button>
+        ) : null}
         <Button variant="ghost" loading={busy === "ignore-sender"} onClick={() => void run("ignore-sender", () => bridge.mail.triage.ignore(item.id, "sender"), "Sender ignored")}>Ignore sender</Button>
         <Button variant="ghost" loading={busy === "ignore-domain"} onClick={() => void run("ignore-domain", () => bridge.mail.triage.ignore(item.id, "domain"), "Domain ignored")}>Ignore domain</Button>
       </div>
+      {linking ? <LinkRecruiter item={item} onClose={() => setLinking(false)} /> : null}
       <Dialog open={creating} onClose={() => setCreating(false)} title="New company and job"
         actions={<><Button variant="ghost" onClick={() => setCreating(false)}>Cancel</Button>
           <ButtonWhy variant="primary" why={!name.trim() || !title.trim() ? "Enter a company name and a job title." : undefined} loading={busy === "create"}
@@ -151,6 +156,44 @@ function SortItem({ item }: { item: TriageItem }) {
         </div>
       </Dialog>
     </Card>
+  );
+}
+
+/**
+ * "This is from a recruiter": links the sender's exact address, or (not free mail) their whole domain, to an agency.
+ * The message and every other waiting one from them is filed under the agency, and new mail from them follows.
+ */
+function LinkRecruiter({ item, onClose }: { item: TriageItem; onClose: () => void }) {
+  const bridge = useBridge();
+  const { busy, run } = useAction();
+  const agencies = useLoad((b) => b.recruiters.list(), [], ["recruiters"]);
+  const [slug, setSlug] = useState("");
+  const [scope, setScope] = useState<AgencyLinkScope>("address");
+  const address = item.from.address.toLowerCase();
+  const domain = address.slice(address.lastIndexOf("@") + 1);
+  const list = agencies.data ?? [];
+  const chosen = slug || list[0]?.slug || "";
+  const save = () => run("link-recruiter", async () => { await bridge.mail.triage.linkAgency(item.id, chosen, item.free_mail ? "address" : scope); onClose(); }, "Linked to the recruiter");
+  return (
+    <Dialog open onClose={onClose} title="This is from a recruiter"
+      actions={<><Button variant="ghost" onClick={onClose}>Cancel</Button>
+        <ButtonWhy variant="primary" why={!chosen ? "Add the recruiter first, on the Recruiters screen." : undefined} loading={busy === "link-recruiter"} onClick={() => void save()}>Link</ButtonWhy></>}>
+      <div className="stack">
+        {agencies.error && !agencies.data ? <Text role="body-sm" className="field__error">{agencies.error}</Text> : !agencies.data ? <Loading /> : list.length ? (
+          <Select label="Recruiter" value={chosen} onChange={(e) => setSlug(e.target.value)} options={list.map((a) => ({ value: a.slug, label: a.name }))} />
+        ) : <Text role="body-sm" muted>No recruiters saved yet. Add the agency on the Recruiters screen first.</Text>}
+        <fieldset className="stack-tight">
+          <legend className="t-label">Link</legend>
+          <label className="row"><input type="radio" name="link-scope" checked={item.free_mail || scope === "address"} onChange={() => setScope("address")} /><Text role="body-sm" as="span">{`Only ${address}`}</Text></label>
+          {item.free_mail ? (
+            <Text role="body-sm" muted>{`${domain} is a mail service many people share, so only this exact address can be linked.`}</Text>
+          ) : (
+            <label className="row"><input type="radio" name="link-scope" checked={scope === "domain"} onChange={() => setScope("domain")} /><Text role="body-sm" as="span">{`Anyone at ${domain}`}</Text></label>
+          )}
+        </fieldset>
+        <Text role="body-sm" muted>Their mail is filed under the recruiter from now on, and shows on its Emails tab. You can remove the link on its Contacts tab.</Text>
+      </div>
+    </Dialog>
   );
 }
 

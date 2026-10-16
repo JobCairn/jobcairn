@@ -1389,7 +1389,9 @@
           "event": "Advertised a job",
           "note": "AI Developer"
         }
-      ]
+      ],
+      "email_match": [],
+      "needs_check": false
     }
   ]
 }

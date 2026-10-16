@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Button, Checkbox, Input, Text } from "@careeros/brand";
 import {
   FIT_PRESETS, JOB_STATUSES, JOB_TYPE_WORDS, JOB_TYPES, JOB_WORK_MODES, POSTED_PRESETS, POSTED_WORDS, postedWords, SALARY_PRESETS, SPONSOR_TIER_WORDS, SPONSOR_TIERS,
@@ -35,6 +35,8 @@ export interface JobQuickFiltersProps {
   /** Clear all also clears the search box: true when there's text in it. */
   searching?: boolean;
   onClearAll?(): void;
+  /** Show/hide switches that sit at the end of the same row, after the chips. */
+  extra?: ReactNode;
 }
 
 /** Location: type a place, or pick one of the places in the list with its count. */
@@ -88,7 +90,7 @@ function SalaryPanel({ value, counts, onPick }: { value: number | null; counts: 
  * The Jobs list's quick filters: one chip per filter with its choices and live counts, active chips showing
  * their value and an x, and Clear all. State lives in the screen (address and per-workspace memory).
  */
-export function JobQuickFilters({ filters: f, onChange, facets, showSponsorship, rights, hideStatus, searching, onClearAll }: JobQuickFiltersProps) {
+export function JobQuickFilters({ filters: f, onChange, facets, showSponsorship, rights, hideStatus, searching, onClearAll, extra }: JobQuickFiltersProps) {
   const set = <K extends keyof JobFilters>(k: K, v: JobFilters[K]) => onChange({ ...f, [k]: v });
   const sites = facets?.sites ?? [];
   const siteChoices = [...sites, ...f.sites.filter((s) => !sites.some((x) => x.name.toLowerCase() === s.toLowerCase())).map((name) => ({ name, count: 0 }))];
@@ -157,6 +159,7 @@ export function JobQuickFilters({ filters: f, onChange, facets, showSponsorship,
             choices={rights.map((l) => ({ value: l, label: WR_LABEL_TEXT[l], count: facets?.labels[l] ?? 0 }))} />}
         </FilterChip>
       ) : null}
+      {extra}
     </QuickFilterBar>
   );
 }

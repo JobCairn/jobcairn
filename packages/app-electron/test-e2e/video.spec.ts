@@ -10,11 +10,12 @@ const JOB_DIR = "companies/acme-corp/jobs/2026-01-12-ai-engineer";
 let app: ElectronApplication;
 let page: Page;
 let ws: string;
+let tmp: string;
 
 test.describe.configure({ mode: "serial" });
 
 test.beforeAll(async () => {
-  const tmp = fs.realpathSync.native(fs.mkdtempSync(path.join(os.tmpdir(), "careeros-e2e-video-")));
+  tmp = fs.realpathSync.native(fs.mkdtempSync(path.join(os.tmpdir(), "careeros-e2e-video-")));
   ws = path.join(tmp, "CareerOS");
   fs.cpSync(SAMPLE, ws, { recursive: true });
   const jobFile = path.join(ws, JOB_DIR, "job.json");
@@ -30,7 +31,7 @@ test.beforeAll(async () => {
   await expect(page.getByRole("navigation", { name: "Main" })).toBeVisible();
 });
 
-test.afterAll(async () => { await app?.close(); });
+test.afterAll(async () => { await app?.close(); fs.rmSync(tmp, { recursive: true, force: true }); });
 
 test("makes a JD walkthrough from a job, reviews it and makes the final video", async () => {
   await page.getByRole("navigation", { name: "Main" }).getByRole("button", { name: /Jobs/ }).click();

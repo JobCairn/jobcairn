@@ -131,12 +131,14 @@ export function Connections({ asked, section }: { asked?: ConnectionId; section?
   const e = engine.data;
   const claudeReady = !!e?.ready;
   const [open, setOpen] = useState<ConnectionId | null>(() => initialConnection({ asked, remembered: rememberedConnection(), needsSetup: [] }));
-  // Once the engine is known: a Claude that needs setup starts open (unless a link asked for another row).
+  // Once the engine is known: a Claude that needs setup starts open (unless a link asked for another row, or the
+  // person already opened or closed a row while the check ran: a slow check must not take over their choice).
+  const chose = useRef(false);
   const settled = useRef(false);
   useEffect(() => {
     if (settled.current || !e) return;
     settled.current = true;
-    if (!asked && !e.ready) setOpen("claude");
+    if (!asked && !chose.current && !e.ready) setOpen("claude");
   }, [e, asked]);
   useEffect(() => { if (asked) setOpen(asked); }, [asked]);
   useEffect(() => { rememberConnection(open); }, [open]);
@@ -151,7 +153,8 @@ export function Connections({ asked, section }: { asked?: ConnectionId; section?
 
   const statuses = secrets.data ?? [];
   const broken = !!secrets.error;
-  const toggle = (id: ConnectionId) => setOpen((o) => (o === id ? null : id));
+  const choose = (id: ConnectionId) => { chose.current = true; setOpen(id); };
+  const toggle = (id: ConnectionId) => { chose.current = true; setOpen((o) => (o === id ? null : id)); };
   const recheck = () => run("recheck", async () => { await bridge.claude.engine(true); engine.reload(); });
   const keySet = statuses.some((x) => x.name === "anthropic_api_key" && x.set);
   // Saving or removing the key changes how Claude Code signs in, so Claude's state is checked again.
@@ -168,19 +171,19 @@ export function Connections({ asked, section }: { asked?: ConnectionId; section?
       : e.ready ? { tone: "success", pill: "Ready", line: `Claude Code ${e.cli.version} · ${keySet ? "your API key, billed per use" : "your Claude plan"} · runs on this computer`, needsSetup: false,
         action: <Button size="sm" variant="ghost" loading={busy === "recheck"} onClick={() => void recheck()}>Check again</Button> }
       : { tone: "warning", pill: "Set up needed", line: "Claude Code runs the work for you. Set it up once.", needsSetup: true,
-        action: open === "claude" ? undefined : <Button size="sm" variant="primary" onClick={() => setOpen("claude")}>Set up</Button> },
+        action: open === "claude" ? undefined : <Button size="sm" variant="primary" onClick={() => choose("claude")}>Set up</Button> },
     email: !m ? { tone: "neutral", pill: mail.error ? "Can't check" : "Checking", line: mail.error ? "Email's status can't be checked right now." : "Checking Gmail…", needsSetup: false }
       : !m.available ? { tone: "neutral", pill: "Not available", line: "Email isn't available in this version of the app.", needsSetup: false }
       : m.connected ? { tone: m.last_error ? "warning" : "success", pill: m.last_error ? "Needs a look" : "Connected",
         line: m.last_error ? m.last_error : `Connected as ${m.address}${m.last_sync ? ` · last sync ${formatWhen(m.last_sync)}` : ""}`, needsSetup: false }
       : { tone: "neutral", pill: "Not set up", line: "Read job email and send replies from Gmail, after your OK.", needsSetup: false,
-        action: open === "email" ? undefined : <Button size="sm" variant="secondary" onClick={() => setOpen("email")}>Set up</Button> },
+        action: open === "email" ? undefined : <Button size="sm" variant="secondary" onClick={() => choose("email")}>Set up</Button> },
     chrome: chromeOn
       ? { tone: chrome.data!.connected ? "success" : "neutral", pill: chrome.data!.connected ? "On" : "On, not connected", line: `Searches ${chrome.data!.settings.boards.length} job ${chrome.data!.settings.boards.length === 1 ? "board" : "boards"} in your own Chrome.${chrome.data!.connected ? "" : " Connects when a search starts."}`, needsSetup: false }
       : chromeOff ? { tone: "warning", pill: "Off", line: "Set up, but off, so Claude searches the web. Turn it on to search your signed-in boards.", needsSetup: false,
-        action: open === "chrome" ? undefined : <Button size="sm" variant="secondary" onClick={() => setOpen("chrome")}>Turn on</Button> }
+        action: open === "chrome" ? undefined : <Button size="sm" variant="secondary" onClick={() => choose("chrome")}>Turn on</Button> }
       : { tone: "neutral", pill: "Not set up", line: "Search job boards in your own Chrome, with your own sign-ins.", needsSetup: false,
-        action: open === "chrome" ? undefined : <Button size="sm" variant="secondary" onClick={() => setOpen("chrome")}>Set up</Button> },
+        action: open === "chrome" ? undefined : <Button size="sm" variant="secondary" onClick={() => choose("chrome")}>Set up</Button> },
   };
   const rows: Record<ConnectionId, { icon: IconGlyph; name: string; body: ReactNode }> = {
     claude: { icon: ServiceMarks.claude, name: "Claude", body: <ClaudeConnection ready={claudeReady} keySet={keySet} switching={busy === "plan"} onSwitchToPlan={() => void switchToPlan()}

@@ -11,13 +11,14 @@ const ID = "2026-01-12-backend-engineer-llm";
 let app: ElectronApplication;
 let page: Page;
 let exportDir: string;
+let tmp: string;
 
 test.describe.configure({ mode: "serial" });
 
 const printDirs = () => new Set(fs.readdirSync(os.tmpdir()).filter((n) => n.startsWith("careeros-print-")));
 
 test.beforeAll(async () => {
-  const tmp = fs.realpathSync.native(fs.mkdtempSync(path.join(os.tmpdir(), "careeros-export-")));
+  tmp = fs.realpathSync.native(fs.mkdtempSync(path.join(os.tmpdir(), "careeros-export-")));
   const ws = path.join(tmp, "CareerOS");
   fs.cpSync(SAMPLE, ws, { recursive: true });
   const appDir = path.join(ws, "companies", SLUG, "jobs", ID, "application");
@@ -39,7 +40,7 @@ test.beforeAll(async () => {
   await expect(page.getByRole("navigation", { name: "Main" })).toBeVisible();
 });
 
-test.afterAll(async () => { await app?.close(); });
+test.afterAll(async () => { await app?.close(); fs.rmSync(tmp, { recursive: true, force: true }); });
 
 /** Calls the bridge from the page; returns "ok" or the error message. */
 const call = (method: string, args: unknown[]) => page.evaluate(async ([m, a]) => {

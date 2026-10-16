@@ -529,6 +529,22 @@ describe("Settings", () => {
     await waitFor(() => expect(screen.getByRole("button", { name: /^Claude\b/ })).toHaveAttribute("aria-expanded", "true"), SLOW);
     expect(screen.getByText("Set up needed")).toBeInTheDocument();
   });
+  it("doesn't take over a row the person opened while Claude was still being checked", async () => {
+    sessionStorage.clear();
+    const bridge = new MockBridge({ claudeEngine: { consent: false } });
+    const engine = bridge.claude.engine;
+    let release!: () => void;
+    const checked = new Promise<void>((r) => { release = r; });
+    bridge.claude.engine = ((...a: Parameters<typeof engine>) => checked.then(() => engine(...a))) as typeof engine;
+    renderApp(<SettingsScreen />, { bridge, hash: "#/settings?tab=connections" });
+    const email = await screen.findByRole("button", { name: /^Email \(Gmail\)/ });
+    await userEvent.click(email);
+    expect(email).toHaveAttribute("aria-expanded", "true");
+    release();
+    expect(await screen.findByText("Set up needed", {}, SLOW)).toBeInTheDocument();
+    expect(email).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByRole("button", { name: /^Claude\b/ })).toHaveAttribute("aria-expanded", "false");
+  });
   it("keeps Save disabled until a secret is typed, and says why", async () => {
     renderApp(<SettingsScreen />, { hash: "#/settings?tab=connections&c=claude" });
     await openApiKey();

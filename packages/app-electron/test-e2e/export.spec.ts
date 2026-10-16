@@ -35,7 +35,7 @@ test.beforeAll(async () => {
     env: { ...process.env, CAREEROS_USER_DATA: path.join(tmp, "user-data"), CAREEROS_HOME_OVERRIDE: path.join(tmp, "home"), CAREEROS_E2E_PICK: JSON.stringify([ws]) },
   });
   page = await app.firstWindow();
-  await page.getByRole("button", { name: /Open a workspace/ }).click();
+  await page.getByRole("button", { name: /Open existing/ }).click();
   await expect(page.getByRole("navigation", { name: "Main" })).toBeVisible();
 });
 

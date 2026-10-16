@@ -117,7 +117,7 @@ test("connects Gmail only after a passing test", async () => {
 });
 
 test("syncs job mail and leaves personal mail out", async () => {
-  await nav(/Mail/).click();
+  await nav(/^Mail$/).click();
   await page.getByRole("button", { name: "Sync now" }).click();
   const list = page.getByRole("list", { name: "Job mail" });
   await expect(list.getByRole("button", { name: /Interview for AI Engineer/ })).toBeVisible();
@@ -159,7 +159,7 @@ test("replies through an approval, and sends exactly once", async () => {
   await page.getByRole("list", { name: "Threads" }).getByRole("button", { name: /Interview for AI Engineer/ }).click();
   await page.getByRole("button", { name: "Reply" }).click();
   const editor = page.getByRole("form", { name: "Email draft" });
-  await editor.getByLabel("Message").fill("Hi,\n\nFriday works.\n\nRegards,\nAlex");
+  await editor.getByRole("textbox", { name: "Message", exact: true }).fill("Hi,\n\nFriday works.\n\nRegards,\nAlex");
   await editor.getByRole("button", { name: "Review and send" }).click();
   await expect(page.getByText("The email is waiting in Approvals. Nothing is sent until you approve it.")).toBeVisible();
   expect(fs.existsSync(sentDir)).toBe(false);

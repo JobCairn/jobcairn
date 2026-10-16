@@ -26,7 +26,7 @@ test.beforeAll(async () => {
     env: { ...process.env, CAREEROS_USER_DATA: path.join(tmp, "user-data"), CAREEROS_E2E_PICK: JSON.stringify([ws]), CAREEROS_E2E_FAKE_VIDEO: "1" },
   });
   page = await app.firstWindow();
-  await page.getByRole("button", { name: /Open a workspace/ }).click();
+  await page.getByRole("button", { name: /Open existing/ }).click();
   await expect(page.getByRole("navigation", { name: "Main" })).toBeVisible();
 });
 
@@ -60,11 +60,13 @@ test("Learn lists the video under Jobs", async () => {
 
 test("a script edit that breaks a cue blocks Approve (Review Focus 1)", async () => {
   await page.getByRole("region", { name: "Job videos" }).getByRole("button", { name: /Open/ }).first().click();
+  // A scene opens for editing when clicked.
+  await page.getByRole("button", { name: "Edit scene 2" }).click();
   const scene2 = page.getByRole("textbox", { name: "Scene 2 script" });
   await scene2.fill("Nothing here matches.");
-  await page.getByRole("button", { name: "Save script" }).click();
-  // The problem shows twice by design: in the summary alert above the scenes and on Scene 2 itself.
-  await expect(page.getByRole("alert").getByText(/Scene 2: the cue "On one side" is not in the script/)).toBeVisible();
-  await expect(page.getByRole("region", { name: "Scene 2" }).getByText(/the cue "On one side" is not in the script/)).toBeVisible();
+  await page.getByRole("button", { name: "Save edits" }).click();
+  // The problem shows twice by design: summed up above the scenes, and in full on Scene 2 itself.
+  await expect(page.getByText("Scene 2 needs a change. It's marked below.")).toBeVisible();
+  await expect(page.getByRole("list", { name: "Scene 2: what needs a change" }).getByText(/highlights "On one side", but those words aren't in its script/)).toBeVisible();
   await expect(page.getByRole("button", { name: "Approve script" })).toBeDisabled();
 });

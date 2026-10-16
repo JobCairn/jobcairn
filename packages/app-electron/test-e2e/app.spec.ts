@@ -126,7 +126,7 @@ test.describe("existing workspace", () => {
   test("unlocking a folder rewrites Claude's settings, and locking restores them", async () => {
     const deny = () => JSON.parse(fs.readFileSync(path.join(ws, ".claude", "settings.json"), "utf8")).permissions.deny as string[];
     await page.getByRole("navigation", { name: "Main" }).getByRole("button", { name: /Privacy/ }).click();
-    const sw = page.getByRole("switch", { name: "Lock me/employment" });
+    const sw = page.getByRole("switch", { name: "Lock Employment records" });
     await sw.click();
     await page.getByRole("dialog").getByRole("button", { name: "Unlock" }).click();
     await expect(sw).toHaveAttribute("aria-checked", "false");
@@ -144,8 +144,8 @@ test.describe("existing workspace", () => {
     const passport = "careeros-file://ws/me/identity/grant-check.png";
     fs.writeFileSync(path.join(ws, "me", "identity", "grant-check.png"), PNG);
     await page.getByRole("navigation", { name: "Main" }).getByRole("button", { name: /Privacy/ }).click();
-    await page.getByRole("button", { name: "Allow once" }).click();
-    const relock = page.getByRole("button", { name: "Re-lock me/identity now" });
+    await page.getByRole("button", { name: /^Allow for / }).click();
+    const relock = page.getByRole("button", { name: "Re-lock Identity documents now" });
     await expect(relock).toBeVisible();
     expect(deny()).not.toContain("Read(./me/identity/**)");
     expect(await loadImage(page, passport)).toBe("load");

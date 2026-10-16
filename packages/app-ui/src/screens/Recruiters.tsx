@@ -19,10 +19,10 @@ import "../styles/tables.css";
 import "../recruiters/recruiters.css";
 
 const WORKSPACE = { kind: "workspace" } as const;
-const TAGS_SHOWN = 3;
+const TAGS_SHOWN = 1;
 
 const NAME_COL: Column<AgencyRow> = {
-  key: "name", header: "Agency", alwaysOn: true, minWidth: "13rem", sortValue: (r) => r.name.toLowerCase(), text: (r) => displayName(r.name),
+  key: "name", header: "Agency", alwaysOn: true, minWidth: "12rem", sortValue: (r) => r.name.toLowerCase(), text: (r) => displayName(r.name),
   render: (r) => (
     <span className="company-cell">
       <CompanyMark name={r.name} />
@@ -34,11 +34,11 @@ const NAME_COL: Column<AgencyRow> = {
   ),
 };
 const CITIES_COL: Column<AgencyRow> = {
-  key: "cities", header: "Cities", width: "9rem", text: (r) => r.cities.join(", "), sortValue: (r) => r.cities[0]?.toLowerCase() ?? null,
+  key: "cities", header: "Cities", width: "8rem", text: (r) => r.cities.join(", "), sortValue: (r) => r.cities[0]?.toLowerCase() ?? null,
   render: (r) => <Text role="body-sm" truncate muted={!r.cities.length}>{r.cities.length ? r.cities.join(", ") : "Not recorded"}</Text>,
 };
 const TAGS_COL: Column<AgencyRow> = {
-  key: "tags", header: "Tags", width: "13rem", priority: "low", sortable: false, text: (r) => r.all_tags.join(", "),
+  key: "tags", header: "Tags", width: "10rem", priority: "low", sortable: false, text: (r) => r.all_tags.join(", "),
   render: (r) => (r.all_tags.length ? (
     <span className="agency-tags" aria-label={`Tags: ${r.all_tags.join(", ")}`}>
       {r.all_tags.slice(0, TAGS_SHOWN).map((t) => <Pill key={t}>{t}</Pill>)}
@@ -47,7 +47,7 @@ const TAGS_COL: Column<AgencyRow> = {
   ) : <Text role="body-sm" muted as="span">None</Text>),
 };
 const HIRING_COL: Column<AgencyRow> = {
-  key: "hiring", header: "Hiring for", minWidth: "12rem", sortable: false, text: (r) => r.hiring_summary,
+  key: "hiring", header: "Hiring for", minWidth: "10rem", sortable: false, text: (r) => r.hiring_summary,
   render: (r) => <Text role="body-sm" truncate muted={!r.hiring_summary}>{r.hiring_summary || "Not recorded"}</Text>,
 };
 const FOUND_COL: Column<AgencyRow> = {
@@ -59,7 +59,7 @@ const STATUS_COL: Column<AgencyRow> = {
   render: (r) => <AgencyStatusPill status={r.tracking.status} />,
 };
 const FOLLOW_COL: Column<AgencyRow> = {
-  key: "follow", header: "Follow up", width: "7.5rem", sortValue: (r) => r.tracking.follow_up_on || null,
+  key: "follow", header: "Follow up", width: "7.5rem", hideWhenEmpty: true, isEmpty: (r) => !r.tracking.follow_up_on, sortValue: (r) => r.tracking.follow_up_on || null,
   render: (r) => <DateText value={r.tracking.follow_up_on} empty="None" />,
 };
 
@@ -115,7 +115,7 @@ export function RecruitersScreen() {
     ),
   };
   const starCol: Column<AgencyRow> = {
-    key: "star", header: "Star", width: "4rem", align: "center", firstSort: "desc", sortValue: (r) => (r.favourite ? 1 : 0), text: (r) => (r.favourite ? "Starred" : ""),
+    key: "star", header: "Star", width: "4.75rem", align: "center", firstSort: "desc", sortValue: (r) => (r.favourite ? 1 : 0), text: (r) => (r.favourite ? "Starred" : ""),
     isEmpty: () => false, inDetail: false, render: (r) => <StarButton a={r} onToggle={() => change(r.slug, { favourite: !r.favourite })} />,
   };
   const columns = [selectCol, starCol, NAME_COL, CITIES_COL, TAGS_COL, HIRING_COL, FOUND_COL, STATUS_COL, FOLLOW_COL];

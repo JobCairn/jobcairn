@@ -65,12 +65,16 @@ describe("Recruiters list", () => {
     expect(row.getByText("Acme Recruiting")).toBeInTheDocument();
     expect(row.getByText("recruiting.example.com · since 2009")).toBeInTheDocument();
     expect(row.getByText("Sampletown")).toBeInTheDocument();
-    for (const t of ["IT specialist", "Government", "AI"]) expect(row.getByText(t)).toBeInTheDocument();
+    // The narrow Tags column shows the first tag and a count; all of them stay in its label.
+    expect(row.getByText("IT specialist")).toBeInTheDocument();
+    expect(row.getByText("+2")).toBeInTheDocument();
+    expect(row.getByLabelText("Tags: IT specialist, Government, AI")).toBeInTheDocument();
     expect(row.getByText(/Has a live AI Developer role/)).toBeInTheDocument();
     expect(row.getByText("SEEK")).toBeInTheDocument();
     expect(row.getByText("+1")).toBeInTheDocument();
     expect(row.getByText("To contact")).toBeInTheDocument();
-    expect(row.getByText("None")).toBeInTheDocument();
+    // No agency has a follow-up date, so the Follow up column steps aside.
+    expect(screen.queryByRole("columnheader", { name: /Follow up/ })).toBeNull();
     expect(row.getByRole("button", { name: "Star Acme Recruiting" })).toHaveAttribute("aria-pressed", "false");
     expect(within(rowOf("Example Labs Talent")).getByText("RCSA directory")).toBeInTheDocument();
     expect(screen.getByText("Only contact details recruiters publish. Check before sending.")).toBeInTheDocument();

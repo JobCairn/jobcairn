@@ -7,7 +7,8 @@ test("guide loads only local files and the bundled fonts", async ({ page }) => {
   await page.evaluate(() => document.fonts.ready);
   expect(external).toEqual([]);
   const families = await page.evaluate(() => [...document.fonts].filter((f) => f.status === "loaded").map((f) => f.family.replace(/"/g, "")));
-  expect(families).toEqual(expect.arrayContaining(["Instrument Serif", "Geist", "Geist Mono"]));
+  // No monospace anywhere (base.css): Geist Mono is never used on the page, so it never loads.
+  expect(families).toEqual(expect.arrayContaining(["Instrument Serif", "Geist"]));
 });
 
 for (const theme of ["graphite", "paper"] as const) {

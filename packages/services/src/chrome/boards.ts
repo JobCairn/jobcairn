@@ -61,8 +61,12 @@ export const BOARDS: Record<BoardId, Board> = {
     search: (k, l, it) => `https://www.seek.com.au/jobs${it ? "-in-information-communication-technology" : ""}?keywords=${q(k)}&where=${q(l)}`,
     // www.seek.com.au now redirects to au.seek.com (seen 2026-10-10); both are SEEK Australia.
     hosts: ["www.seek.com.au", "seek.com.au", "au.seek.com", "login.seek.com"],
-    // SEEK may rewrite a search to its own path: /jobs-in-<category>/in-<place>, /<words>-jobs-in-<category>/in-<place>.
-    searchPages: [/^\/jobs(-in-[a-z0-9-]+)?(\/(in|at|on)-[a-z0-9-]+)*\/?$/i, /^\/[a-z0-9-]+-jobs(-in-[a-z0-9-]+)?(\/(in|at|on)-[a-z0-9-]+)*\/?$/i],
+    // SEEK may rewrite a search to its own path: /jobs-in-<category>/in-<place>, /<words>-jobs-in-<category>/in-<place>,
+    // with a work type filter as the last part (/full-time, seen 2026-10-17).
+    searchPages: [
+      /^\/jobs(-in-[a-z0-9-]+)?(\/(in|at|on)-[a-z0-9-]+)*(\/(full-time|part-time|contract-temp|casual-vacation))?\/?$/i,
+      /^\/[a-z0-9-]+-jobs(-in-[a-z0-9-]+)?(\/(in|at|on)-[a-z0-9-]+)*(\/(full-time|part-time|contract-temp|casual-vacation))?\/?$/i,
+    ],
     adPages: [/^\/job\/\d+\/?$/i],
     wallPages: [{ host: "login.seek.com" }, { path: LOGIN_PATH }],
     signedIn: { strong: /^(sign out|profile avatar|saved searches|applied jobs|recommended jobs)\b/i, weak: /^(profile|saved jobs)\b/i }, readScope: ["main", "body"],

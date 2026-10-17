@@ -47,6 +47,11 @@ describe("page allow-list (C2)", () => {
       ["https://au.seek.com/jobs-in-information-communication-technology?keywords=LLM&where=Sampletown", "seek", "search"],
       ["https://au.seek.com/jobs-in-information-communication-technology/in-Sampletown-QLD", "seek", "search"],
       ["https://www.seek.com.au/LLM-Engineer-jobs-in-information-communication-technology/in-All-Sampletown-QLD", "seek", "search"],
+      // With a work type filter SEEK adds it as the last path part (seen 17 Oct: every filtered search was closed).
+      ["https://au.seek.com/LLM-Engineer-jobs-in-information-communication-technology/in-Sampletown-QLD/full-time?daterange=14&salaryrange=100000-&salarytype=annual", "seek", "search"],
+      ["https://au.seek.com/LLM-Engineer-jobs/in-Sampletown-QLD/contract-temp", "seek", "search"],
+      ["https://au.seek.com/jobs/part-time", "seek", "search"],
+      ["https://au.seek.com/jobs-in-information-communication-technology/casual-vacation", "seek", "search"],
       ["https://au.indeed.com/jobs?q=AI&l=Sampletown", "indeed", "search"],
       ["https://au.indeed.com/q-ai-engineer-jobs.html", "indeed", "search"],
       ["https://au.indeed.com/viewjob?jk=0123456789abcdef", "indeed", "ad"],

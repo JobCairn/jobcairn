@@ -17,8 +17,12 @@ the human who reads it next.
 - **The target job title in the headline.** Resumes containing the actual job
   title get dramatically more interview invitations — it's the highest-leverage
   single element. Match the posting's title where honest.
-- **Reverse-chronological experience** with consistent `Company — Title — Dates`
-  formatting. Keep date formats uniform (e.g. `Jan 2022 – Present`).
+- **Reverse-chronological experience** with consistent `Company | Title | Dates`
+  formatting. Keep date formats uniform (e.g. `Jan 2022 - Present`).
+- **ASCII hyphens in date ranges.** Write `Jan 2022 - Present` or `2019 - 2022`
+  with a plain hyphen (or the word `to`), never an en dash (–) or em dash (—).
+  Some ATS imports split a range only on the plain hyphen and drop a date joined
+  to any other dash. The app's ATS check of the exported file warns about this.
 - **Standard fonts** (Arial, Calibri, Helvetica, Georgia, Times). Decorative or
   embedded fonts can render as unparseable glyphs.
 - **Real text, not images.** Text inside graphics/logos is invisible to parsers.
@@ -34,6 +38,9 @@ the human who reads it next.
 - Non-standard or embedded fonts; unusual bullet glyphs.
 - Scanned/image PDFs, or PDFs exported with security/encryption.
 - Inconsistent or invented section labels.
+- En or em dashes joining the years of a date range (see above).
+- Contact details that exist only as a link or an image: the email and phone
+  must be plain text in the body.
 - **Meta text in the canonical output** — `Status: DONE`, `draft`, `v2`, review
   notes, TODOs. Strip all of it before finalizing.
 

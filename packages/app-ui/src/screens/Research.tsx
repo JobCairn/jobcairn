@@ -125,7 +125,6 @@ function TopicPage({ slug, route }: { slug: string; route: Route }) {
     <div className="research-page">
       <BackLink route={route} />
       <div className="research-bar">
-        <Button size="sm" variant="ghost" icon={Icons.back} onClick={() => navigate({ screen: "research" })}>All research</Button>
         <div className="research-bar__actions">
           {chip ? <RunChip run={claude.run!} onCancel={() => void claude.cancel()} onRetry={() => void start()} />
             : <Button size="sm" variant={t.at ? "secondary" : "primary"} icon={t.at ? Icons.refresh : Icons.ai} aria-label={`${label}: ${t.title}`}

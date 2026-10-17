@@ -25,29 +25,29 @@ validator, topic view, staleness) and `research-html.ts` (escaped, script-free e
 ### Task 1: contract
 Files: `packages/contract/src/{actions,request,research,research-html,bridge,methods,trash,index}.ts`,
 `packages/contract/test/research.test.ts`.
-- [ ] Failing tests: schema accepts the example, rejects bad URLs, unknown footnotes, huge strings, non-finite numbers;
+- [x] Failing tests: schema accepts the example, rejects bad URLs, unknown footnotes, huge strings, non-finite numbers;
       staleness; HTML export escapes and has no script; action prompt (web, outputs, depth, note).
-- [ ] Implement; tests pass.
+- [x] Implement; tests pass.
 
 ### Task 2: services
 Files: `packages/services/src/{research,trash,watcher,handlers,claude/context}.ts`, `packages/services/test/research.test.ts`.
-- [ ] Failing tests: create makes the folder and topic.json (deduped slug); list and get; invalid JSON falls back;
+- [x] Failing tests: create makes the folder and topic.json (deduped slug); list and get; invalid JSON falls back;
       export writes report.html; trash moves the topic.
-- [ ] Implement; tests pass.
+- [x] Implement; tests pass.
 
 ### Task 3: UI and mock
 Files: `packages/app-ui/src/{router,Shell,screens/*,research/*,mock/*,nav/trail}.ts(x)`, `packages/app-ui/test/research.test.tsx`.
-- [ ] Failing tests: list, report renders tiles, steps, table, bars and sources; fallback to Markdown; no raw HTML.
-- [ ] Implement; tests pass.
+- [x] Failing tests: list, report renders tiles, steps, table, bars and sources; fallback to Markdown; no raw HTML.
+- [x] Implement; tests pass.
 
 ### Task 4: career skill
 Files: `plugin/skills/career/SKILL.md`, `plugin/skills/career/references/topic-research.md`.
-- [ ] Add the method reference and link it from the skill.
+- [x] Add the method reference and link it from the skill.
 
 ### Task 5: video
 Files: core schemas and videos.ts, `packages/video/src/{types,registry,sources}.ts`, `plugin/video-types/research-briefing.json`,
 contract video.ts, MakeVideo, video-mock, services video.ts.
-- [ ] Subject kind `research`, resolver `research.report`, folder pattern; tests for the folder and the source pack.
+- [x] Subject kind `research`, resolver `research.report`, folder pattern; tests for the folder and the source pack.
 
 ### Task 6: check
-- [ ] Typecheck, targeted tests, headless screenshots of the report in light and dark.
+- [x] Typecheck, targeted tests, headless screenshots of the report in light and dark.

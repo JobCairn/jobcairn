@@ -1,7 +1,7 @@
 /* Research any topic (spec 2026-10-17-research-any-topic). Tokens only. */
 
 /* The topic list */
-.research-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(calc(var(--space-12) * 6), 1fr)); gap: var(--space-3); }
+.research-grid { margin-top: var(--space-2); display: grid; grid-template-columns: repeat(auto-fill, minmax(calc(var(--space-12) * 6), 1fr)); gap: var(--space-3); }
 .research-card {
   position: relative; display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-4); min-height: calc(var(--space-12) * 2.5);
   border-radius: var(--card-radius); background: var(--card-bg); border: var(--size-border) solid var(--card-border);
@@ -31,7 +31,7 @@
 .research-depth__item:focus-visible { outline: var(--size-focus-ring) solid var(--color-focus); outline-offset: var(--size-border); }
 
 /* One topic's page */
-.research-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-4); }
+.research-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: var(--space-3); margin-bottom: var(--space-4); }
 .research-bar__actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
 .research-page { max-width: calc(var(--space-12) * 19); }
 .research-fallback { display: flex; gap: var(--space-2); align-items: flex-start; padding: var(--space-3) var(--space-4); margin-bottom: var(--space-4); border-radius: var(--radius-md); background: var(--color-warning-soft); border: var(--size-border) solid var(--color-border); }
@@ -75,7 +75,7 @@
   background: var(--card-bg); border: var(--size-border) solid var(--card-border); box-shadow: var(--shadow-card);
 }
 .rr-tile__label { font-size: var(--font-size-12); text-transform: uppercase; letter-spacing: 0.06em; color: var(--color-text-muted); font-weight: var(--font-weight-medium); }
-.rr-tile__value { font-size: var(--font-size-24); font-weight: var(--font-weight-semibold); line-height: var(--font-line-height-snug); color: var(--color-text); overflow-wrap: anywhere; }
+.rr-tile__value { font-size: var(--font-size-20); font-weight: var(--font-weight-semibold); line-height: var(--font-line-height-snug); color: var(--color-text); overflow-wrap: anywhere; }
 .rr-tile__detail { font-size: var(--font-size-13); color: var(--color-text-muted); line-height: var(--font-line-height-body); }
 
 /* Step timeline */
@@ -106,7 +106,8 @@
 /* Bar charts */
 .rr-charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(calc(var(--space-12) * 7), 1fr)); gap: var(--space-4); }
 .rr-chart { margin: 0; display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-4) var(--space-5); border-radius: var(--radius-lg); background: var(--card-bg); border: var(--size-border) solid var(--card-border); }
-.rr-chart__title { display: flex; align-items: baseline; gap: var(--space-1); }
+.rr-chart__title { display: flex; align-items: baseline; gap: var(--space-1); font-size: var(--font-size-14); font-weight: var(--font-weight-semibold); }
+.rr-chart__title .t-label { font: inherit; color: var(--color-text); }
 .rr-bars { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
 .rr-bar { display: grid; grid-template-columns: minmax(calc(var(--space-12) * 1.5), 28%) minmax(0, 1fr) auto; align-items: center; gap: var(--space-3); font-size: var(--font-size-13); }
 .rr-bar__label { overflow-wrap: anywhere; }

@@ -17,7 +17,7 @@ export interface JobFilters {
 }
 export interface JobsForm {
   text: string; sort: JobSort; showIneligible: boolean; filters: JobFilters;
-  /** "Hide likely stale": leave out open ads posted over 30 days ago or reposted (contract ghost.ts). */
+  /** "Hide likely stale": leave out open ads past their closing date or reposted (contract ghost.ts). */
   hideStale?: boolean;
 }
 

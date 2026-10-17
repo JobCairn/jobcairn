@@ -55,6 +55,14 @@ describe("closingDateFromAd", () => {
     expect(closingDateFromAd("Start date: 1 December 2026. Posted 10 October 2026.", FOUND)).toBeNull();
     expect(closingDateFromAd("Applications close when we find the right person.\n\nStart date 1 December 2026.", FOUND)).toBeNull();
     expect(closingDateFromAd("", FOUND)).toBeNull();
+    expect(closingDateFromAd("Applications close when we find the right person. Start date 1 December 2026.", FOUND)).toBeNull();
+    expect(closingDateFromAd("Applications close soon. Interviews on 5 November.", FOUND)).toBeNull();
+    expect(closingDateFromAd("You will deliver projects by the deadline of 30 June 2027.", FOUND)).toBeNull();
+  });
+
+  it("reads a deadline only when it is about applications", () => {
+    expect(closingDateFromAd("Deadline: 7 Nov 2026", FOUND)).toBe("2026-11-07");
+    expect(closingDateFromAd("The application deadline is Fri. 31 Oct 2026.", FOUND)).toBe("2026-10-31");
   });
 });
 

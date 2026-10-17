@@ -88,7 +88,7 @@ export function parseClosingDate(value: string, found: string): string | null {
 
 const FACT_KEYS = new Set(["closes", "closing date", "applications close", "deadline", "apply by"]);
 /** Words in an ad that introduce its closing date. */
-const CLOSING_WORDS = /\b(?:applications?\s+(?:will\s+)?(?:close|closing)s?|closing\s+date(?:\s+for\s+applications)?|closes|apply\s+(?:by|before)|applications?\s+(?:are\s+)?due(?:\s+(?:by|on))?|(?:application\s+)?deadline|submit\s+(?:your\s+application\s+)?by)\b/gi;
+const CLOSING_WORDS = /\b(?:applications?\s+(?:will\s+)?(?:close|closing)s?|closing\s+date(?:\s+for\s+applications)?|closes|apply\s+(?:by|before)|applications?\s+(?:are\s+)?due(?:\s+(?:by|on))?|application\s+deadline|deadline\s+for\s+applications|deadline(?=\s*:)|submit\s+(?:your\s+application\s+)?by)\b/gi;
 
 /**
  * The ad's closing date (YYYY-MM-DD), or null when it states none. A "Closes:" line in the saved ad's header wins;
@@ -104,8 +104,9 @@ export function closingDateFromAd(text: string, found: string): string | null {
   }
   const body = text.slice(0, 200 * 1024);
   for (const m of body.matchAll(CLOSING_WORDS)) {
-    // The date must follow soon after the words ("on", a weekday, a time and a timezone fit in 60 characters).
-    const after = body.slice(m.index + m[0].length, m.index + m[0].length + 60).split(/\n\s*\n/)[0]!;
+    // The date must follow soon after the words, in the same sentence ("on", a weekday, a time and a timezone fit in
+    // 60 characters). "Applications close when we find the right person. Start date 1 December" has no closing date.
+    const after = body.slice(m.index + m[0].length, m.index + m[0].length + 60).split(/\n|(?<=[.!?])\s+(?=[A-Z])/)[0]!;
     const d = parseClosingDate(after, found);
     if (d) return d;
   }

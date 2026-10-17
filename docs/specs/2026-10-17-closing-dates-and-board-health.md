@@ -24,7 +24,8 @@ Ideas 2 and 9 from the ai-job-search comparison (MIT licensed upstream: ideas on
   `app-ui/src/reading/jd.ts` to contract `jd-text.ts`; the app-ui file re-exports it.
 - `closingDateFromAd(text, found)` looks for, in order: a "Closes" / "Closing date" fact line in the saved JD header,
   then the ad's own words ("Applications close 31 October 2026", "Closing date: 31/10/2026", "Apply by Friday 7 Nov",
-  "Applications due by 2026-11-07", "Deadline: 7 Nov 2026").
+  "Applications due by 2026-11-07", "Deadline: 7 Nov 2026"). The date must be in the same sentence as the words, and
+  a bare "deadline" counts only as "Deadline:", "application deadline" or "deadline for applications".
 - `parseClosingDate(value, found)` reads ISO dates, `d/m/yyyy` (Australian order; `m/d` only when the day can't be a
   month), `31 October 2026`, `31st Oct`, `October 31, 2026`. A date without a year takes the year it was found in,
   or the next year when that would put it more than 60 days before the day it was found. Anything else: null.
@@ -53,7 +54,7 @@ Ideas 2 and 9 from the ai-job-search comparison (MIT licensed upstream: ideas on
 
 ### Data
 
-- Per board, this run: the search-log entries (`knowledge/job-searches.jsonl` via `search_add`) logged between the
+- Per board, this run: the search-log entries (`knowledge/search-log.jsonl`, written by `search_add`) logged between the
   run's start and end, and the jobs saved in that time from that board (`source_site`).
 - Per board, the past: the same search-log entries windowed by earlier Find jobs run records (`.careeros/runs`), and
   each finished run's own `board_counts` (stored from now on). Only runs where the board logged a numeric result
@@ -63,8 +64,8 @@ Ideas 2 and 9 from the ai-job-search comparison (MIT licensed upstream: ideas on
 
 - **Returned nothing:** every logged search on the board this run returned a numeric 0, and at least two past runs
   found some (median of the last five past runs at 3 or more). Message: "SEEK returned nothing this time, it usually
-  finds about 20. Its pages may have changed." Suggestion: "Open SEEK in Chrome and search there yourself. If it
-  shows jobs, run Find jobs again; if it still finds nothing, untick SEEK in Settings › Search for now."
+  finds about 20. Its pages may have changed." Suggestion: "Try the same search on SEEK yourself. If it shows jobs
+  there, run Find jobs again; if SEEK keeps finding nothing, leave it out of your searches for now."
 - **Looks wrong:** at least 3 jobs saved from the board this run and half or more have junk titles (HTML tags, HTML
   entities such as `&amp;`, longer than 150 characters, or no letters) or a blank or placeholder company ("Unknown",
   "N/A", "Confidential" is fine). Message: "Most of what SEEK returned this time looked wrong (6 of 8 titles had

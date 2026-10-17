@@ -16,7 +16,7 @@ const MAX_SCAN = 20_000;
 /** OS junk (.DS_Store, ._*, Thumbs.db, desktop.ini, .Spotlight-V100, ~$ lock files) is never a run's change, new or deleted. */
 
 const LABELS: [RegExp, string][] = [
-  [/(^|\/)resume\.md$/, "Resume"], [/(^|\/)cover-letter\.md$/, "Cover letter"], [/(^|\/)claims\.json$/, "Claim sources"],
+  [/(^|\/)resume\.md$/, "Resume"], [/(^|\/)cover-letter\.md$/, "Cover letter"], [/(^|\/)claims\.json$/, "Claim sources"], [/(^|\/)review\.json$/, "Second-pass review"],
   [/(^|\/)answers\.md$/, "Application answers"], [/(^|\/)score\.md$/, "Job score"], [/(^|\/)research\.md$/, "Company research"],
   [/(^|\/)questions\.md$/, "Interview questions"], [/(^|\/)script\.txt$/, "Video script"], [/(^|\/)spec\.json$/, "Video plan"],
   [/(^|\/)sources\.md$/, "Sources"], [/(^|\/)notes\.md$/, "Notes"], [/(^|\/)pitch\.md$/, "Pitch"],

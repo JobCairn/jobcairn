@@ -11,6 +11,7 @@ import { TemplateGallery } from "./TemplateGallery";
 import { errorText, useBridge } from "../bridge-context";
 import { lineView } from "./line-view";
 import { fmtDateTime, plural } from "../format";
+import { AtsChecklist } from "../components/AtsChecklist";
 
 // ---- Style -------------------------------------------------------------------------
 
@@ -258,6 +259,7 @@ export function DownloadPanel({ state, flush }: { state: ResumeState; flush(): P
           })}>{f === "txt" ? "Copy text" : "Copy Markdown"}</Button>
         ))}
       </div>
+      {state.ref.kind === "job" && state.file === "resume.md" ? <AtsChecklist slug={state.ref.company_slug} id={state.ref.id} /> : null}
     </div>
   );
 }

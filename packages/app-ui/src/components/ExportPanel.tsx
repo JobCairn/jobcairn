@@ -5,6 +5,7 @@ import { Button, Card, Dialog, Pill, Text, useToast, Icons, SectionTitle } from 
 import { EXPORT_FORMATS } from "@careeros/contract";
 import { errorText, useAction, useBridge, useLoad } from "../bridge-context";
 import { bytes, fmtDateTime } from "../format";
+import { AtsChecklist } from "./AtsChecklist";
 
 /** ATS-safe PDF and Word files for the resume and cover letter, made on this computer. */
 
@@ -67,6 +68,7 @@ export function ExportPanel({ slug, id, variant = "primary" }: { slug: string; i
           ))}
         </ul>
       ) : null}
+      {sources.includes("resume") ? <AtsChecklist slug={slug} id={id} /> : null}
       {viewer.element}
       <Dialog open={confirm} onClose={() => setConfirm(false)} title="Replace the exported files?"
         actions={<><Button variant="ghost" onClick={() => setConfirm(false)}>Cancel</Button><Button variant="primary" loading={busy === "export"} onClick={() => void go(true)}>Replace</Button></>}>

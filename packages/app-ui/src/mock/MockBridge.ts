@@ -29,6 +29,7 @@ import { isLockedKind, LOCKABLE_DIRS,
   agencyActivity, agencyAddresses, agencyPatchArgs, agencyThreads, addRecruiterArgs, applyAgencyPatch, buildAgencyRows, localDate, parseAgencyLines, type AddRecruiterInput, type AgencyAddClean,
   type AgencyAddResult, type AgencyEmails, type AgencyImportResult, type AgencyPatch, type AgencyRecordView, type AgencyRow, type CompanyRow, type VideoListItem, type VideoSubjectArg,
   parseDraftSuggestion, RECRUITER_EMAIL_IDS, SUGGESTION_UNREADABLE, type DraftSuggestion,
+  type ApplicationReview, applyStretch, atsCheck, type AtsCheckView, parseReview, plainFact, type StretchChoice,
 } from "@careeros/contract";
 import { DEMO_SCORE, DEMO_SCORE_MD } from "../score/demo";
 import { ALEX_LONG_RESUME, ALEX_RESUME, mockRewrite, RESUME_JOB } from "./resume-fixture";
@@ -638,7 +639,30 @@ export class MockBridge implements CareerosBridge {
       files, claims: claimsText ? JSON.parse(claimsText) : null, approval,
       prompt: buildApplyPrompt(j.job.title, j.company.name, slug, id, { languages: spokenLanguages(getPath(this.f.profile, "languages")) }),
       apply_email: this.mailMock.applyEmail(slug, id),
+      review: this.reviewOf(slug, id),
     };
+  }
+  private reviewRel = (slug: string, id: string) => `companies/${slug}/jobs/${id}/application/review.json`;
+  private reviewOf(slug: string, id: string): ApplicationReview | null {
+    const t = this.f.texts[this.reviewRel(slug, id)];
+    try { return t ? parseReview(JSON.parse(t)) : null; } catch { return null; }
+  }
+  /** Like the services: the review item must still hold `text`; the decision is written back into review.json. */
+  private reviewDecide(slug: string, id: string, key: "stretch" | "facts", index: number, text: string, patch: Record<string, unknown>): void {
+    const rel = this.reviewRel(slug, id);
+    const raw = JSON.parse(this.f.texts[rel] ?? "{}") as Record<string, unknown>;
+    const list = Array.isArray(raw[key]) ? raw[key] as Record<string, unknown>[] : [];
+    const read = (x: unknown) => { const p = parseReview({ [key]: [x] }); return key === "stretch" ? p?.stretch[0]?.text : p?.facts[0]?.fact; };
+    const item = list.find((x) => read(x) === text);
+    if (!item) throw new Error("Claude's review changed since you opened it. Reload to see the latest.");
+    Object.assign(item, patch);
+    this.f.texts[rel] = JSON.stringify(raw, null, 2);
+  }
+  private addFact(text: string): void {
+    const fact = plainFact(text);
+    const rel = "me/history/confirmed-facts.md";
+    const cur = this.f.texts[rel] ?? "# Confirmed facts\n\n";
+    if (!cur.includes(`- ${fact} (`)) this.f.texts[rel] = `${cur}- ${fact} (confirmed ${this.iso().slice(0, 10)})\n`;
   }
   /** Which files exist: files Claude "wrote" in tests, application files, then the fixture's texts (no time). */
   private probe: Probe = (rel) => {
@@ -865,6 +889,11 @@ export class MockBridge implements CareerosBridge {
     this.addAppFile(slug, id, "cover-letter.md", coverLetter);
     const list = Array.isArray(claims) ? claims : claims ? [{ claim: "Built retrieval pipelines", source: "me/history/roles.md" }] : null;
     if (list) this.addAppFile(slug, id, "claims.json", JSON.stringify(list));
+    this.emit("jobs");
+  }
+  /** Pretend Claude's second pass wrote application/review.json (any shape: it is read leniently, like the services). */
+  simulateReview(slug: string, id: string, review: unknown): void {
+    this.addAppFile(slug, id, "review.json", JSON.stringify(review));
     this.emit("jobs");
   }
   /** Pretend Claude wrote every output file of an action (a score, a report, a rendered video). */
@@ -1197,6 +1226,26 @@ export class MockBridge implements CareerosBridge {
     }),
     markApplied: (slug: string, id: string) => this.rec("apply.markApplied", [slug, id], () => {
       this.setJobStatus(this.find(slug, id), "Applied", `Marked applied in ${PRODUCT_NAME}`); this.emit("jobs", "home"); return this.applyState(slug, id);
+    }),
+    stretch: (slug: string, id: string, index: number, text: string, choice: StretchChoice) => this.rec("apply.stretch", [slug, id, index, text, choice], () => {
+      const item = this.reviewOf(slug, id)?.stretch[index];
+      if (!item || item.text !== text) throw new Error("Claude's review changed since you opened it. Reload to see the latest.");
+      if (choice === "keep") this.addFact(item.text);
+      else {
+        const rel = `companies/${slug}/jobs/${id}/application/${item.file}`;
+        const next = applyStretch(this.f.texts[rel] ?? "", item, choice);
+        if (next === null) throw new Error("That line isn't in your resume any more. Edit it in the Resume Studio instead.");
+        this.f.texts[rel] = next;
+      }
+      this.reviewDecide(slug, id, "stretch", index, text, { state: choice === "keep" ? "kept" : choice === "soften" ? "softened" : "dropped" });
+      this.emit("jobs");
+      return this.applyState(slug, id);
+    }),
+    saveFact: (slug: string, id: string, index: number, fact: string) => this.rec("apply.saveFact", [slug, id, index, fact], () => {
+      this.reviewDecide(slug, id, "facts", index, fact, { saved: true });
+      this.addFact(fact);
+      this.emit("jobs");
+      return this.applyState(slug, id);
     }),
   };
 
@@ -1896,6 +1945,15 @@ export class MockBridge implements CareerosBridge {
         this.emit("jobs");
         return this.docsState(slug, id);
       }),
+    // A stand-in for the real check: the Markdown is checked as if it were the exported PDF's text (one page).
+    check: (slug: string, id: string) => this.rec("docs.check", [slug, id], (): AtsCheckView | null => {
+      const made = this.docsState(slug, id).files.find((f) => f.source === "resume" && f.exists);
+      if (!made) return null;
+      const text = this.f.texts[exportSourceRel(slug, id, "resume")] ?? "";
+      const email = String(getPath(this.f.profile, "contact.email") ?? "");
+      const phone = String(getPath(this.f.profile, "contact.phone") ?? "");
+      return { file: made.name, at: made.at, stale: false, items: atsCheck({ text: text.replace(/^#+ /gm, ""), pages: made.format === "pdf" ? 1 : null, email, phone }) };
+    }),
   };
 
   tts = {

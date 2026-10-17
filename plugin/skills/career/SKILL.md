@@ -37,7 +37,8 @@ they aren't set. Sensible defaults for the JobCairn workspace layout are shown
 | `{{INDEX_ROOT}}` | Processing index files | `me/history/index/` |
 | `{{CONVERSATIONS_DIR}}` | Exported conversation archives | `me/conversations/` |
 | `{{JOBS_DIR}}` | Per-application job folders | `companies/<slug>/jobs/` |
-| `{{PROFILE}}` | Learned profile (facts confirmed by the user) | `settings/profile.json` |
+| `{{PROFILE}}` | The user's profile (read only for Claude) | `settings/profile.json` |
+| `{{CONFIRMED_FACTS}}` | Facts the user confirmed (evidence, like the master docs) | `me/history/confirmed-facts.md` |
 
 If master docs don't exist yet, say so plainly and offer to start with
 **Workflow 4 (content extraction)** or to work from a resume the user pastes in —
@@ -58,6 +59,8 @@ just flag that traceability can't be verified without master docs.
 | Gaps/conflicts | `{{INDEX_ROOT}}/gaps-and-conflicts.md` |
 | Per-application job folders | `{{JOBS_DIR}}/[id]/posting.md`, `resume.md` |
 | Learned profile | `{{PROFILE}}` |
+| Confirmed facts | `{{CONFIRMED_FACTS}}` |
+| Second-pass review of a tailored application | `{{JOBS_DIR}}/[id]/application/review.json` |
 
 ## Routing — pick the workflow, then read its reference file
 
@@ -69,6 +72,7 @@ just flag that traceability can't be verified without master docs.
 | "Pull achievements from my convos / git / LinkedIn", "gather evidence", "add this new role to my resume" | 4. Content Extraction & Evidence | `references/workflow-content-extraction.md` |
 | "Audit the resume chain", "can I trust this pipeline?" | 5. Pipeline Audit | `references/workflow-pipeline-audit.md` |
 | "Export my resume to PDF/Word", "convert this markdown resume" | 6. Export | `references/workflow-export.md` |
+| After any tailored resume or cover letter; "double-check this draft", "is this defensible?" | Second-pass review | `references/workflow-second-pass-review.md` |
 | "Write my LinkedIn profile / About / headline", "draft a cover letter", "prep STAR stories for this interview" | 7. LinkedIn & Adjacent | `references/workflow-linkedin-and-adjacent.md` |
 | "Find jobs", "search the boards", "check my sign-in" (every job search run; the Chrome steps apply when it browses Chrome) | 8. Job Search | `references/job-search-browsing.md` |
 
@@ -100,9 +104,19 @@ Only load the one reference file for the workflow in play; don't preload the res
   filler; always run the mandatory critique-and-rewrite pass
   (`references/writing-style-and-verbs.md`) before presenting candidate-facing prose.
 - **Learn from corrections** — when the user corrects a fact (business model,
-  scope, responsibility), fix it everywhere *and* persist it to `{{PROFILE}}` so
-  the same mistake doesn't recur. If the profile is a blank template, start it
-  with what you now know for certain.
+  scope, responsibility), fix it everywhere *and* persist it so the same mistake
+  doesn't recur (see the next rule for how).
+- **Confirmed facts persist, in the same turn** — when the user confirms a fact
+  that isn't in the master docs (answers a question, says a stretch bullet is
+  true, gives a metric), record it immediately with
+  `careeros fact add "<fact>" --from "<where>"`, which appends to
+  `{{CONFIRMED_FACTS}}`. A fact left only in chat or a draft is stripped as made
+  up by the next grounding check. You can't edit `me/` or `settings/` yourself; if
+  you can't run the command, give the user the exact line to add. In an app run,
+  list facts from the user's note in `review.json` instead (the user saves them).
+- **Second pass after tailoring** — after writing a tailored resume or cover
+  letter, always run `references/workflow-second-pass-review.md` (grounding and
+  the interview test) and write its `review.json`.
 - **One conversation at a time** (Workflow 4) — don't load entire archives.
 - **Update the index** (Workflow 4) — mark conversations processed after each run.
 - **Traceability** — every bullet maps to evidence.
@@ -122,6 +136,8 @@ Only load the one reference file for the workflow in play; don't preload the res
   commands, and HTML/CSS template in `references/document-export.md`.
 - `references/workflow-linkedin-and-adjacent.md` — Workflow 7 steps; format specs
   and character limits in `references/linkedin-and-adjacent.md`.
+- `references/workflow-second-pass-review.md` — the required review after
+  tailoring: grounding, the interview test, `review.json`, confirmed facts.
 - `references/ats-formatting-standards.md` — what keeps a resume machine-parseable.
 - `references/resume-quality-rubric.md` — default 0–100 resume quality rubric.
 - `references/job-scoring-rubric.md` — default job-fit and interview-odds rubrics.

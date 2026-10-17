@@ -8,6 +8,7 @@ import { DraftEditor } from "../components/DraftEditor";
 import { EmailPreviewCard } from "../components/EmailPreview";
 import { JobErrorBanner } from "../components/ErrorBanner";
 import { ExportPanel } from "../components/ExportPanel";
+import { ReviewCard } from "../components/ReviewCard";
 import { useFileViewer } from "../viewer";
 import { ExternalLink, hostLabel } from "../components/ExternalLink";
 import { Markdown } from "../components/Markdown";
@@ -266,6 +267,7 @@ function ApplyView({ slug, id, step }: { slug: string; id: string; step?: ApplyS
               )}
             </Card>
           </div>
+          {s.review ? <ReviewCard slug={slug} id={id} review={s.review} readOnly={broken} /> : null}
           {byEmail && !broken ? <Text role="body-sm" muted>This job takes applications by email at {s.apply_email}.</Text> : null}
           {emailing && !broken ? (
             <Card className="stack" aria-label="Email application">

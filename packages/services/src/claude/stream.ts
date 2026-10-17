@@ -21,6 +21,7 @@ const WRITE_LABELS: [RegExp, string][] = [
   [/(^|\/)resume\.md$/, "Writing your resume"],
   [/(^|\/)cover-letter\.md$/, "Writing your cover letter"],
   [/(^|\/)claims\.json$/, "Checking claims"],
+  [/(^|\/)review\.json$/, "Reviewing the drafts"],
   [/(^|\/)answers\.md$/, "Answering the application questions"],
   [/(^|\/)score\.md$/, "Scoring the job"],
   [/(^|\/)research\.md$/, "Writing the company research"],

@@ -65,6 +65,7 @@ export const MUTATION_AREAS: Partial<Record<MethodName, ChangeArea[]>> = {
   "recruiters.add": ["recruiters"], "recruiters.importList": ["recruiters"], "recruiters.importFile": ["recruiters"], "recruiters.unlink": ["recruiters"],
   "jobs.setInterview": ["jobs", "home"], "jobs.setOffer": ["jobs"],
   "apply.prepare": ["jobs", "home"], "apply.requestApproval": ["approvals", "home", "jobs"], "apply.markApplied": ["jobs", "home"],
+  "apply.stretch": ["jobs"], "apply.saveFact": ["jobs"],
   "inbox.add": ["inbox", "home"], "inbox.file": ["inbox", "home", "jobs"],
   "inbox.remove": ["inbox", "home"], "inbox.putBack": ["inbox", "home"], "inbox.ask": ["inbox", "claude"], "inbox.addAsJob": ["inbox", "home", "jobs"],
   "inbox.fillProfile": ["settings", "jobs", "home", "inbox"],

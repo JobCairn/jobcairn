@@ -20,7 +20,8 @@ import { jobDetail, jobDirRel, touch } from "./read.js";
 import identity from "@careeros/brand/identity.json" with { type: "json" };
 import { exportStyle } from "./resume.js";
 import { resumeDocx, resumeHtml, ResumeTooLarge } from "./print/resume-print.js";
-import { parseResume, resumeLayout, visibleMarkdown, type ResumeStyle } from "@careeros/contract";
+import { atsCheck, atsUnreadable, MAX_RESUME_FILE_BYTES, parseResume, resumeLayout, visibleMarkdown, type AtsCheckView, type ResumeStyle } from "@careeros/contract";
+import { extractDocument } from "./resume-fill.js";
 
 /** A resume or letter is a few KB; anything this large is refused before it is parsed. */
 export const MAX_EXPORT_SOURCE_BYTES = 512 * 1024;
@@ -256,7 +257,56 @@ async function exportDocs(ctx: ServiceContext, slug: string, id: string, sources
   return exportState(ctx, slug, id);
 }
 
+/** An exported file's bytes, read without following links: a plain, single-named file of at most 10 MB. */
+function readExport(abs: string): Buffer {
+  const fd = fs.openSync(abs, fs.constants.O_RDONLY | (fs.constants.O_NOFOLLOW ?? 0) | (fs.constants.O_NONBLOCK ?? 0));
+  try {
+    const st = fs.fstatSync(fd);
+    if (!st.isFile() || st.nlink !== 1 || st.size > MAX_RESUME_FILE_BYTES) throw new Error("not a plain file");
+    const buf = Buffer.alloc(st.size);
+    let off = 0;
+    while (off < buf.length) {
+      const n = fs.readSync(fd, buf, off, buf.length - off, off);
+      if (n === 0) break;
+      off += n;
+    }
+    return buf.subarray(0, off);
+  } finally { fs.closeSync(fd); }
+}
+
+function profileContact(root: string): { email: string; phone: string } {
+  try {
+    const c = readRecord("profile", layout(root).profile).contact;
+    return { email: c.email ?? "", phone: c.phone ?? "" };
+  } catch { return { email: "", phone: "" }; }
+}
+
+/**
+ * The ATS check of the exported resume (spec 2026-10-17-resume-checks): the text an applicant tracking system gets
+ * from application/export/resume.pdf (resume.docx when there's no PDF), pulled out in the same worker as Fill from
+ * my resume, then checked (atsCheck). Null when the resume hasn't been exported. Read only; nothing is written.
+ */
+async function checkExport(ctx: ServiceContext, slug: string, id: string): Promise<AtsCheckView | null> {
+  const root = ctx.requireRoot();
+  const st = exportState(ctx, slug, id);
+  const made = (["pdf", "docx"] as const).map((format) => st.files.find((f) => f.source === "resume" && f.format === format && f.exists && !f.problem)).find(Boolean);
+  if (!made) return null;
+  const src = st.sources.find((s) => s.source === "resume");
+  const srcStat = src?.exists ? fileStat(root, src.path) : null;
+  const stale = !!srcStat && !!made.at && srcStat.mtime.toISOString() > made.at;
+  const view = (items: AtsCheckView["items"]): AtsCheckView => ({ file: made.name, at: made.at, stale, items });
+  let doc: { text: string; pages: number | null };
+  try {
+    const bytes = readExport(path.join(root, ...made.path.split("/")));
+    doc = await extractDocument(made.format === "pdf" ? "pdf" : "word", bytes, made.name);
+  } catch {
+    return view([atsUnreadable()]);
+  }
+  return view(atsCheck({ text: doc.text, pages: made.format === "pdf" ? doc.pages : null, ...profileContact(root) }));
+}
+
 export const docsHandlers = {
   "docs.state": exportState,
   "docs.export": exportDocs,
+  "docs.check": checkExport,
 } satisfies Partial<HandlerTable>;

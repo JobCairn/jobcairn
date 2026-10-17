@@ -7,6 +7,7 @@ import type { DraftView, EmailPreview, MailRow } from "./mail.js";
 import type { VideoListItem } from "./video.js";
 import type { ScoreResult } from "./score.js";
 import type { JobFacets, JobType, SponsorTier } from "./job-filters.js";
+import type { ApplicationReview } from "./review.js";
 
 export interface FieldDef {
   path: string; label: string; type: string; options: string[]; optionLabels: Record<string, string>; help: string; pattern: string; fields: FieldDef[];
@@ -214,6 +215,8 @@ export interface ApplyState {
   company_slug: string; id: string; title: string; company_name: string; url: string;
   step: "prepare" | "review" | "handoff" | "confirm" | "done"; files: JobFile[]; claims: ClaimLink[] | null; approval: ApprovalView | null; prompt: string;
   apply_email?: string;
+  /** Claude's second-pass review (application/review.json), or null when there is none. */
+  review?: ApplicationReview | null;
 }
 export interface SecretStatus { name: SecretName; available: boolean; set: boolean }
 export interface AppInfo { version: string; shell: "electron" | "mock"; platform: string }

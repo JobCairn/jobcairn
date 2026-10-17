@@ -3,6 +3,7 @@ import {
 } from "./constants.js";
 import { ACTION_IDS, TARGET_KINDS, TOPIC_LABEL, type ActionTarget, type TargetKind } from "./actions.js";
 import { EXPORT_FORMATS, EXPORT_SOURCES } from "./exports.js";
+import { REVIEW_LIMITS, STRETCH_CHOICES } from "./review.js";
 import { claudeRunRequest, runId } from "./claude-engine.js";
 import { JOB_TYPES, SPONSOR_TIERS } from "./job-filters.js";
 import { BOARD_IDS } from "./chrome.js";
@@ -181,6 +182,8 @@ export const METHODS = {
   "apply.prepare": [slug, slug],
   "apply.requestApproval": [slug, slug],
   "apply.markApplied": [slug, slug],
+  "apply.stretch": [slug, slug, int(0, REVIEW_LIMITS.items - 1), required(REVIEW_LIMITS.text), oneOf(STRETCH_CHOICES)],
+  "apply.saveFact": [slug, slug, int(0, REVIEW_LIMITS.items - 1), required(REVIEW_LIMITS.fact)],
   "inbox.list": [],
   "inbox.overview": [],
   "inbox.add": [arr(absPath, { min: 1, max: 50 })],
@@ -356,6 +359,7 @@ export const METHODS = {
   "tts.stopVoiceWork": [],
   "docs.state": [slug, slug],
   "docs.export": [slug, slug, arr(oneOf(EXPORT_SOURCES), { min: 1, max: 2 }), arr(oneOf(EXPORT_FORMATS), { min: 1, max: 2 }), bool],
+  "docs.check": [slug, slug],
   // A job's tailored resume or a general version (ResumeRef); the file is a plain name in that folder.
   "resume.load": [resumeRef, resumeFile],
   "resume.save": [resumeRef, resumeFile, resumeMarkdown, resumeStyleArg, digest, bool],

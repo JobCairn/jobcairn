@@ -4,6 +4,7 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
 import { checkDraft, parseAddressList, proposeEmailSend, workspaceRel, writeDraft } from "./drafts.js";
+import { addConfirmedFact, confirmedFactsRel } from "./facts.js";
 import { buildIndex } from "./index-db.js";
 import { fileInboxItem, type InboxTarget, listInbox } from "./inbox.js";
 import { addEvent, attachFile, type JobSubdir, newJob, setStatus } from "./jobs.js";
@@ -31,6 +32,7 @@ const USAGE = `careeros <command>
   request access --folder identity|employment --why W [--field F --minutes N] | request list
     (--folder also takes me/identity or me/employment)
   mail draft --job SLUG/ID --to A [--cc C] --subject S --body-file F [--attach PATH]... [--in-reply-to ID]
+  fact add <fact> [--from WHERE]   (a fact you confirmed, saved to me/history/confirmed-facts.md)
   privacy expire
   index | validate | migrate
   import-legacy <legacy-dir> --to <dir> [--dry-run]
@@ -63,7 +65,7 @@ const OPTIONS = {
   subdir: { type: "string" }, me: { type: "string" }, job: { type: "string" }, query: { type: "string" },
   results: { type: "string" }, kept: { type: "string" }, notes: { type: "string" }, to: { type: "string" },
   action: { type: "string" }, status: { type: "string" }, folder: { type: "string" }, why: { type: "string" },
-  field: { type: "string" }, minutes: { type: "string" },
+  field: { type: "string" }, minutes: { type: "string" }, from: { type: "string" },
   cc: { type: "string" }, subject: { type: "string" }, "body-file": { type: "string" }, attach: { type: "string", multiple: true }, "in-reply-to": { type: "string" },
   "dry-run": { type: "boolean" }, help: { type: "boolean" },
 } as const;
@@ -203,6 +205,11 @@ export function run(argv: string[], env: NodeJS.ProcessEnv = process.env): { cod
         fs.rmSync(path.join(ws, saved.rel), { force: true });
         throw e;
       }
+    }
+    if (cmd === "fact" && sub === "add") {
+      requireWorkspace();
+      const added = addConfirmedFact(ws, arg(2, "<fact>"), (o.from as string | undefined) ?? "");
+      return ok({ added, file: confirmedFactsRel() });
     }
     if (cmd === "privacy" && sub === "expire") { requireWorkspace(); return ok(expireGrantsAndLog(ws)); }
     throw new Error(`unknown command "${p.join(" ")}" -- ${USAGE_HINT}`);

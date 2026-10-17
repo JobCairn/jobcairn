@@ -35,7 +35,7 @@ describe("RequestComposer", () => {
     renderApp(<RequestComposer action="tailor_application" target={JOB} />);
     expect(await screen.findByRole("heading", { name: "Claude will write a tailored resume, a cover letter and answers for Backend Engineer (LLM) at Example Labs." })).toBeInTheDocument();
     const files = within(screen.getByLabelText("What Claude will create"));
-    for (const f of ["Resume", "Cover letter", "Claim check", "Answers"]) expect(files.getByText(f)).toBeInTheDocument();
+    for (const f of ["Resume", "Cover letter", "Claim check", "Answers", "Second-pass review"]) expect(files.getByText(f)).toBeInTheDocument();
     expect(files.getByText("if needed")).toBeInTheDocument();
     expect(screen.getByRole("radio", { name: "Professional" })).toBeChecked();
     expect(screen.getByRole("radio", { name: "2 pages" })).toBeChecked();

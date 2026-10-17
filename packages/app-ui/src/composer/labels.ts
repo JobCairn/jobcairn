@@ -5,11 +5,13 @@ import { CheckIcon, CloseIcon, FileIcon, LockIcon, VideoIcon, type ComposerIcon 
 export interface FileChip { label: string; icon: ComposerIcon; optional: boolean }
 
 /** Friendly names for the files Claude writes, by file name. Anything not named here isn't shown as a chip. */
-const FILES: Record<string, { label: string; icon: ComposerIcon }> = {
+const FILES: Record<string, { label: string; icon: ComposerIcon; always?: boolean }> = {
   "resume.md": { label: "Resume", icon: FileIcon },
   "cover-letter.md": { label: "Cover letter", icon: FileIcon },
   "claims.json": { label: "Claim check", icon: CheckIcon },
   "answers.md": { label: "Answers", icon: FileIcon },
+  // An extra only so older applications still count as done; the steps make every tailoring run write it.
+  "review.json": { label: "Second-pass review", icon: CheckIcon, always: true },
   "score.md": { label: "Fit score", icon: CheckIcon },
   "research.md": { label: "Company research", icon: FileIcon },
   "questions.md": { label: "Interview questions", icon: FileIcon },
@@ -27,7 +29,7 @@ export function fileChips(outputs: readonly string[], extras: readonly string[])
     const n = name(p);
     // A search report is named by its date.
     const known = FILES[n] ?? (/^\d{4}-\d{2}-\d{2}\.md$/.test(n) ? { label: "Search report", icon: FileIcon } : { label: "File", icon: FileIcon });
-    return { ...known, optional };
+    return { label: known.label, icon: known.icon, optional: optional && !("always" in known && known.always) };
   };
   return [...outputs.map((p) => chip(p, false)), ...extras.filter((p) => FILES[name(p)]).map((p) => chip(p, true))];
 }

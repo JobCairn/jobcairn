@@ -15,14 +15,14 @@ const optionWords = (f: FieldDef, o: string) => f.optionLabels[o] ?? (o.charAt(0
 /** The sub-field that names a row (the first text field: "Place"), or undefined. */
 export const nameField = (f: FieldDef): FieldDef | undefined => f.fields.find((x) => x.type === "string");
 
-/** A fresh row: text empty, ticks off, multi-choice with every option (the schemas' "any" default). */
+/** A fresh row: text empty, ticks off, multi-choice with every option (the schemas' "any" default), a choice at its default. */
 export function blankRow(f: FieldDef): ListRow {
   const row: ListRow = {};
   for (const x of f.fields) {
     if (x.type === "string") row[x.path] = "";
     else if (x.type === "boolean") row[x.path] = false;
     else if (x.type === "enum[]") row[x.path] = [...x.options];
-    else if (x.type === "enum") row[x.path] = x.options[0] ?? "";
+    else if (x.type === "enum") row[x.path] = x.default && x.options.includes(x.default) ? x.default : x.options[0] ?? "";
   }
   return row;
 }

@@ -11,10 +11,11 @@ Ideas 3, 10 and 11 from the ai-job-search comparison (MIT; ideas only, written a
 
 ## 1. Languages
 
-**Profile.** Settings › Profile gains a **Languages** section: a list of rows, each a language (free text, with
-suggestions) and a level: **Basic**, **Conversational**, **Professional**, **Native or fluent**. Stored as
-`profile.languages: [{ language, level }]` with levels `basic | conversational | professional | native`. The default
-is an empty list. Nothing is assumed (not even English): an empty list means "unknown", and no ad is marked.
+**Profile.** Settings › Profile gains a **Languages** section: a list of rows, each a language (free text) and a
+level: **Basic**, **Conversational**, **Professional**, **Native or fluent** (a new row starts at Professional, the
+schema's default). Stored as `profile.languages: [{ language, level }]` with levels
+`basic | conversational | professional | native`. The default is an empty list. Nothing is assumed (not even
+English): an empty list means "unknown", and no ad is marked.
 
 **Reading an ad** (`contract/src/languages.ts`, `detectLanguageNeeds`, pure). Only explicit requirement wording
 counts, for a fixed list of common languages (English, Mandarin, Cantonese, Japanese, Korean, Vietnamese, Thai,
@@ -31,7 +32,11 @@ business, proficient, advanced, excellent, C1/C2 → professional; conversationa
 B1/B2 → conversational; basic, A1/A2 → basic; a bare "German required" or "German speaking" states no level.
 
 Not counted: sentences that call the language desirable, preferred, a plus, an advantage or a bonus; "Mandarin-
-speaking customers" (a description of the clients, not the role); lower-case "polish" and other common words.
+speaking customers" (a description of the clients, not the role); "non-English speaking background"; lower-case
+"polish" and other common words; a language name used as an adjective beside an everyday level word ("Chinese
+business partners", "advanced Chinese manufacturing"): the words business, professional, proficient, advanced,
+excellent, intermediate and basic count only with a mark or "level" after the language ("Japanese - business level")
+or words about the language around it ("advanced Japanese and English skills").
 Aliases are folded together (Chinese and Putonghua → Mandarin, Bahasa Indonesia → Indonesian, Farsi → Persian,
 Filipino → Tagalog), on both sides.
 
@@ -46,15 +51,19 @@ Filipino → Tagalog), on both sides.
 
 **Where it shows.** Jobs gets a **Language** column next to Work rights (hidden when no row has a result): a red tag
 for a blocker, an amber one for a warning, the full sentence on hover and for screen readers. The Job page shows a
-pill beside the work-rights pills ("Needs German"). A language blocker doesn't hide the ad (the reading is a
+pill beside the work-rights pills ("Needs German"), with the ad's words on hover; with an empty list, a quiet "Needs
+German" pill and an **Add languages** link to Settings › Profile › Languages. A language blocker doesn't hide the ad (the reading is a
 heuristic; the person decides), and it doesn't change the "Show ads I can't apply for" count.
 
 **How.** Main reads each job's `jd.md` once and keeps the needs in memory keyed by file time and size, so a list is
-cheap after the first read. Rows carry `lang?: { verdict, text, needs }`. The job record is unchanged.
+cheap after the first read. With an empty list no ad is read. Rows carry `lang?: LanguageCheck` (verdict, short,
+text, issues) only for a blocker or a warning; the job page gets `language` (including "unknown"). The job record is
+unchanged.
 
 **Claude.** The scoring rubric gets a Language row under Deal-breakers with the same rule (missing language: cap at
-Nah or Definite No Go and name it; higher level: score and say so, quoting both). The score and tailor prompts tell
-Claude to read the profile's Languages list and apply it.
+Nah or Definite No Go and name it; higher level: score and say so, quoting both). The score and tailor prompts
+(and Apply's prompt, which is the tailor prompt) carry the profile's Languages list and the rule; with an empty list
+they say not to assume any language.
 
 ## 2. Company research age
 
@@ -68,15 +77,18 @@ Research company again). Fresh research shows "Researched today / N days ago" qu
 **Claude.** Score, Tailor and Interview prep prompts get one line about the research: fresh research may be used
 as background; stale research ("41 days old, older than 30 days") must not be reused as current: don't put its
 facts in the score or the letter, and say in the summary to refresh it first. The career skill says the same:
-research older than 30 days is re-researched before it's relied on (these runs have no web access, so the app's
-Refresh does the re-research).
+research older than 30 days is re-researched before it's relied on. In the app these runs have no web access, so
+they don't re-research by themselves: they leave stale facts out and ask for a refresh, and the Company page's
+Refresh does the re-research. Starting Research company automatically before a score is a possible follow-up.
 
 ## 3. Pasted link host check
 
 `classifyJobHost(url, company)` (in `job-link.ts`, pure):
 
 - **board**: a known board or applicant system (`JOB_BOARDS`, exact host or dot-bounded subdomain);
-- **company**: the host names the company ("careers.acme.com.au" for Acme Corp), or is the company's saved website;
+- **company**: the name the host is registered under names the company ("careers.acme.com.au" for Acme Corp), or
+  the host is the company's saved website. A subdomain or a hyphenated part of someone else's name
+  ("acme.example.net", "acme-jobs.example.net") doesn't count;
 - **lookalike**: not a known board, but a part of the host is a board's name or one letter off it
   ("seek-jobs.com.au", "linkedin.com.example.net", "lnkedin.com");
 - **unknown**: anything else.
@@ -94,3 +106,5 @@ Add job's preview adds a warning (never a refusal) for the last two:
 - Storing language needs on the job record or letting Claude override the detector.
 - Per-fact source URLs in a research cache (the research already cites a URL for every fact).
 - Fetching anything to check a host.
+- More applicant systems (PageUp, Jobvite, Teamtailor and others) in `JOB_BOARDS`: until then their links get the
+  unknown-host warning. A likely follow-up.

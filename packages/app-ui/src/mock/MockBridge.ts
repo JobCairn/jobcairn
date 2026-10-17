@@ -635,7 +635,8 @@ export class MockBridge implements CareerosBridge {
     const url = [j.job.apply_via, j.job.url].find((u) => u.startsWith("https://")) ?? "";
     return {
       company_slug: slug, id, title: j.job.title, company_name: j.company.name, url, step: applyStep(j.job.status, files, approval),
-      files, claims: claimsText ? JSON.parse(claimsText) : null, approval, prompt: buildApplyPrompt(j.job.title, j.company.name, slug, id),
+      files, claims: claimsText ? JSON.parse(claimsText) : null, approval,
+      prompt: buildApplyPrompt(j.job.title, j.company.name, slug, id, { languages: spokenLanguages(getPath(this.f.profile, "languages")) }),
       apply_email: this.mailMock.applyEmail(slug, id),
     };
   }

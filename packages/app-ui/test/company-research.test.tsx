@@ -22,6 +22,8 @@ describe("company research age", () => {
   it("says quietly when fresh research was done, with no Refresh", async () => {
     renderApp(<CompanyScreen route={{ screen: "company", slug: "acme-corp", tab: "research" }} />, { bridge: bridgeWith("2026-10-15") });
     expect(await screen.findByText("Researched 2 days ago.")).toBeInTheDocument();
+    // The research action has loaded its state (done), and offers no Refresh.
+    expect((await screen.findAllByText("Research ready")).length).toBeGreaterThan(0);
     expect(screen.queryByRole("button", { name: "Refresh the research on Acme Corp" })).toBeNull();
   });
 });

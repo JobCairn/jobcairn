@@ -11,6 +11,13 @@ describe("fieldsFor", () => {
     expect(by("contact.links")?.type).toBe("string[]");
     expect(by("targets.roles")?.type).toBe("string[]");
   });
+  it("describes the Languages list, with a new row's level starting at Professional", () => {
+    const langs = f.find((x) => x.path === "languages");
+    expect(langs?.type).toBe("object[]");
+    expect(langs?.fields.map((x) => [x.path, x.type, x.default])).toEqual([["language", "string", undefined], ["level", "enum", "professional"]]);
+    expect(langs?.fields[1]?.optionLabels.native).toBe("Native or fluent");
+  });
+
   it("describes arrays of objects with their item fields", () => {
     const loc = by("locations");
     expect(loc?.type).toBe("object[]");

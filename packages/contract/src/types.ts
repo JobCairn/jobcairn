@@ -8,7 +8,11 @@ import type { VideoListItem } from "./video.js";
 import type { ScoreResult } from "./score.js";
 import type { JobFacets, JobType, SponsorTier } from "./job-filters.js";
 
-export interface FieldDef { path: string; label: string; type: string; options: string[]; optionLabels: Record<string, string>; help: string; pattern: string; fields: FieldDef[] }
+export interface FieldDef {
+  path: string; label: string; type: string; options: string[]; optionLabels: Record<string, string>; help: string; pattern: string; fields: FieldDef[];
+  /** A list row's choice that starts set to the schema's default (core fields.ts). Only on list sub-fields. */
+  default?: string;
+}
 export interface TimelineEvent { at: string; event: string; note: string }
 export interface FileRef { path: string; label: string; at: string }
 export interface JobRecord {

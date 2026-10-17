@@ -28,9 +28,6 @@ const LANGUAGES: Record<string, readonly string[]> = {
 const ALIAS = new Map<string, string>();
 for (const [name, others] of Object.entries(LANGUAGES)) for (const n of [name, ...others]) ALIAS.set(n.toLowerCase(), name);
 
-/** Language names the profile's Languages box suggests. */
-export const LANGUAGE_SUGGESTIONS: readonly string[] = Object.keys(LANGUAGES);
-
 /** A language's canonical name ("chinese" → "Mandarin"); any other name trimmed with its first letter capitalised. */
 export function normaliseLanguage(name: string): string {
   const s = name.replace(/\s+/g, " ").trim();
@@ -55,15 +52,28 @@ const LEVEL_WORDS: [string, LanguageLevel][] = [
   ["basic", "basic"], ["a2", "basic"], ["a1", "basic"],
 ];
 const CUE = `(${LEVEL_WORDS.map(([w]) => w).join("|")})`;
+/**
+ * Level words that are also everyday adjectives ("business partners", "professional bodies", "advanced
+ * manufacturing"): beside a language name they count only when the words around them are clearly about the language.
+ */
+const SOFT = `(${LEVEL_WORDS.map(([w]) => w).filter((w) => /^(business|professional|proficiency|proficient|advanced|excellent|intermediate|basic)$/.test(w)).join("|")})`;
+const STRONG = `(${LEVEL_WORDS.map(([w]) => w).filter((w) => !new RegExp(`^${SOFT}$`).test(w)).join("|")})`;
 const levelOf = (word: string): LanguageLevel | null => {
   const w = word.toLowerCase().replace(/\s+/g, " ");
   return LEVEL_WORDS.find(([re]) => new RegExp(`^(?:${re})$`, "i").test(w))?.[1] ?? null;
 };
 const SKILL = String.raw`(?:spoken|written|verbal|oral|reading|writing)`;
+const SKILLS = String.raw`(?:\s+${SKILL}(?:\s*(?:and|&|\/|,)\s*${SKILL})*)?`;
+/** What may follow a language named after a soft level word: the end, punctuation, or words about the language. */
+const ABOUT_LANGUAGE = String.raw`(?=\s*(?:$|[.,;:)!/&]|(?:and|or|language|languages|skills?|speaking|speaker|proficiency|communication|writing|written|verbal|level|is|are|required|essential|mandatory|to|at)\b))`;
 /** A level word before the language: "fluent in German", "fluency in Japanese", "business-level Japanese", "working knowledge of French". */
-const BEFORE = new RegExp(String.raw`\b${CUE}(?:\s+${SKILL}(?:\s*(?:and|&|\/|,)\s*${SKILL})*)?\s+(?:(?:in|of)\s+)?(?:the\s+)?${LANG}\b`, "gi");
-/** A level word after the language: "Japanese (fluent)", "German: native", "Japanese - business level", "English at C1". */
-const AFTER = new RegExp(String.raw`\b${LANG}(?:\s+language)?\s*(?:\(|:|-|–|—|,|\bat\b|\bto\b|\bis\b)?\s*(?:a\s+)?${CUE}\b`, "gi");
+const BEFORE = new RegExp(String.raw`\b${STRONG}${SKILLS}\s+(?:(?:in|of)\s+)?(?:the\s+)?${LANG}\b`, "gi");
+/** The same with a soft level word: "advanced Japanese and English skills", not "advanced Chinese manufacturing". */
+const BEFORE_SOFT = new RegExp(String.raw`\b${SOFT}${SKILLS}\s+(?:(?:in|of)\s+)?(?:the\s+)?${LANG}\b${ABOUT_LANGUAGE}`, "gi");
+/** A level word after the language: "Japanese (fluent)", "German: native", "English at C1", "Japanese fluent". */
+const AFTER = new RegExp(String.raw`\b${LANG}(?:\s+language)?\s*(?:\(|:|-|–|—|,|\bat\b|\bto\b|\bis\b)?\s*(?:a\s+)?${STRONG}\b`, "gi");
+/** A soft level word after the language needs a mark or "level": "Japanese - business level", "English (advanced)", not "German professional bodies". */
+const AFTER_SOFT = new RegExp(String.raw`\b${LANG}(?:\s+language)?(?:\s*(?:\(|:|-|–|—|,|\bat\b|\bto\b|\bis\b)\s*(?:a\s+)?${SOFT}\b|\s+${SOFT}[\s-]+level\b)`, "gi");
 /** No level: "German required", "Mandarin is essential", "Japanese language skills are mandatory". */
 const REQUIRED = new RegExp(String.raw`\b${LANG}(?:\s+language)?(?:\s+(?:skills?|proficiency|ability))?\s+(?:is\s+|are\s+)?(?:(?:also|absolutely)\s+)?(required|essential|mandatory|a\s+must|necessary|compulsory)\b`, "gi");
 /** "Japanese speaking Account Manager", "a native Korean speaker"; not "Mandarin-speaking customers" or "non-English speaking background". */
@@ -100,7 +110,9 @@ export function detectLanguageNeeds(text: string): LanguageNeed[] {
   for (const s of sentences(text.slice(0, 200_000))) {
     if (OPTIONAL.test(s)) continue;
     for (const m of s.matchAll(BEFORE)) add(m[2], levelOf(m[1]!), s);
+    for (const m of s.matchAll(BEFORE_SOFT)) add(m[2], levelOf(m[1]!), s);
     for (const m of s.matchAll(AFTER)) add(m[1], levelOf(m[2]!), s);
+    for (const m of s.matchAll(AFTER_SOFT)) add(m[1], levelOf((m[2] ?? m[3])!), s);
     for (const m of s.matchAll(REQUIRED)) add(m[1], null, s);
     for (const m of s.matchAll(SPEAKING)) add(m[1], null, s);
     for (const m of s.matchAll(SPEAK)) add(m[2], m[1] ? levelOf(m[1]) : null, s);

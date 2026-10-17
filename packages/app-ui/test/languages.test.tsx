@@ -1,6 +1,7 @@
 import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { checkLanguages } from "@careeros/contract";
+import { blankRow } from "../src/components/ListField";
 import { LanguageCell } from "../src/jobs/cells/cells";
 import { MockBridge, loadFixture } from "../src/mock/MockBridge";
 import { JobScreen } from "../src/screens/Job";
@@ -19,6 +20,14 @@ function bridgeWith(languages: { language: string; level: string }[]) {
   (f.profile as Record<string, unknown>).languages = languages;
   return new MockBridge({ fixture: f });
 }
+
+describe("the profile's Languages list", () => {
+  it("starts a new row at Professional, the schema's default", () => {
+    const f = loadFixture();
+    const langs = f.fields.profile.find((x) => x.path === "languages")!;
+    expect(blankRow(langs)).toEqual({ language: "", level: "professional" });
+  });
+});
 
 describe("language cell", () => {
   it("shows a blocker and a warning with the full sentence for screen readers, and nothing when fine", () => {

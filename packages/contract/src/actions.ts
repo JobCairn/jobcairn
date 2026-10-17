@@ -169,6 +169,7 @@ export const ACTIONS: { readonly [K in ActionId]: ActionDef & { id: K } } = {
     steps: [
       "Prepare my application for this job. Score before you write: if {job}/score.md is missing, score the job first (Workflow 2).",
       "Read {job}/jd.md and my history in me/history and me/resumes.",
+      "{language_rule}",
       "{research_rule}",
       "Write a tailored resume (resume.md, Workflow 1) and a cover letter (cover-letter.md, Workflow 7). Answer any application questions from the ad in answers.md.",
       "Use plain Markdown with standard section headings (Summary, Experience, Education, Skills) and no tables or images, so the PDF and Word exports stay ATS-safe.",

@@ -61,6 +61,18 @@ describe("detectLanguageNeeds: what an ad requires", () => {
     expect(needs("People from a non-English speaking background are encouraged to apply.")).toEqual([]);
   });
 
+  it("doesn't read a language name used as an adjective as a requirement", () => {
+    expect(needs("You will work with our Chinese business partners.")).toEqual([]);
+    expect(needs("Membership of German professional bodies.")).toEqual([]);
+    expect(needs("Experience in advanced Chinese manufacturing.")).toEqual([]);
+    expect(needs("You will look after professional Japanese clients.")).toEqual([]);
+    expect(needs("Excellent French cuisine in the staff canteen.")).toEqual([]);
+    // The same words still count when they describe the language.
+    expect(needs("Japanese business level")).toEqual([["Japanese", "professional"]]);
+    expect(needs("Advanced Japanese and English skills.")).toEqual([["Japanese", "professional"]]);
+    expect(needs("Japanese fluent")).toEqual([["Japanese", "native"]]);
+  });
+
   it("ignores lower-case words that look like languages, and text that names no requirement", () => {
     expect(needs("You polish the product and are fluent in polish of UI.")).toEqual([]);
     expect(needs("Our office is near the French restaurant.")).toEqual([]);

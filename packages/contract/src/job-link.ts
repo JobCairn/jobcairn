@@ -158,10 +158,22 @@ export function classifyJobHost(url: string, company = "", website = ""): HostCh
   const parts = host.split(/[.-]/).filter(Boolean);
   const fake = BOARD_MARKS.find((m) => parts.some((p) => imitates(p, m.mark)));
   if (fake) return { kind: "lookalike", host, board: { name: fake.name, domain: fake.domain } };
-  const named = parts.filter((p) => !HOST_FILLER.has(p));
+  // Only the name the host is registered under counts ("acme" in careers.acme.com.au): a subdomain or a hyphenated
+  // part elsewhere ("acme.example.net", "acme-jobs.example.net") is anyone's to choose.
+  const named = registeredName(host).split("-").filter((p) => p && !HOST_FILLER.has(p));
   const marks = companyMarks(company);
   if (named.some((p) => marks.some((m) => p === m || (m.length >= 4 && p.startsWith(m))))) return { kind: "company", host };
   return { kind: "unknown", host };
+}
+
+/** Two-part endings a name is registered under, as well as the one-part ones (com, net, io…). */
+const SECOND_LEVEL = /^(?:com|net|org|gov|edu|asn|id|co|ac|govt)\.(?:au|nz|uk|in|sg|jp|za|my|ph)$/;
+
+/** The label a host is registered under: "acme" for careers.acme.com.au and for jobs.acme.io. */
+function registeredName(host: string): string {
+  const labels = host.split(".");
+  const suffix = labels.length >= 3 && SECOND_LEVEL.test(labels.slice(-2).join(".")) ? 2 : 1;
+  return labels[labels.length - suffix - 1] ?? "";
 }
 
 /** The plain warning Add job shows for a link's host, or "" for a board or the company's own site. Never a refusal. */

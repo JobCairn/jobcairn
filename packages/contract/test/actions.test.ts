@@ -271,6 +271,11 @@ describe("prompts", () => {
     expect(p).toContain("My languages: English (Native or fluent), German (Basic).");
     expect(p).toMatch(/requires a language not on this list, that's a deal-breaker/);
     expect(buildActionPrompt("score_job", ACME, INFO)).toMatch(/doesn't list my languages, so don't assume any/);
+    // Tailor scores first when there's no score yet, so it gets the same rule; Apply's prompt stays the tailor prompt.
+    const langs = { languages: [{ language: "English", level: "native" as const }], researched_at: "2025-11-20", now: INFO.now };
+    expect(buildActionPrompt("tailor_application", ACME, { title: "AI Engineer", company: "Acme Corp", ...langs })).toContain("My languages: English (Native or fluent).");
+    expect(buildApplyPrompt("AI Engineer", "Acme Corp", "acme-corp", "2026-01-12-ai-engineer", langs))
+      .toBe(buildActionPrompt("tailor_application", ACME, { title: "AI Engineer", company: "Acme Corp", ...langs }));
   });
 
   it("tells score, tailor and interview prep how old the company research is, and not to reuse stale research", () => {

@@ -16,6 +16,13 @@ describe("classifyJobHost: where a pasted job link is hosted", () => {
     expect(kind("https://examplelabs.com/careers/ai-engineer", "Example Labs")).toBe("company");
     expect(kind("https://jobs.example.org/role/9", "Sample Org", "https://www.example.org")).toBe("company");
     expect(kind("https://jobs.example.org/role/9", "Sample Org", "example.org")).toBe("company");
+    expect(kind("https://acme-careers.com.au/role/9", "Acme Corp")).toBe("company");
+  });
+
+  it("never takes a subdomain or a hyphenated part someone else registered as the company's site", () => {
+    expect(kind("https://acme.example.net/jobs/1", "Acme Corp")).toBe("unknown");
+    expect(kind("https://acme-jobs.example.net/jobs/1", "Acme Corp")).toBe("unknown");
+    expect(kind("https://careers.acme.com.au.example.net/jobs/1", "Acme Corp")).toBe("unknown");
   });
 
   it("calls a host that imitates a board a look-alike", () => {

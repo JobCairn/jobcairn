@@ -314,7 +314,8 @@
             },
             "help": "",
             "pattern": "",
-            "fields": []
+            "fields": [],
+            "default": "professional"
           }
         ]
       },

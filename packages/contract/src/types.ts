@@ -16,6 +16,8 @@ export interface JobRecord {
   apply_via: string; posted: string; found_at: string; location: string; work_mode: string; job_type: string;
   /** The posted date was worked out from what the board said ("3d ago", "30+ days ago"), so it's roughly right. */
   posted_approx?: boolean;
+  /** When applications close (local YYYY-MM-DD), as the ad stated it (closing-date.ts). Absent when the ad said none. */
+  closes_on?: string;
   salary: { min: number | null; max: number | null; currency: string; period: string; text: string };
   work_rights: { label: WorkRightsLabel; quotes: string[]; decided_by: string };
   scores: {
@@ -35,6 +37,8 @@ export interface JobRow {
   status: JobStatus; source: JobSource; source_site: string; posted: string; found_at: string; eligible: boolean; pinned: boolean; last_activity: string;
   /** The posted date is roughly right (worked out from "3d ago"); optional: older bridges leave it out. */
   posted_approx?: boolean;
+  /** When applications close (YYYY-MM-DD); absent when the ad said none (optional: older bridges leave it out). */
+  closes_on?: string;
   /** The ad's job type as written ("Full time", "Contract"); "" or missing when it didn't say (optional: older bridges leave it out). */
   job_type?: string;
   /** Why the sponsor score is what it is, most telling first (at most SPONSOR_REASONS_SHOWN; optional: older bridges leave it out). */
@@ -53,7 +57,7 @@ export interface JobQuery {
   postedUndated?: boolean;
   /** "fresh" (shown as "Newest posted"): the ad's own posted date, newest first (freshness.ts). */
   sort?: "default" | "fit" | "sponsor" | "newest" | "fresh"; limit?: number; offset?: number;
-  /** "Hide likely stale": leave out open ads flagged stale or reposted (ghost.ts hiddenAsStale). */
+  /** "Hide likely stale": leave out open ads past their closing date or reposted (ghost.ts hiddenAsStale). */
   hideStale?: boolean;
 }
 /** `facets`: live counts for the quick-filter chips (optional: older bridges leave it out). */

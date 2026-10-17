@@ -22,6 +22,7 @@ import { fitView, sponsorView } from "../jobs/cells/meta";
 import { AddJobDialog } from "../addjob/AddJobDialog";
 import { GhostPills } from "../jobs/GhostPills";
 import { FreshBadge } from "../jobs/FreshBadge";
+import { ClosingBadge } from "../jobs/ClosingBadge";
 import { useDelete } from "../trash";
 
 export type { JobsForm } from "../jobs/filters";
@@ -34,7 +35,7 @@ const ROLE_COL: Column<JobRow> = {
   render: (r) => (
     <div className="role-cell">
       <SourceBadge job={r} size="sm" className="role-cell__source" />
-      <div className="role-cell__text"><Text role="body" as="div" className="role-title">{r.title}</Text><Text role="body-sm" muted truncate as="div">{r.client ? `${r.company_name} · client ${r.client}` : r.company_name}</Text><FreshBadge row={r} /><GhostPills ghost={r.ghost} /></div>
+      <div className="role-cell__text"><Text role="body" as="div" className="role-title">{r.title}</Text><Text role="body-sm" muted truncate as="div">{r.client ? `${r.company_name} · client ${r.client}` : r.company_name}</Text><FreshBadge row={r} /><ClosingBadge row={r} /><GhostPills ghost={r.ghost} /></div>
     </div>
   ),
 };
@@ -240,7 +241,7 @@ export function JobsScreen({ route }: { route: Route }) {
                 <Checkbox data-tour="jobs-hidden" label={`Show ads I can't apply for (${hidden} hidden)`} checked={form.showIneligible} onChange={(e) => set("showIneligible", e.target.checked)} />
               ) : null}
               <Checkbox label="Hide likely stale" checked={!!form.hideStale} onChange={(e) => set("hideStale", e.target.checked)}
-                title="Hides ads you haven't applied for that were posted over 30 days ago, or posted again by the same company" />
+                title="Hides ads you haven't applied for whose closing date has passed, or that the same company posted again. Old ads stay, marked Possibly stale" />
             </div>
           )} />
       </div>

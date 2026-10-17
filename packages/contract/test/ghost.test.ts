@@ -124,6 +124,8 @@ describe("flags on job rows and the Hide likely stale filter", () => {
     row({ id: "again", posted: "2026-10-10" }),
     row({ id: "fresh", posted: "2026-10-12" }),
     row({ id: "applied-old", posted: "2026-08-01", status: "Applied" }),
+    row({ id: "closed", posted: "2026-09-20", closes_on: "2026-10-14" }),
+    row({ id: "old-but-open", posted: "2026-08-01", closes_on: "2026-10-31" }),
   ];
   const flagged = withGhostFlags(rows, new Map([["acme-corp/again", "Reposted because…"]]), NOW);
 
@@ -132,18 +134,22 @@ describe("flags on job rows and the Hide likely stale filter", () => {
     expect(flagged[1]!.ghost).toEqual({ repost: "Reposted because…" });
     expect(flagged[2]).toBe(rows[2]);
     expect(flagged[3]!.ghost).toBeUndefined();
+    expect(flagged[4]!.ghost).toEqual({ closed: expect.stringMatching(/^The ad said applications closed on 14 Oct 2026/) });
+    expect(flagged[5]!.ghost?.closed).toBeUndefined();
   });
 
-  it("hides only open ads with a flag", () => {
-    expect(flagged.map(hiddenAsStale)).toEqual([true, true, false, false]);
+  it("hides only open ads that closed or were reposted: age alone never hides", () => {
+    expect(flagged.map(hiddenAsStale)).toEqual([false, true, false, false, true, false]);
     expect(hiddenAsStale({ status: "Applied", ghost: { repost: "x" } })).toBe(false);
+    expect(hiddenAsStale({ status: "Applied", ghost: { closed: "x" } })).toBe(false);
+    expect(hiddenAsStale({ status: "Found", ghost: { stale: "x" } })).toBe(false);
   });
 
   it("applyJobQuery leaves them out only when asked, and counts the total after", () => {
-    expect(applyJobQuery(flagged, {}).total).toBe(4);
+    expect(applyJobQuery(flagged, {}).total).toBe(6);
     const list = applyJobQuery(flagged, { hideStale: true });
-    expect(list.rows.map((r) => r.id).sort()).toEqual(["applied-old", "fresh"]);
-    expect(list.total).toBe(2);
+    expect(list.rows.map((r) => r.id).sort()).toEqual(["applied-old", "fresh", "old", "old-but-open"]);
+    expect(list.total).toBe(4);
   });
 
   it("sanitizeJobQuery keeps hideStale only when it is true", () => {

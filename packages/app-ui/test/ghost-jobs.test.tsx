@@ -11,11 +11,20 @@ vi.setConfig({ testTimeout: 15_000 });
 const rows = () => within(screen.getByRole("table")).getAllByRole("row").slice(1);
 beforeEach(() => { localStorage.clear(); window.location.hash = "#/jobs"; });
 
-/** The mock's fixture with its first visible job posted long before the mock's clock (15 Jan 2026). */
-function staleBridge(): MockBridge {
+/**
+ * The mock's fixture with its first visible job posted long before the mock's clock (15 Jan 2026), and with
+ * `closed` set, the second one's closing date passed.
+ */
+function staleBridge(closed = false): MockBridge {
   const f = loadFixture();
-  const open = f.jobs.find((j) => j.job.status === "Found" && !["citizen_pr_only", "clearance"].includes(j.job.work_rights.label))!;
+  const visible = f.jobs.filter((j) => !["citizen_pr_only", "clearance"].includes(j.job.work_rights.label));
+  const open = visible.find((j) => j.job.status === "Found")!;
   open.job.posted = "2025-11-01";
+  if (closed) {
+    const other = visible.find((j) => j !== open)!;
+    other.job.status = "Saved";
+    other.job.closes_on = "2026-01-10";
+  }
   return new MockBridge({ fixture: f });
 }
 
@@ -43,14 +52,16 @@ describe("Hide likely stale", () => {
     expect(queryFromForm(EMPTY_FORM).hideStale).toBeUndefined();
   });
 
-  it("flags the old ad in the list and hides it when ticked", async () => {
-    renderApp(<JobsScreen route={{ screen: "jobs" }} />, { bridge: staleBridge() });
+  it("flags the old ad and keeps it, and hides the closed ad when ticked", async () => {
+    renderApp(<JobsScreen route={{ screen: "jobs" }} />, { bridge: staleBridge(true) });
     await screen.findByRole("table");
     expect(await screen.findByText("Possibly stale")).toHaveAttribute("title", expect.stringMatching(/^Posted 75 days ago/));
+    expect(screen.getByText("Closed")).toHaveAttribute("title", "The ad said applications closed on 10 Jan 2026.");
     const before = rows().length;
     await userEvent.click(screen.getByRole("checkbox", { name: "Hide likely stale" }));
     await waitFor(() => expect(rows()).toHaveLength(before - 1));
-    expect(screen.queryByText("Possibly stale")).toBeNull();
+    expect(screen.queryByText("Closed")).toBeNull();
+    expect(screen.getByText("Possibly stale")).toBeInTheDocument();
     await waitFor(() => expect(window.location.hash).toBe("#/jobs?fresh=1"));
   });
 });

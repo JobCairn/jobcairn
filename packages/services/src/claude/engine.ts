@@ -32,6 +32,7 @@ import { parseLine, summarise } from "./stream.js";
 import { snapshot, verifyRun, type Snapshot } from "./verify.js";
 import { isTransientFailure, retryDelay } from "./retry.js";
 import { cleanBoards } from "../chrome/boards.js";
+import { runBoardHealth } from "../board-health.js";
 
 export const CAREER_TIMEOUT_MS = 20 * 60_000;
 export const VIDEO_TIMEOUT_MS = 45 * 60_000;
@@ -728,6 +729,14 @@ export class ClaudeEngine {
         // How each board's tab was opened (the browser the helper drove, the profile seen), for the run's Details.
         const diags = await chromeFor(this.ctx).endRun(l.browser, { keepHelper: again }).catch(() => []);
         if (diags.length) v.browser_diag = diags;
+      }
+      // Board health: each board's results this run, and a warning for one that returned nothing or junk.
+      if (v.action === "find_jobs" && v.status === "succeeded" && l.root) {
+        try {
+          const h = runBoardHealth(l.root, v, listRuns(l.root), this.ctx.now());
+          v.board_counts = h.counts;
+          if (h.warnings.length) v.board_health = h.warnings;
+        } catch (e) { console.error(`careeros: couldn't check the boards' health (${(e as Error).message})`); }
       }
       this.scheduleRetry(l, done);
       this.persist(l, true);

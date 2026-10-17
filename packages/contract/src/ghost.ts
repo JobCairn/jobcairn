@@ -2,6 +2,7 @@
 // jobs already saved (their posted dates and ad text). Nothing is looked up online.
 import { postedDate } from "./analytics.js";
 import type { JobStatus } from "./constants.js";
+import { closingState } from "./closing-date.js";
 
 const DAY = 86_400_000;
 
@@ -20,6 +21,8 @@ export const GHOST_OPEN: readonly JobStatus[] = ["Found", "Saved", "Applying"];
 export interface GhostFlags {
   stale?: string;
   repost?: string;
+  /** The ad's own closing date has passed (closing-date.ts). Shown by the closing badge, not as a ghost pill. */
+  closed?: string;
 }
 
 /**
@@ -117,19 +120,25 @@ export function findReposts(ads: GhostAd[]): Map<string, string> {
   return out;
 }
 
-/** Whether "Hide likely stale" hides this row: an open ad flagged stale or reposted. */
+/**
+ * Whether "Hide likely stale" hides this row: an open ad whose closing date has passed, or that was posted again.
+ * Age alone ("Possibly stale", posted over 30 days ago) is shown but never hides an ad: many stay open for weeks,
+ * and one with a closing date still to come is plainly open (spec 2026-10-17-closing-dates-and-board-health).
+ */
 export function hiddenAsStale(row: { status: JobStatus; ghost?: GhostFlags }): boolean {
-  return GHOST_OPEN.includes(row.status) && !!(row.ghost?.stale || row.ghost?.repost);
+  return GHOST_OPEN.includes(row.status) && !!(row.ghost?.closed || row.ghost?.repost);
 }
 
-/** The rows with their ghost flags: stale from the posted date, reposts from findReposts (keyed "slug/id"). */
-export function withGhostFlags<R extends { company_slug: string; id: string; posted: string; status: JobStatus; ghost?: GhostFlags }>(
+/** The rows with their ghost flags: stale from the posted date, closed from the ad's closing date, reposts from findReposts (keyed "slug/id"). */
+export function withGhostFlags<R extends { company_slug: string; id: string; posted: string; status: JobStatus; closes_on?: string; ghost?: GhostFlags }>(
   rows: R[], reposts: Map<string, string>, now: Date,
 ): R[] {
   return rows.map((r) => {
     const stale = staleReason(r, now);
     const repost = reposts.get(`${r.company_slug}/${r.id}`);
-    if (!stale && !repost) return r;
-    return { ...r, ghost: { ...(stale ? { stale } : {}), ...(repost ? { repost } : {}) } };
+    const closing = closingState(r, now);
+    const closed = closing?.closed ? closing.why : undefined;
+    if (!stale && !repost && !closed) return r;
+    return { ...r, ghost: { ...(stale ? { stale } : {}), ...(repost ? { repost } : {}), ...(closed ? { closed } : {}) } };
   });
 }

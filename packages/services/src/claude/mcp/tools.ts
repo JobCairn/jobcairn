@@ -118,13 +118,14 @@ export const MCP_TOOLS: Record<McpToolName, McpTool> = {
     inputSchema: schema({
       company: s("Company name", 120), title: s("Job title", 200), url: s("https link to the ad", 2000), source: { type: "string", enum: [...JOB_SOURCES] },
       site: s("Job site", 80), location: s("Location", 120), work_mode: s("Remote, hybrid or on-site", 40), job_type: s("Full time, contract…", 40),
-      salary: s("Salary as written in the ad", 120), posted: s("When the ad was posted, as the ad shows it: a date (2026-10-12) or the board's words (\"3d ago\", \"30+ days ago\", \"just posted\"). Leave it out when the ad shows none", 40), apply_via: s("How to apply", 300),
+      salary: s("Salary as written in the ad", 120), posted: s("When the ad was posted, as the ad shows it: a date (2026-10-12) or the board's words (\"3d ago\", \"30+ days ago\", \"just posted\"). Leave it out when the ad shows none", 40),
+      closes: s("When applications close, as the ad states it (\"2026-10-31\", \"31 October\", \"Applications close 5pm Friday 7 Nov\"). Leave it out when the ad states none: never guess it", 80), apply_via: s("How to apply", 300),
       jd_text: { type: "string", description: "The whole job ad as plain text", maxLength: MAX_JD_BYTES },
       no_link_reason: s("Only when you truly can't get the ad's link: why, in one plain sentence", 300),
     }, ["company", "title"]),
     validate: obj({
       company: line(120), title: line(200), url: opt(httpsUrl), source: opt(oneOf(JOB_SOURCES)), site: opt(line(80)), location: opt(line(120)),
-      work_mode: opt(line(40)), job_type: opt(line(40)), salary: opt(line(120)), posted: opt(line(40)), apply_via: opt(line(300)), jd_text: opt(jdText),
+      work_mode: opt(line(40)), job_type: opt(line(40)), salary: opt(line(120)), posted: opt(line(40)), closes: opt(line(80)), apply_via: opt(line(300)), jd_text: opt(jdText),
       no_link_reason: opt(line(300)),
     }),
     run: ({ root, search, chrome }, a) => {
@@ -134,7 +135,7 @@ export const MCP_TOOLS: Record<McpToolName, McpTool> = {
         company: a.company as string, title: a.title as string, url: a.url as string | undefined, source: a.source as (typeof JOB_SOURCES)[number] | undefined,
         source_site: a.site as string | undefined, location: a.location as string | undefined, work_mode: a.work_mode as string | undefined,
         job_type: a.job_type as string | undefined, salary_text: a.salary as string | undefined, posted: a.posted as string | undefined,
-        apply_via: a.apply_via as string | undefined, jd_text: jd,
+        closes: a.closes as string | undefined, apply_via: a.apply_via as string | undefined, jd_text: jd,
       };
       const known = findDuplicateJob(root, input, { key: jobAdKey }) ? newJob(root, input, undefined, { key: jobAdKey }) : null;
       if (known?.duplicate) return { duplicate: true, company_slug: known.company_slug, id: known.id, filled: known.filled ?? [], note: "Already in the workspace: count it as already had, not added." };

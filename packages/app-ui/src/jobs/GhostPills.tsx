@@ -3,7 +3,8 @@ import "./extras.css";
 
 /**
  * Quiet hints that an ad may not be live: "Possibly stale" (posted over 30 days ago) and "Reposted" (the same ad
- * saved before). The tooltip says why; screen readers hear the reason with the label.
+ * saved before). The tooltip says why; screen readers hear the reason with the label. A closed ad's flag is shown by
+ * ClosingBadge instead.
  */
 export function GhostPills({ ghost }: { ghost?: GhostFlags }) {
   if (!ghost?.stale && !ghost?.repost) return null;

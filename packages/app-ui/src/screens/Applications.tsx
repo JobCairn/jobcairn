@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Button, Icons, Pill, Select, Tabs, Text } from "@careeros/brand";
-import { followUpIsDue, type JobRow, type SponsorshipFocus } from "@careeros/contract";
+import { followUpIsDue, followUpLimitText, type JobRow, type SponsorshipFocus } from "@careeros/contract";
 import { useLoad } from "../bridge-context";
 import { displayName } from "../components/displayName";
 import { errorSentence } from "../components/ErrorBanner";
@@ -10,6 +10,7 @@ import { navigate } from "../router";
 import { SourceBadge } from "../source/SourceBadge";
 import { RightsCell } from "../jobs/cells/cells";
 import { OfferComparison } from "../jobs/OfferComparison";
+import { QuietBanner } from "../applications/QuietBanner";
 import { resolveBoard } from "../source/boards";
 import {
   STAGES, defaultStage, filterPrepare, rememberStage, rememberedStage, stageCounts, stageRows, waitingKeys,
@@ -26,6 +27,8 @@ function Row({ r, stage, focus }: { r: JobRow; stage: StageId; focus: Sponsorshi
   const tone = rightsTone(r.wr_label, focus);
   // Sent and no reply by the follow-up day: the row says so and its button opens the ready follow-up draft.
   const due = stage === "sent" && followUpIsDue(r.follow_up_on, new Date());
+  // Two follow-ups sent: no third is offered, and the row says why.
+  const limit = followUpLimitText(r.follow_ups ?? 0);
   const action = due ? { label: "Follow up", primary: true } : ACTION[stage];
   const sub = [displayName(r.company_name), r.location ? displayName(r.location) : ""].filter(Boolean).join(" · ");
   return (
@@ -36,6 +39,7 @@ function Row({ r, stage, focus }: { r: JobRow; stage: StageId; focus: Sponsorshi
         <span className="app-row__title">{displayName(r.title)}</span>
         <span className="app-row__sub">{sub}</span>
         {due ? <span className="app-row__due"><Pill tone="warning">Follow up due</Pill></span> : null}
+        {stage === "sent" && limit ? <span className="app-row__due" title={limit}><Pill tone="neutral">Followed up twice</Pill></span> : null}
       </button>
       <span className="app-row__fit" aria-label={r.fit !== null ? `Fit ${r.fit}` : "Not scored"} title={r.fit !== null ? "Fit score" : "Not scored yet"}>{r.fit !== null ? r.fit : "–"}</span>
       <span className="app-row__salary">{r.salary_text ? displayName(r.salary_text) : <span className="t-muted">Salary not stated</span>}</span>
@@ -89,6 +93,7 @@ export function ApplicationsScreen() {
   return (
     <>
       <ScreenHead title="Applications" sub="Prepare, review and send applications. Nothing is ever sent without your OK." settings="applications" />
+      <QuietBanner />
       <OfferComparison />
       <div data-tour="apps-stages">
         <Tabs label="Application stages" value={stage} onChange={pick} tabs={STAGES.map((s) => ({ id: s.id, label: s.label, count: counts[s.id] }))}>

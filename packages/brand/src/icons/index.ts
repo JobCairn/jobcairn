@@ -12,7 +12,7 @@ import {
   // Recruiters (ui/recruiters)
   Phone, Star, UsersRound,
   // Table status marks (ui/jobs-cells)
-  BadgeCheck, Bookmark, CircleDashed, CircleSlash, CircleX, PenLine, Shield, ShieldCheck, ShieldQuestion, ShieldX,
+  BadgeCheck, Bookmark, CircleDashed, CircleMinus, CircleSlash, CircleX, MailX, PenLine, Shield, ShieldCheck, ShieldQuestion, ShieldX,
   // List editor and quick filters (ui/search-filters)
   GripVertical, ListFilter, MapPin,
   // Resume Studio and the Resumes file grid (ui/resume-studio)
@@ -140,6 +140,8 @@ export const Icons = {
   applying: PenLine,
   offer: BadgeCheck,
   rejected: CircleX,
+  noResponse: MailX,
+  withdrawn: CircleMinus,
   skipped: CircleSlash,
   sponsorYes: ShieldCheck,
   sponsorNo: ShieldX,

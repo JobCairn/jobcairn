@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { isFinalStatus } from "@careeros/contract";
 import { type Clock, iso } from "./clock.js";
 import { JOB_SUBDIRS, type JobSubdir, jobFilePath, listJobs, uniquePath } from "./jobs.js";
 import { assertSegment, insideRoot, layout, ME_DIRS, type MeDir } from "./paths.js";
@@ -192,7 +193,7 @@ function matchCompany(text: string, all: Candidate[]): Candidate[] {
 function bestJob(found: Candidate[], text: string): Candidate {
   const tw = new Set(text.split(" "));
   const score = (c: Candidate) => words(c.title).split(" ").filter((w) => w.length > 2 && tw.has(w)).length;
-  const closed = (c: Candidate) => (c.status === "Rejected" || c.status === "Skipped" ? 1 : 0);
+  const closed = (c: Candidate) => (isFinalStatus(c.status) ? 1 : 0);
   return [...found].sort((a, b) => closed(a) - closed(b) || score(b) - score(a) || b.found_at.localeCompare(a.found_at))[0]!;
 }
 

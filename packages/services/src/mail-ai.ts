@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { insideRoot, isEmailAddress, layout, listDraftFiles, readDraft, readEmails, readRecord } from "@careeros/core";
 import {
-  actionPaths, parseDraftSuggestion, SUGGESTION_MAX_BYTES, SUGGESTION_UNREADABLE,
+  actionPaths, followUpLimitText, followUpsSent, parseDraftSuggestion, SUGGESTION_MAX_BYTES, SUGGESTION_UNREADABLE,
   type ActionTarget, type ClaudeRunRequest, type DraftAssist, type DraftSuggestion, type MailAddressView,
 } from "@careeros/contract";
 import { applyEmailOf } from "./apply.js";
@@ -32,6 +32,12 @@ export function emailRequest(root: string, t: ActionTarget, req: ClaudeRunReques
   if (t.kind !== "job") return req;
   const { thread: _ignored, ...options } = (req.options ?? {}) as Record<string, unknown>;
   const draftId = typeof options.draft_id === "string" ? options.draft_id : "";
+  // At most two follow-ups per application: a third is refused with the same reason the Outreach card gives.
+  if (options.purpose === "follow_up" && (options.mode ?? "new") === "new") {
+    let limit = "";
+    try { limit = followUpLimitText(followUpsSent(readRecord("job", layout(root).jobFile(t.company_slug, t.id)).timeline)); } catch { limit = ""; }
+    if (limit) throw new Error(limit);
+  }
   let thread = false;
   if (draftId) {
     const f = listDraftFiles(root, t.company_slug, t.id).find((x) => x.draft_id === draftId);

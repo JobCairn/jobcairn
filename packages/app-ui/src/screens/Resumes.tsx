@@ -1,6 +1,6 @@
 import { useEffect, useId, useMemo, useState } from "react";
 import { Button, Dialog, Icon, Icons, Input, Pill, Select, Table, Text, useToast, type Column } from "@careeros/brand";
-import { isActiveRun, VARIANT_NAME, VARIANTS_DIR, type ClaudeRunView, type JobAdded, type ResumeItemRef, type ResumeLibrary, type ResumeRef } from "@careeros/contract";
+import { isActiveRun, SENT_STATUSES, VARIANT_NAME, VARIANTS_DIR, type ClaudeRunView, type JobAdded, type ResumeItemRef, type ResumeLibrary, type ResumeRef } from "@careeros/contract";
 import { errorText, useBridge, useLoad } from "../bridge-context";
 import { useClaudeRuns } from "../claude";
 import { DateText } from "../components/DateText";
@@ -39,8 +39,7 @@ const copyName = (n: string) => `${n.replace(/[^\p{L}\p{N} +#./()&,'-]/gu, " ").
 type Target = { ref: ResumeItemRef; name: string; sent?: boolean };
 
 /** Job statuses where the tailored resume has gone out: Applied and everything after it. */
-const SENT_STATUSES: readonly string[] = ["Applied", "Interview", "Offer", "Rejected"];
-const wasSent = (status: string) => SENT_STATUSES.includes(status);
+const wasSent = (status: string) => (SENT_STATUSES as readonly string[]).includes(status);
 
 /**
  * Every resume in one place, like a file browser: the person's own, the ones tailored to a job (in company folders

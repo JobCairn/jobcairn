@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { importLegacy } from "../src/legacy.js";
+import { importLegacy, legacyStatus } from "../src/legacy.js";
 import { listJobs } from "../src/jobs.js";
 import { readRecord } from "../src/store.js";
 import { readSearches } from "../src/knowledge.js";
@@ -14,6 +14,18 @@ function setup() {
   const dest = path.join(tmpDir(), "ws");
   return { src, dest };
 }
+
+describe("legacyStatus", () => {
+  it("keeps Withdrawn and No response as final statuses, and still folds Closed into Skipped", () => {
+    expect(legacyStatus("Withdrawn")).toBe("Withdrawn");
+    expect(legacyStatus("No response")).toBe("No response");
+    expect(legacyStatus("Ghosted")).toBe("No response");
+    expect(legacyStatus("Closed")).toBe("Skipped");
+    expect(legacyStatus("Interviewing")).toBe("Interview");
+    expect(legacyStatus("Something else")).toBe("Found");
+    expect(legacyStatus(undefined)).toBe("Found");
+  });
+});
 
 describe("importLegacy", () => {
   it("dry run plans everything and writes nothing", () => {

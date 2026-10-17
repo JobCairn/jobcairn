@@ -1,3 +1,4 @@
+import { FINAL_STATUSES } from "./constants.js";
 import { isPlainEmail, linkedinCompanyPage } from "./contacts.js";
 import { jobBoardByUrl } from "./job-boards.js";
 import type { JobRow } from "./types.js";
@@ -67,7 +68,7 @@ export interface AgencyRow extends AgencyRecordView {
   activity: AgencyEvent[];
 }
 
-const CLOSED = new Set(["Rejected", "Skipped"]);
+const CLOSED = new Set<string>(FINAL_STATUSES);
 const SPONSOR_LABELS = new Set(["sponsorship_offered", "visa_ok"]);
 const uniq = (xs: string[]) => {
   const seen = new Set<string>();

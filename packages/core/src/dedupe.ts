@@ -1,5 +1,5 @@
 import fs from "node:fs";
-import { storedClosing, storedPosted } from "@careeros/contract";
+import { FINAL_STATUSES, storedClosing, storedPosted } from "@careeros/contract";
 import { type Clock, iso } from "./clock.js";
 import { listJobs } from "./jobs.js";
 import { layout, splitClient } from "./paths.js";
@@ -9,11 +9,11 @@ import { readJson, updateRecord } from "./store.js";
  * One duplicate check for every way a job is added (Find jobs, Add a job, the CLI). A job is already in the
  * workspace when it has the same ad (same board id, or the same address once tracking, fragment and trailing slash
  * are gone), or the same company, the same title and a compatible place. The second rule catches a run that found
- * the ad again without its link. Closed jobs (Rejected, Skipped) only block the same ad, never a new posting.
+ * the ad again without its link. Closed jobs (a final status: Rejected, No response, Withdrawn, Skipped) only block the same ad, never a new posting.
  */
 
 const TRACKING = /^(utm_|ref$|refid$|trk|trackingid$|source$|gh_src$|lever-source)/i;
-const CLOSED = new Set(["Rejected", "Skipped"]);
+const CLOSED = new Set<string>(FINAL_STATUSES);
 
 const onHost = (host: string, domain: string) => host === domain || host.endsWith(`.${domain}`);
 

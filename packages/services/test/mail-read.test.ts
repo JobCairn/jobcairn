@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { allowAccessRequest, ME_NOT_ATTACHABLE, requestAccess, layout, readRecord, writeDraft } from "@careeros/core";
-import { addr, ALEX, rawMessage, readMailState, TALENT } from "@careeros/mail";
+import { addr, ALEX, rawMessage, readMailState, TALENT, updateStored } from "@careeros/mail";
 import { mailRefToken, mailUrlFor, mailViewUrl } from "@careeros/contract";
 import { describe, expect, it, vi } from "vitest";
 import { approvalHandlers as AP } from "../src/approvals.js";
@@ -233,6 +233,12 @@ describe("Mail to sort", () => {
     const { ctx, root, board } = await seeded();
     expect(R["mail.triage.ignore"](ctx, board.split("/").pop()!.replace(/\.json$/, ""), "domain").map((i) => i.subject)).toEqual(["Your application"]);
     expect(readMailState(root).ignore).toEqual({ senders: [], domains: ["s.seek.com.au"] });
+  });
+  it("shows why sync held an email back from a job: the company it matched and what needs a check", async () => {
+    const { ctx, triage, root } = await seeded();
+    updateStored(root, triage, (e) => { e.custom = { needs_check: { company_slug: ACME[0], job_id: ACME[1], reason: "The job is Rejected, but the employer asked to talk or interview." } }; });
+    const item = R["mail.triage.list"](ctx).find((i) => i.subject === "Your application")!;
+    expect(item.suggestion).toMatchObject({ company_slug: ACME[0], reason: "Needs a check: The job is Rejected, but the employer asked to talk or interview." });
   });
 });
 

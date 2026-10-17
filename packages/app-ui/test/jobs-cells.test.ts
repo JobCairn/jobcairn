@@ -58,6 +58,8 @@ describe("statusView", () => {
     expect(statusView("Interview").tone).toBe("success");
     expect(statusView("Rejected").tone).toBe("danger");
     expect(statusView("Skipped").tone).toBe("muted");
+    expect(statusView("No response")).toMatchObject({ word: "No response", tone: "muted" });
+    expect(statusView("Withdrawn")).toMatchObject({ word: "Withdrawn", tone: "muted" });
     expect(statusView("Found").tone).toBe("muted");
   });
 });

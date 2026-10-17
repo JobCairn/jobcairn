@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { ACTIONS, buildActionPrompt } from "@careeros/contract";
 import { MockBridge, loadFixture } from "../src/mock/MockBridge";
 import { JobScreen } from "../src/screens/Job";
+import { draftPurpose } from "../src/components/DraftEditor";
 import { renderApp } from "./render";
 
 const ROUTE = { screen: "job", slug: "acme-corp", id: "2026-01-12-ai-engineer", tab: "outreach" } as const;
@@ -76,5 +77,42 @@ describe("Job › Outreach", () => {
     renderApp(<JobScreen route={ROUTE} />, { bridge: bridgeWith({}) });
     expect(await screen.findByText("Note to the hiring manager")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Open in Mail" })).toBeNull();
+  });
+});
+
+describe("Follow-up limit and thank-you prompt", () => {
+  const job = (f: ReturnType<typeof loadFixture>) => f.jobs.find((j) => j.job.company_slug === "acme-corp" && j.job.id === "2026-01-12-ai-engineer")!.job;
+  it("after two follow-ups, Outreach says why there is no third and offers no draft", async () => {
+    const f = loadFixture();
+    const j = job(f);
+    j.status = "Applied";
+    j.timeline.push({ at: "2026-01-20T00:00:00.000Z", event: "Status: Applied", note: "" },
+      { at: "2026-01-27T00:00:00.000Z", event: "Email sent", note: "Following up: AI Engineer application" },
+      { at: "2026-02-03T00:00:00.000Z", event: "Email sent", note: "Following up: AI Engineer application" });
+    renderApp(<JobScreen route={ROUTE} />, { bridge: new MockBridge({ fixture: f }) });
+    expect(await screen.findByText(/You've followed up twice/)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Open follow-up draft" })).not.toBeInTheDocument();
+  });
+  it("opens the follow-up draft with Write with Claude already on Follow-up, so its grounding and limit apply", async () => {
+    const f = loadFixture();
+    const j = job(f);
+    j.status = "Applied";
+    j.timeline.push({ at: "2026-01-20T00:00:00.000Z", event: "Status: Applied", note: "" });
+    renderApp(<JobScreen route={ROUTE} />, { bridge: new MockBridge({ fixture: f }) });
+    await userEvent.click(await screen.findByRole("button", { name: "Open follow-up draft" }));
+    expect(await screen.findByRole("radio", { name: "Follow-up" })).toHaveAttribute("aria-checked", "true");
+    expect(draftPurpose({ in_reply_to: "", subject: "Thank you: AI Engineer interview" })).toBe("thank_you");
+    expect(draftPurpose({ in_reply_to: "<m1@example.org>", subject: "Following up: x" })).toBe("reply");
+    expect(draftPurpose({ in_reply_to: "", subject: "AI Engineer application" })).toBe("application");
+  });
+  it("once an interview is logged, the job page offers the thank-you note", async () => {
+    const f = loadFixture();
+    const j = job(f);
+    j.status = "Interview";
+    j.timeline.push({ at: "2026-02-01T00:00:00.000Z", event: "Status: Interview", note: "" });
+    renderApp(<JobScreen route={{ ...ROUTE, tab: "description" }} />, { bridge: new MockBridge({ fixture: f }) });
+    expect(await screen.findByRole("region", { name: "Thank-you note" })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Open the thank-you draft in Outreach" }));
+    expect(window.location.hash).toContain("outreach");
   });
 });

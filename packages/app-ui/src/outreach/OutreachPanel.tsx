@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button, Card, Icons, Pill, Text, useToast } from "@careeros/brand";
 import {
-  LINKEDIN_NOTE_MAX, fitLinkedIn, followUpIsDue, followUpOn, followUpTemplate, parseOutreach, thankYouTemplate, type DraftInput, type JobDetail,
+  LINKEDIN_NOTE_MAX, fitLinkedIn, followUpIsDue, followUpLimitText, followUpOn, followUpsSent, followUpTemplate, parseOutreach, thankYouTemplate, type DraftInput, type JobDetail,
 } from "@careeros/contract";
 import { fmtDay, parseDay } from "../reading/dates";
 import { useLoad } from "../bridge-context";
@@ -70,11 +70,26 @@ function NoteCard({ slug, id, broken, onMail }: { slug: string; id: string; brok
   );
 }
 
-/** "Follow up due" after applying (with a ready follow-up draft), or a thank-you draft after an interview. */
+/**
+ * "Follow up due" after applying (with a ready follow-up draft), or a thank-you draft after an interview. After two
+ * follow-ups the card says why there is no third.
+ */
 function FollowUpCard({ d, onMail }: { d: JobDetail; onMail: (d: DraftInput) => void }) {
   const j = d.job;
   const company = d.company?.name ?? j.company_slug;
   if (j.status === "Applied") {
+    const limit = followUpLimitText(followUpsSent(j.timeline));
+    if (limit) {
+      return (
+        <Card className="stack" aria-label="Follow-up">
+          <div className="row row--between">
+            <Text role="heading-2" as="h3">Follow-up</Text>
+            <Pill tone="neutral">Followed up twice</Pill>
+          </div>
+          <Text role="body-sm" muted>{limit}</Text>
+        </Card>
+      );
+    }
     const on = followUpOn(j);
     if (!on) return null;
     const due = followUpIsDue(on, new Date());

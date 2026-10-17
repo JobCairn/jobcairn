@@ -49,7 +49,7 @@
         "career": { "type": "object", "default": {}, "properties": { "match": { "type": ["number", "null"], "default": null }, "odds": { "type": ["number", "null"], "default": null }, "tier": { "type": "string", "default": "" }, "scored_at": { "type": "string", "default": "" } } }
       }
     },
-    "status": { "enum": ["Found", "Saved", "Applying", "Applied", "Interview", "Offer", "Rejected", "Skipped"], "default": "Found", "x-ui": { "label": "Status" } },
+    "status": { "enum": ["Found", "Saved", "Applying", "Applied", "Interview", "Offer", "Rejected", "No response", "Withdrawn", "Skipped"], "default": "Found", "x-ui": { "label": "Status" } },
     "interview_at": { "type": "string", "pattern": "^(\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2})?$" },
     "offer": {
       "type": "object",

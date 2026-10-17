@@ -566,3 +566,54 @@ describe("looking back when companies change", () => {
     expect(readMailState(s.root).mailboxes.inbox).toMatchObject({ last_uid: 3 });
   });
 });
+
+describe("status rules for mail (spec 2026-10-17-statuses-followups-mail-rules)", () => {
+  const setStatus = (s: ReturnType<typeof setup>, status: string) =>
+    updateRecord("job", layout(s.root).jobFile(s.job.company_slug, s.job.id), (j) => { j.status = status as typeof j.status; });
+  const record = (s: ReturnType<typeof setup>) => readRecord("job", layout(s.root).jobFile(s.job.company_slug, s.job.id));
+
+  it("an acknowledgement moves Applying to Applied, dated by the email, with a timeline note", async () => {
+    const s = setup();
+    setStatus(s, "Applying");
+    s.provider.add("inbox", rawMessage({ id: "ack", subject: "Thank you for applying", text: "Hi Alex,\r\n\r\nWe've received your application for AI Engineer.", date: "Wed, 14 Jan 2026 12:00:00 +0000" }));
+    expect(await syncMail(s.opts())).toMatchObject({ stored: 1, error: "", suggestions: [] });
+    const j = record(s);
+    expect(j.status).toBe("Applied");
+    const ev = j.timeline.find((e) => e.event === "Status: Applied")!;
+    expect(ev.at).toBe("2026-01-14T12:00:00.000Z");
+    expect(ev.note).toMatch(/^Moved to Applied: the employer acknowledged your application/);
+    // The acknowledgement is marked, so it never counts as the reply that ends the follow-up.
+    expect(j.timeline.find((e) => e.event === "Email received")).toMatchObject({ signal: "acknowledged" });
+  });
+  it("marks an acknowledgement on a job you had already set to Applied, and changes nothing else", async () => {
+    const s = setup();
+    setStatus(s, "Applied");
+    s.provider.add("inbox", rawMessage({ id: "ack2", subject: "Application received: AI Engineer", text: "Hi Alex,\r\n\r\nThanks for applying." }));
+    const r = await syncMail(s.opts());
+    expect(r).toMatchObject({ stored: 1, suggestions: [] });
+    const j = record(s);
+    expect(j.status).toBe("Applied");
+    expect(j.timeline.find((e) => e.event === "Email received")).toMatchObject({ signal: "acknowledged" });
+  });
+
+  it("never sets an outcome from mail: a rejection is only a suggestion", async () => {
+    const s = setup();
+    setStatus(s, "Applied");
+    s.provider.add("inbox", rawMessage({ id: "no", subject: "Your application", text: "Hi Alex,\r\n\r\nWe regret to inform you that we won't be moving forward with your application." }));
+    const r = await syncMail(s.opts());
+    expect(r).toMatchObject({ stored: 1, triaged: 0 });
+    expect(r.suggestions).toEqual([expect.objectContaining({ company_slug: s.job.company_slug, job_id: s.job.id, to: "Rejected" })]);
+    expect(record(s).status).toBe("Applied");
+  });
+
+  it("sends mail that conflicts with a final status to Mail to sort, with why", async () => {
+    const s = setup();
+    setStatus(s, "Rejected");
+    s.provider.add("inbox", rawMessage({ id: "inv", subject: "Interview invitation: AI Engineer", text: "Hi Alex,\r\n\r\nWe'd like to invite you to an interview." }));
+    expect(await syncMail(s.opts())).toMatchObject({ stored: 0, triaged: 1, error: "" });
+    expect(fs.existsSync(layout(s.root).jobEmailsDir(s.job.company_slug, s.job.id))).toBe(false);
+    expect(record(s).status).toBe("Rejected");
+    const t = listTriage(s.root)[0]!;
+    expect(t.email.custom.needs_check).toMatchObject({ company_slug: s.job.company_slug, job_id: s.job.id, reason: expect.stringContaining("The job is Rejected") });
+  });
+});

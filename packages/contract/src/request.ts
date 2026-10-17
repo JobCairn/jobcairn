@@ -190,7 +190,7 @@ export const ACTION_OPTIONS: { readonly [K in ActionId]: readonly ActionOption[]
   draft_email: [
     sel("purpose", "What it's for", "The kind of email.", "application", [
       { value: "application", label: "Application", line: "It's my application email for this job: name the role, give two or three reasons I fit from my evidence, and say my resume is attached." },
-      { value: "follow_up", label: "Follow-up", line: "It's a polite follow-up on my application: ask about the next steps and restate my interest in one line." },
+      { value: "follow_up", label: "Follow-up", line: "It's a polite follow-up on my application: ask about the next steps and restate my interest in one line. Use only claims already in the resume and cover letter I sent for this job (application/resume.md and application/cover-letter.md in this job's folder): add no new claims, numbers or skills. Keep it to 60 to 120 words, and start the subject with \"Following up:\"." },
       { value: "thank_you", label: "Thank you", line: "It's a thank-you note after an interview or call: thank them, link one thing from the ad to my evidence, and say I'd welcome the next step." },
       { value: "reply", label: "Reply", line: "It's a reply to the email I'm answering: answer what it asks from my evidence only. Where my files can't answer, say I'll confirm." },
       { value: "question", label: "Ask question", line: "It's a short question about the role or the hiring process. My note says what to ask." },

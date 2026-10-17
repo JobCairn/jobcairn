@@ -2,7 +2,7 @@
 // cache (knowledge/sponsors.json), scored with the same likelihood rules the job-hunt scripts
 // use (a port of `likelihood()` in the legacy check_sponsor.py). Pure, so the services and the
 // UI's mock bridge build the exact same rows.
-import type { JobStatus } from "./constants.js";
+import { FINAL_STATUSES, type JobStatus } from "./constants.js";
 import type { SponsorEvidenceItem, SponsorJobRef, SponsorRow, SponsorStatusKey } from "./types.js";
 
 export const SPONSOR_STATUSES: readonly SponsorStatusKey[] = ["verified", "to_verify", "checked_none", "sanctioned", "unknown"];
@@ -102,7 +102,7 @@ export const IMPORT_SPONSOR_REASON = "Employer's sponsor score when this job was
 export interface SponsorCompanyInput { name: string; slug: string; sponsor: { status: string; evidence: unknown[]; last_checked: string } }
 export interface SponsorJobInput { company_slug: string; id: string; title: string; status: JobStatus; sponsor: { value: number | null; tier: string; reasons: string[] } }
 
-const CLOSED_JOB: JobStatus[] = ["Rejected", "Skipped"];
+const CLOSED_JOB = FINAL_STATUSES;
 
 function qldOf(v: unknown): boolean | null {
   if (v === true || v === false) return v;

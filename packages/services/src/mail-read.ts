@@ -243,9 +243,21 @@ export function triageItems(ctx: ServiceContext): TriageItem[] {
   const companies = companyIndex(root);
   return listTriage(root).map((t) => ({
     id: t.id, ref: t.ref, from: t.email.from, subject: t.email.subject, date: t.email.date,
-    suggestion: suggestCompany({ direction: t.email.direction, from: t.email.from, to: t.email.to, cc: t.email.cc, subject: t.email.subject }, companies),
+    suggestion: needsCheck(t.email.custom, companies)
+      ?? suggestCompany({ direction: t.email.direction, from: t.email.from, to: t.email.to, cc: t.email.cc, subject: t.email.subject }, companies),
     free_mail: !linkableDomain(t.email.from.address),
   }));
+}
+
+/**
+ * Mail sync held this email back from a job because it conflicts with the job's status (mail signals.ts): the
+ * company it matched, with why it needs a check.
+ */
+function needsCheck(custom: Record<string, unknown> | undefined, companies: ReturnType<typeof companyIndex>): TriageItem["suggestion"] {
+  const n = custom?.needs_check as { company_slug?: unknown; reason?: unknown } | undefined;
+  if (!n || typeof n.company_slug !== "string" || typeof n.reason !== "string") return null;
+  const c = companies.find((x) => x.slug === n.company_slug);
+  return c ? { company_slug: c.slug, company_name: c.name, reason: `Needs a check: ${n.reason.slice(0, 300)}` } : null;
 }
 
 export function assignTriage(ctx: ServiceContext, id: string, target: MailTarget, addMatch: boolean): TriageItem[] {

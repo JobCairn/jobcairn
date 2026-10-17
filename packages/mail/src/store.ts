@@ -53,6 +53,8 @@ export type StoreTarget = { company_slug: string; job_id: string } | "triage";
 export interface StoreInput {
   raw: Buffer | null; parsed: ParsedMessage | null; header: HeaderSummary; mailbox: string;
   direction: "in" | "out"; matched_by: EmailMatchKind; tooLarge: boolean;
+  /** Extra sidecar fields (`custom`), e.g. sync's needs_check when an email's signals conflict with the job's status. */
+  custom?: Record<string, unknown>;
 }
 
 // --- errors ------------------------------------------------------------------------------------
@@ -728,7 +730,7 @@ export function storeMessage(root: string, target: StoreTarget, input: StoreInpu
     matched_by: input.matched_by,
     attachments: (p?.attachments ?? []).map((a) => ({ part: a.part, name: a.name, size: a.size, type: a.type, cid: a.cid, inline: a.inline, saved_as: "" })),
     images_allowed: false, remote_images: p?.html ? sanitizeEmailHtml(p.html, { token: "count", imagesAllowed: false }).remoteImages.length : 0,
-    auth: p?.auth ?? "none", too_large: tooLarge, opened_at: input.direction === "out" ? date : "", custom: {},
+    auth: p?.auth ?? "none", too_large: tooLarge, opened_at: input.direction === "out" ? date : "", custom: { ...input.custom },
   };
   const json = sidecarText(path.join(dir, "sidecar.json"), email);
   const text = tooLarge ? TOO_LARGE : (p?.text || (p?.html ? htmlToText(sanitizeEmailHtml(p.html, { token: "text", imagesAllowed: false }).html) : "") || NO_TEXT);

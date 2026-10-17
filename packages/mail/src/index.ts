@@ -15,7 +15,7 @@ export * from "./testing.js";
 export type { CompanyInfo, HeaderInfo, IgnoreList, JobInfo, JobSenders, MatchResult } from "./match.js";
 export { RECHECK_VERSION, recheckFiled, type FiledEmail, type RecheckOutcome } from "./recheck.js";
 export {
-  JOB_SENDERS, coreName, counterparts, domainMatches, domainOf, isIgnored, isJobRelated,
+  JOB_SENDERS, coreName, counterparts, domainMatches, domainOf, isAtsDomain, isIgnored, isJobRelated,
   isSystemAddress, linkableDomain, matchCompany, matchMessage, pickJob, suggestCompany, websiteDomain,
 } from "./match.js";
 // Task 9: named re-exports, matching the rule above.
@@ -31,6 +31,8 @@ export {
   IMAGE_TYPES, IMAGE_USER_AGENT, ImageFetchError, MAX_IMAGE_BYTES, checkImageUrl, fetchRemoteImage, guardedLookup, imageCacheKey,
   isBlockedAddress, nodeImageFetcher, sniffImageType,
 } from "./images.js";
+// What an email says about an application, and what it may do to the job's status (spec 2026-10-17-statuses-followups-mail-rules).
+export { bodyHead, mailSignals, statusAdvice, type MailAdvice, type MailSignal } from "./signals.js";
 // Task 10: named re-exports, matching the rule above. `_storeFaults` is a test seam and stays out.
 export type { MailPaths, StoreInput, StoreTarget } from "./store.js";
 export {
@@ -39,7 +41,7 @@ export {
   storeMessage, updateStored,
 } from "./store.js";
 // Task 11: named re-exports, matching the rule above.
-export type { MailState, MailboxState, SyncCaps, SyncCounts, SyncOptions, SyncResult } from "./sync.js";
+export type { MailState, MailboxState, StatusSuggestion, SyncCaps, SyncCounts, SyncOptions, SyncResult } from "./sync.js";
 export { DEFAULT_CAPS, SYNC_STOPPED, SyncBusyError, WorkspaceError, acquireLock, companyIndex, readMailState, syncMail, writeMailState } from "./sync.js";
 // Task 12: named re-exports, matching the rule above (fix round 1, ruling 3: the package
 // convention wins over the brief's `export *`).

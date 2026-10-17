@@ -12,11 +12,12 @@ describe("application stages", () => {
   const rows = [
     row({ id: "a", status: "Found" }), row({ id: "b", status: "Saved" }), row({ id: "c", status: "Applying" }), row({ id: "d", status: "Applied" }),
     row({ id: "e", status: "Interview" }), row({ id: "f", status: "Offer" }), row({ id: "g", status: "Rejected" }), row({ id: "h", status: "Skipped" }),
+    row({ id: "i", status: "No response" }), row({ id: "j", status: "Withdrawn" }),
   ];
   it("maps every status to one stage tab, in order", () => {
     expect(STAGES.map((s) => s.label)).toEqual(["To prepare", "In progress", "Waiting for your OK", "Sent", "Interviews", "Closed"]);
     const waiting = waitingKeys([approval({ company_slug: "acme-corp", id: "c" })]);
-    expect(stageCounts(rows, waiting)).toEqual({ prepare: 2, progress: 1, waiting: 1, sent: 1, interviews: 2, closed: 2 });
+    expect(stageCounts(rows, waiting)).toEqual({ prepare: 2, progress: 1, waiting: 1, sent: 1, interviews: 2, closed: 4 });
     expect(stageRows("interviews", rows, waiting).map((r) => r.id)).toEqual(["e", "f"]);
   });
   it("only counts pending approvals that name a job", () => {

@@ -137,7 +137,7 @@ export const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n ==
 export const bytes = (n: number) => (n < 1024 ? `${n} B` : n < 1_048_576 ? `${Math.round(n / 1024)} KB` : `${(n / 1_048_576).toFixed(1)} MB`);
 /** One tone per job status, so status reads the same everywhere it is a pill. */
 export const jobStatusTone = (s: string): PillTone =>
-  (({ Found: "neutral", Saved: "accent", Applying: "warning", Applied: "accent", Interview: "success", Offer: "success", Rejected: "danger", Skipped: "neutral" } as Record<string, PillTone>)[s] ?? "neutral");
+  (({ Found: "neutral", Saved: "accent", Applying: "warning", Applied: "accent", Interview: "success", Offer: "success", Rejected: "danger", "No response": "neutral", Withdrawn: "neutral", Skipped: "neutral" } as Record<string, PillTone>)[s] ?? "neutral");
 // Default "primary" keeps every call site that hasn't adopted sponsorshipFocus yet reading
 // exactly as before. "Citizens/PR only" only turns alarming (danger) for a candidate who could
 // actually be excluded by it; a citizen/PR/unknown candidate (focus "off") is never excluded by

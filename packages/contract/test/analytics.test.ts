@@ -405,3 +405,12 @@ describe("seenCount", () => {
     expect(seenCount("unknown")).toBeNull();
   });
 });
+
+describe("final statuses in the funnel", () => {
+  it("counts No response and Withdrawn as applied, like Rejected; Skipped as not", () => {
+    expect(reachedStage("No response", [])).toBe(3);
+    expect(reachedStage("Withdrawn", [])).toBe(3);
+    expect(reachedStage("Rejected", [])).toBe(3);
+    expect(reachedStage("Skipped", [])).toBe(0);
+  });
+});

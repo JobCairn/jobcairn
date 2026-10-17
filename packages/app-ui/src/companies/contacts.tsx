@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from "react";
 import { Button, Icons, Pill, Select, Text, useToast } from "@careeros/brand";
-import { CONTACT_KIND_LABELS, CONTACT_KINDS, hasContacts, type CompanyContacts, type ContactEmail, type JobRow } from "@careeros/contract";
+import { CONTACT_KIND_LABELS, CONTACT_KINDS, FINAL_STATUSES, hasContacts, type CompanyContacts, type ContactEmail, type JobRow } from "@careeros/contract";
 import { DateText } from "../components/DateText";
 import { displayName } from "../components/displayName";
 import { DraftEditor, EMPTY_DRAFT } from "../components/DraftEditor";
@@ -9,7 +9,7 @@ import { hostOf, openable, useOpenLink } from "./parts";
 
 /** Shown above every list of published contacts. */
 export const PUBLISHED_NOTE = "Only addresses the company publishes. Check before sending.";
-const CLOSED = new Set(["Rejected", "Skipped"]);
+const CLOSED = new Set<string>(FINAL_STATUSES);
 
 /** Copies a value and says so; on failure, says how to copy it by hand. */
 export function useCopy() {

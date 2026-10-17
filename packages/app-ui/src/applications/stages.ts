@@ -14,7 +14,7 @@ export const STAGES: Stage[] = [
   { id: "waiting", label: "Waiting for your OK", statuses: [], empty: "Nothing is waiting for your OK." },
   { id: "sent", label: "Sent", statuses: ["Applied"], empty: "Nothing sent yet. Applications you mark as sent show up here." },
   { id: "interviews", label: "Interviews", statuses: ["Interview", "Offer"], empty: "No interviews yet. Jobs move here when you set their status to Interview or Offer." },
-  { id: "closed", label: "Closed", statuses: ["Rejected", "Skipped"], empty: "Nothing closed. Rejected and skipped jobs land here." },
+  { id: "closed", label: "Closed", statuses: ["Rejected", "No response", "Withdrawn", "Skipped"], empty: "Nothing closed. Jobs that were rejected, got no response, were withdrawn or skipped land here." },
 ];
 
 const keyOf = (r: { company_slug: string; id: string }) => `${r.company_slug}/${r.id}`;

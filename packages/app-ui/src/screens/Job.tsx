@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Badge, Button, cx, Icons, Pill, Select, Tabs, Text, Textarea, useToast } from "@careeros/brand";
-import { JOB_STATUSES, WR_LABEL_TEXT, topicLabel, topicSlug, type ActionTarget, type JobDetail, type JobFile, type JobStatus, type SponsorshipFocus, type WorkRightsLabel } from "@careeros/contract";
+import { Badge, Button, Card, cx, Icon, Icons, Pill, Select, Tabs, Text, Textarea, useToast } from "@careeros/brand";
+import { JOB_STATUSES, thankYouDue, WR_LABEL_TEXT, topicLabel, topicSlug, type ActionTarget, type JobDetail, type JobFile, type JobStatus, type SponsorshipFocus, type WorkRightsLabel } from "@careeros/contract";
 import { useAction, useBridge, useLoad } from "../bridge-context";
 import { ActionButton } from "../components/ActionButton";
 import { MakeVideoButton } from "../components/MakeVideo";
@@ -40,7 +40,8 @@ const APPLY_TEXT: Record<JobStatus, { label: string; primary: boolean }> = {
   Found: { label: "Prepare application", primary: true }, Saved: { label: "Prepare application", primary: true },
   Applying: { label: "Continue application", primary: true }, Applied: { label: "View application", primary: false },
   Interview: { label: "View application", primary: false }, Offer: { label: "View application", primary: false },
-  Rejected: { label: "View application", primary: false }, Skipped: { label: "Prepare application", primary: false },
+  Rejected: { label: "View application", primary: false }, "No response": { label: "View application", primary: false },
+  Withdrawn: { label: "View application", primary: false }, Skipped: { label: "Prepare application", primary: false },
 };
 
 const TABS = ["description", "score", "files", "videos", "timeline", "gaps", "interview", "activity", "mail", "outreach"] as const;
@@ -129,6 +130,14 @@ function JobView({ slug, id, tab, start }: { slug: string; id: string; tab: Tab;
           </div>
         )}
       </header>
+
+      {!broken && tab !== "outreach" && thankYouDue(j, new Date()) ? (
+        <Card className="thanks-prompt" role="region" aria-label="Thank-you note">
+          <Icon icon={Icons.mail} size="sm" />
+          <Text role="body" className="grow">Interview done? Send a short thank-you within a day. A draft is ready in Outreach.</Text>
+          <Button size="sm" icon={Icons.mail} aria-label="Open the thank-you draft in Outreach" onClick={() => navigate({ screen: "job", slug, id, tab: "outreach" })}>Thank-you</Button>
+        </Card>
+      ) : null}
 
       <Tabs label="Job sections" value={tab} onChange={(t) => navigate({ screen: "job", slug, id, tab: t })}
         tabs={[

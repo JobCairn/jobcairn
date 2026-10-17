@@ -1,5 +1,10 @@
-export const JOB_STATUSES = ["Found", "Saved", "Applying", "Applied", "Interview", "Offer", "Rejected", "Skipped"] as const;
+export const JOB_STATUSES = ["Found", "Saved", "Applying", "Applied", "Interview", "Offer", "Rejected", "No response", "Withdrawn", "Skipped"] as const;
 export type JobStatus = (typeof JOB_STATUSES)[number];
+/** Final statuses: the application is over (a no, no reply, you pulled out, or you passed on it). */
+export const FINAL_STATUSES: readonly JobStatus[] = ["Rejected", "No response", "Withdrawn", "Skipped"];
+export const isFinalStatus = (s: string): boolean => (FINAL_STATUSES as readonly string[]).includes(s);
+/** Statuses that mean the application went in (a final one included, except Skipped). */
+export const SENT_STATUSES: readonly JobStatus[] = ["Applied", "Interview", "Offer", "Rejected", "No response", "Withdrawn"];
 export const WR_LABELS = ["sponsorship_offered", "visa_ok", "silent", "citizen_pr_only", "clearance"] as const;
 export type WorkRightsLabel = (typeof WR_LABELS)[number];
 export const WR_STATUSES = ["citizen", "pr", "full_visa", "limited_visa", "needs_sponsorship", "unknown"] as const;

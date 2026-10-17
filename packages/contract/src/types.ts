@@ -14,7 +14,11 @@ export interface FieldDef {
   /** A list row's choice that starts set to the schema's default (core fields.ts). Only on list sub-fields. */
   default?: string;
 }
-export interface TimelineEvent { at: string; event: string; note: string }
+export interface TimelineEvent {
+  at: string; event: string; note: string;
+  /** "acknowledged" on an employer's "we've received your application" email (mail signals.ts): it isn't a reply. */
+  signal?: string;
+}
 export interface FileRef { path: string; label: string; at: string }
 export interface JobRecord {
   id: string; company_slug: string; client: string | null; title: string; source: JobSource; source_site: string; url: string;
@@ -54,6 +58,8 @@ export interface JobRow {
   follow_up_on?: string;
   /** The ad needs a language the profile doesn't list, or a higher level (languages.ts). Absent when fine or unknown. */
   lang?: import("./languages.js").LanguageCheck;
+  /** Follow-ups sent on the application (application-rules.ts followUpsSent). Missing when none. */
+  follow_ups?: number;
 }
 export interface JobQuery {
   text?: string; statuses?: JobStatus[]; showIneligible?: boolean; labels?: WorkRightsLabel[]; location?: string; modes?: string[];

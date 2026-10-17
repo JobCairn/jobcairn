@@ -22,6 +22,7 @@ import type { OfferDetails } from "./offers.js";
 import type { TourId, TourMark, TourState } from "./tour.js";
 import type { UpdateView } from "./updates.js";
 import type { TrashCheck, TrashItem, TrashTarget } from "./trash.js";
+import type { ResearchDepth, ResearchTopic, ResearchView } from "./research.js";
 import type { TtsActivity, TtsLang, TtsOptions, TtsPreviews, TtsSpeakResult, TtsStatus, TtsVoice } from "./tts.js";
 import type { DownloadResult, ResumeCopy, ResumeDownload, ResumeItemRef, ResumeLibrary, ResumeRef, ResumeState, SuggestionDecision } from "./resume.js";
 import type { ResumeStyle } from "./resume-style.js";
@@ -416,6 +417,19 @@ export interface CareerosBridge {
     /** Moves a resume to Recently deleted (the workspace trash). The entry comes back for Undo. */
     remove(target: ResumeItemRef): Promise<TrashItem>;
   };
+  /** Research any topic (research/<slug>/): the topic list, a new topic's folder, one report, and its exports. */
+  research: {
+    list(): Promise<ResearchTopic[]>;
+    /** Makes research/<slug>/ with topic.json (deduped slug). Claude writes the report with research_topic. */
+    create(title: string, questions: string, depth: ResearchDepth): Promise<ResearchTopic>;
+    /** Saves new questions and depth for Refresh. */
+    update(slug: string, questions: string, depth: ResearchDepth): Promise<ResearchTopic>;
+    get(slug: string): Promise<ResearchView>;
+    /** Writes research/<slug>/report.html (self-contained, no scripts) and returns its path. */
+    exportHtml(slug: string): Promise<string>;
+    /** Writes research/<slug>/report.pdf with the app's printer and returns its path. */
+    exportPdf(slug: string): Promise<string>;
+  };
   /** Delete with Undo: items move to the workspace trash and stay in Recently deleted for 30 days. */
   trash: {
     /** The name and what goes with it, for the confirm dialog, and why it can't be deleted now (if so). */
@@ -584,6 +598,10 @@ export function createRemoteBridge(t: Transport): CareerosBridge {
       download: (r, f, fmt) => c("resume.download", r, f, fmt), copy: (r, f, fmt) => c("resume.copy", r, f, fmt),
     },
     resumes: { list: () => c("resumes.list"), newVariant: (n) => c("resumes.newVariant", n), duplicate: (src, n) => c("resumes.duplicate", src, n), remove: (t) => c("resumes.remove", t) },
+    research: {
+      list: () => c("research.list"), create: (t, q, d) => c("research.create", t, q, d), update: (s, q, d) => c("research.update", s, q, d),
+      get: (s) => c("research.get", s), exportHtml: (s) => c("research.exportHtml", s), exportPdf: (s) => c("research.exportPdf", s),
+    },
     trash: {
       check: (t) => c("trash.check", t), move: (ts) => c("trash.move", ts), list: () => c("trash.list"),
       restore: (id) => c("trash.restore", id), forget: (id, ok) => c("trash.forget", id, ok),

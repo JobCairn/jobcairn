@@ -20,6 +20,7 @@ import {
   absPath, ArgError, arr, bool, digest, fileName, httpsUrl, int, json, num, obj, oneOf, opt, queueId, relPath, segmentName, settingsPath, slug, str, type V,
 } from "./validate.js";
 import { trashId, trashTarget } from "./trash.js";
+import { RESEARCH_DEPTHS, RESEARCH_QUESTIONS_MAX } from "./research.js";
 import { agencyPatchArgs } from "./recruiters.js";
 import { AGENCY_IMPORT_MAX_CHARS } from "./recruiter-add.js";
 import { SETUP_TOOLS } from "./setup.js";
@@ -90,12 +91,18 @@ export const draftInput = obj({
 /** Background sync interval, in minutes. Matches services' setBackground and the integrations schema (15 to 1440). */
 export const backgroundMinutes = int(15, 1440);
 
+/** A research topic's folder name under research/ (topicSlug's output, deduped with -2, -3). */
+export const researchSlug = str({ min: 1, max: 64, pattern: /^[a-z0-9]+(-[a-z0-9]+)*$/ });
+const researchTitle = str({ min: 1, max: 80, pattern: TOPIC_LABEL });
+const researchQuestions = str({ max: RESEARCH_QUESTIONS_MAX, multiline: true });
+
 const actionTargets: Record<TargetKind, V<unknown>> = {
   workspace: obj({ kind: oneOf(["workspace"] as const) }),
   company: obj({ kind: oneOf(["company"] as const), company_slug: slug }),
   job: obj({ kind: oneOf(["job"] as const), company_slug: slug, id: slug }),
   topic: obj({ kind: oneOf(["topic"] as const), topic: slug, label: str({ min: 1, max: 80, pattern: TOPIC_LABEL }), company_slug: opt(slug), id: opt(slug) }),
   resume_variant: obj({ kind: oneOf(["resume_variant"] as const), variant: variantSlug, label: str({ min: 1, max: 80, pattern: TOPIC_LABEL }) }),
+  research: obj({ kind: oneOf(["research"] as const), topic: researchSlug, label: str({ min: 1, max: 80, pattern: TOPIC_LABEL }) }),
 };
 /** What a Claude action runs on. Topic labels go into prompts, so they are one line of plain characters. */
 export const actionTarget: V<ActionTarget> = (v, at) => {
@@ -364,6 +371,12 @@ export const METHODS = {
   "resume.suggestion": [resumeRef, resumeFile, suggestionDecision, digest],
   "resume.download": [resumeRef, resumeFile, oneOf(RESUME_DOWNLOADS)],
   "resume.copy": [resumeRef, resumeFile, oneOf(RESUME_COPY)],
+  "research.list": [],
+  "research.create": [researchTitle, researchQuestions, oneOf(RESEARCH_DEPTHS)],
+  "research.update": [researchSlug, researchQuestions, oneOf(RESEARCH_DEPTHS)],
+  "research.get": [researchSlug],
+  "research.exportHtml": [researchSlug],
+  "research.exportPdf": [researchSlug],
   "resumes.list": [],
   // A new general version: its name (the focus) only. Main makes resume-variants/<slug>/ and returns the slug.
   "resumes.newVariant": [str({ min: 1, max: 80, pattern: VARIANT_NAME })],

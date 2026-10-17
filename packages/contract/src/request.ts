@@ -234,6 +234,12 @@ export const ACTION_OPTIONS: { readonly [K in ActionId]: readonly ActionOption[]
     { kind: "slug", key: "agency", label: "Agency", help: "Set by the app.", default: "",
       line: (s) => `The agency's record is recruiters/${s}/agency.json.` },
   ],
+  research_topic: [
+    sel("depth", "Depth", "Quick is a one-page brief. Thorough reads more sources.", "quick", [
+      { value: "quick", label: "Quick", line: "Keep it quick: a one-page brief from the most useful official sources." },
+      { value: "thorough", label: "Thorough", line: "Be thorough: read more sources, compare them, and go deeper on each section." },
+    ]),
+  ],
   rewrite_resume: [
     sel("scope", "What to rewrite", "The whole resume, one section or one bullet.", "resume", [
       { value: "resume", label: "Whole resume", line: "Rewrite the whole resume." },

@@ -15,10 +15,12 @@ export type TrashTarget =
   | { kind: "topic"; topic: string }
   /** A video folder (VideoListItem.folder). */
   | { kind: "video"; folder: string }
+  /** A research topic: its folder name under research/ (with its report, exports and videos). */
+  | { kind: "research"; topic: string }
   /** One of a job's own files (JobFile.path, inside the job folder), such as application/cover-letter.md. */
   | { kind: "job_file"; company_slug: string; id: string; path: string };
 export type TrashTargetKind = TrashTarget["kind"];
-export const TRASH_TARGET_KINDS = ["job", "company", "resume", "topic", "video", "job_file"] as const satisfies readonly TrashTargetKind[];
+export const TRASH_TARGET_KINDS = ["job", "company", "resume", "topic", "video", "job_file", "research"] as const satisfies readonly TrashTargetKind[];
 
 /** What a confirm dialog says before anything moves. `blocked`: why it can't be deleted right now (a run is working on it). */
 export interface TrashCheck {
@@ -53,6 +55,7 @@ const shapes: Record<TrashTargetKind, V<unknown>> = {
   topic: obj({ kind: oneOf(["topic"] as const), topic: fileName }),
   video: obj({ kind: oneOf(["video"] as const), folder: videoFolder }),
   job_file: obj({ kind: oneOf(["job_file"] as const), company_slug: slug, id: slug, path: relPath }),
+  research: obj({ kind: oneOf(["research"] as const), topic: slug }),
 };
 
 export const trashTarget: V<TrashTarget> = (v, at) => {

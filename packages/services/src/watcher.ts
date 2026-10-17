@@ -43,7 +43,7 @@ export function areasFor(rels: string[]): ChangeArea[] {
       if (rel.split("/").includes("emails")) add("mail");
     }
     else if (top === "inbox") add("inbox", "home");
-    else if (top === "learning" || top === "recaps") add("learn");
+    else if (top === "learning" || top === "recaps" || top === "research") add("learn");
     else if (top === "knowledge") add(second === "sponsors.json" ? "sponsors" : "searches");
     else if (top === ".careeros" && second === "approvals") add("approvals", "home");
     else if (top === ".careeros" && (second === "mail-triage" || second === "mail-state.json")) add("mail", "home");

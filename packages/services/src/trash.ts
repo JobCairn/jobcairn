@@ -11,6 +11,7 @@ import type { ServiceContext } from "./context.js";
 import type { HandlerTable } from "./handlers.js";
 import { learnList } from "./learn.js";
 import { resumeTrashItem } from "./resumes.js";
+import { researchTrashInfo } from "./research.js";
 import { videoBusyUnder, videoTrashCheck } from "./video.js";
 
 /**
@@ -132,6 +133,14 @@ function plan(ctx: ServiceContext, t: TrashTarget, runs: ClaudeRunView[]): Plan 
       if (runs.some((r) => (r.target as { kind: string; topic?: string }).kind === "topic" && (r.target as { topic?: string }).topic === t.topic)) blocked = "Claude is writing for this topic. Wait for it to finish, or cancel it in Activity.";
       else if (videoBusyUnder(ctx, rel)) blocked = "A video for this topic is being made. Wait for it to finish, or cancel it.";
       return { kind: "topic", title: topic.title, also: videos ? `its ${plural(videos, "video")}` : "", note: "", rels: [rel], mail: [], blocked };
+    }
+    case "research": {
+      const info = researchTrashInfo(ctx, t.topic);
+      const rel = `research/${t.topic}`;
+      let blocked: string | null = null;
+      if (runs.some((r) => (r.target as { kind: string; topic?: string }).kind === "research" && (r.target as { topic?: string }).topic === t.topic)) blocked = "Claude is researching this topic. Wait for it to finish, or cancel it in Activity.";
+      else if (videoBusyUnder(ctx, rel)) blocked = "A video for this topic is being made. Wait for it to finish, or cancel it.";
+      return { kind: "research", title: info.title, also: info.videos ? `its ${plural(info.videos, "video")}` : "", note: "", rels: [rel], mail: [], blocked };
     }
     case "video": {
       const v = videoTrashCheck(ctx, t.folder);

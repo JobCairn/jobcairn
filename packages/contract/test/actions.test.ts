@@ -13,6 +13,7 @@ const ON: Record<TargetKind, ActionTarget> = {
   job: ACME,
   topic: { kind: "topic", topic: "kubernetes", label: "Kubernetes", company_slug: "acme-corp", id: "2026-01-12-ai-engineer" },
   resume_variant: { kind: "resume_variant", variant: "backend-heavy", label: "Backend-heavy" },
+  research: { kind: "research", topic: "express-entry-in-canada", label: "Express Entry in Canada" },
 };
 const INFO = { title: "AI Engineer", company: "Acme Corp", now: "2026-01-15T09:00:00.000Z" };
 const NOW = new Date(INFO.now);

@@ -36,6 +36,8 @@ export * from "./job-link.js";
 export * from "./ad-parse.js";
 export * from "./search-report.js";
 export * from "./trash.js";
+export * from "./research.js";
+export * from "./research-html.js";
 export * from "./setup.js";
 export * from "./contacts.js";
 export * from "./recruiters.js";

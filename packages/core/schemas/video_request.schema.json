@@ -8,7 +8,7 @@
     "subject": {
       "type": "object", "additionalProperties": false, "required": ["kind"],
       "properties": {
-        "kind": { "enum": ["job", "company", "topic", "week"] },
+        "kind": { "enum": ["job", "company", "topic", "week", "research"] },
         "company_slug": { "$ref": "#/$defs/slug" },
         "id": { "$ref": "#/$defs/slug" },
         "topic": { "type": "string", "minLength": 1, "maxLength": 80, "pattern": "^[^\\u0000-\\u001f\\u007f]+$" },
@@ -18,7 +18,8 @@
         { "if": { "properties": { "kind": { "const": "job" } } }, "then": { "required": ["company_slug", "id"] } },
         { "if": { "properties": { "kind": { "const": "company" } } }, "then": { "required": ["company_slug"] } },
         { "if": { "properties": { "kind": { "const": "topic" } } }, "then": { "required": ["topic"] } },
-        { "if": { "properties": { "kind": { "const": "week" } } }, "then": { "required": ["week"] } }
+        { "if": { "properties": { "kind": { "const": "week" } } }, "then": { "required": ["week"] } },
+        { "if": { "properties": { "kind": { "const": "research" } } }, "then": { "required": ["topic"] } }
       ]
     },
     "options": {

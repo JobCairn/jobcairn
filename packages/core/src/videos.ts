@@ -5,9 +5,9 @@ import { readRecord, RecordError } from "./store.js";
 import type { VideoRecord } from "./types.js";
 
 const SLUG = "[a-z0-9]+(?:-[a-z0-9]+)*";
-/** Workspace-relative video folders: recaps/<YYYY>-W<ww>, or 1 to 3 plain segments under a topic, company or job folder. */
+/** Workspace-relative video folders: recaps/<YYYY>-W<ww>, or 1 to 3 plain segments under a topic, research topic, company or job folder. */
 export const VIDEO_FOLDER_RE = new RegExp(
-  `^(?:recaps/\\d{4}-W\\d{2}(?:-\\d{4}-\\d{2}-\\d{2}(?:-\\d{1,2})?)?|(?:learning/${SLUG}|companies/${SLUG}(?:/jobs/${SLUG})?)(?:/[a-z0-9][a-z0-9_-]{0,60}){1,3})$`,
+  `^(?:recaps/\\d{4}-W\\d{2}(?:-\\d{4}-\\d{2}-\\d{2}(?:-\\d{1,2})?)?|(?:learning/${SLUG}|research/${SLUG}|companies/${SLUG}(?:/jobs/${SLUG})?)(?:/[a-z0-9][a-z0-9_-]{0,60}){1,3})$`,
 );
 
 /** The only top-level names a video folder may hold. Delete refuses folders with anything else in them. */
@@ -21,7 +21,7 @@ export function isVideoFolderRel(rel: string): boolean {
   return typeof rel === "string" && rel.length <= 300 && VIDEO_FOLDER_RE.test(rel);
 }
 
-/** Every folder under learning/, companies/ and recaps/ that holds a video.json. Never follows links or enters hidden folders. */
+/** Every folder under learning/, research/, companies/ and recaps/ that holds a video.json. Never follows links or enters hidden folders. */
 export function listVideoFolders(root: string): string[] {
   const out: string[] = [];
   const walk = (rel: string, depth: number): void => {
@@ -40,7 +40,7 @@ export function listVideoFolders(root: string): string[] {
       walk(`${rel}/${e.name}`, depth + 1);
     }
   };
-  for (const top of ["learning", "companies", "recaps"]) {
+  for (const top of ["learning", "research", "companies", "recaps"]) {
     let st: fs.Stats;
     try { st = fs.lstatSync(path.join(root, top)); } catch { continue; }
     if (st.isDirectory() && !st.isSymbolicLink()) walk(top, 1);

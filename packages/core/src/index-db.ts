@@ -167,7 +167,7 @@ export function planRefresh(relPaths: string[]): RefreshPlan {
     const r = raw.replace(/^\.\//, "").replace(/\/+$/, "");
     if (r.startsWith("..")) continue;
     const parts = r.split("/");
-    if (parts.at(-1) === "video.json" || parts[0] === "learning" || parts[0] === "recaps" || parts.some((p) => VIDEO_PARTS.has(p))) plan.videos = true;
+    if (parts.at(-1) === "video.json" || parts[0] === "learning" || parts[0] === "research" || parts[0] === "recaps" || parts.some((p) => VIDEO_PARTS.has(p))) plan.videos = true;
     if (r === "" || r === "." || r === "workspace.json" || parts[0] === "settings" || r === "companies") { plan.full = true; continue; }
     if (parts[0] === "knowledge" && (parts.length === 1 || parts[1] === "search-log.jsonl")) { plan.searches = true; continue; }
     if (parts[0] !== "companies" || !parts[1]) continue;

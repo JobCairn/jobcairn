@@ -116,6 +116,29 @@ describe("buildSourcePack", () => {
   });
 });
 
+describe("research reports", () => {
+  it("reads the topic's report.md and report.json as untrusted, with its title as the topic", () => {
+    const root = sampleCopy();
+    const dir = path.join(root, "research/express-entry");
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(path.join(dir, "topic.json"), JSON.stringify({ title: "Express Entry in Canada", questions: "", depth: "quick", created_at: "2026-01-15T00:00:00Z" }));
+    fs.writeFileSync(path.join(dir, "report.md"), "# Express Entry\n\nAs of 2026-01-15 (example).\n");
+    fs.writeFileSync(path.join(dir, "report.json"), "{}");
+    const p = pack(root, "research-briefing", { kind: "research", topic: "express-entry" }, "research/express-entry/videos/1");
+    expect(p.files.map((f) => [f.rel, f.resolver, f.untrusted])).toEqual([
+      ["research/express-entry/report.md", "research.report", true], ["research/express-entry/report.json", "research.report", true],
+    ]);
+    expect(p.facts.gap).toBe("Express Entry in Canada");
+    expect(p.missing).toEqual([]);
+  });
+  it("says to research the topic first, and never reads outside research/", () => {
+    const root = sampleCopy();
+    expect(pack(root, "research-briefing", { kind: "research", topic: "nothing-yet" }, "research/nothing-yet/videos/1").missing[0]).toMatchObject({ resolver: "research.report", message: /Research this topic first/ });
+    const bad = pack(root, "research-briefing", { kind: "research", topic: "../me" }, "research/x/videos/1");
+    expect(bad.files).toEqual([]);
+  });
+});
+
 describe("candidateTerms", () => {
   it("keeps names and numbers only the candidate's history has", () => {
     expect(candidateTerms(["Lead Engineer at Example Labs since 2024, 3 agents"], ["Example Labs is hiring. 3 roles."])).toEqual(["2024", "Lead Engineer"]);

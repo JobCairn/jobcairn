@@ -32,11 +32,13 @@ export function validateVideoType(data: unknown, origin: "builtin" | "workspace"
   // built-in template writer may use it.
   if (t.output.startsWith("recaps/") && t.writer !== "template") p.push("/output: only a template writer may write under recaps/");
   if (tokens.includes("week") && t.subject !== "week") p.push("/output uses {week} but the subject is not a week");
-  if (tokens.includes("topic") && t.subject !== "topic") p.push("/output uses {topic} but the subject is not a topic");
+  if (tokens.includes("topic") && t.subject !== "topic" && t.subject !== "research") p.push("/output uses {topic} but the subject is not a topic");
   if (t.subject === "job" && !t.output.startsWith("companies/{slug}/jobs/{id}/")) p.push("/output for a job video must be inside companies/{slug}/jobs/{id}/");
   if (t.subject === "company" && (!t.output.startsWith("companies/{slug}/") || t.output.startsWith("companies/{slug}/jobs/"))) p.push("/output for a company video must be inside companies/{slug}/ and not inside a job");
   if (t.subject === "week" && t.output !== "recaps/{week}/") p.push("/output for a weekly video must be recaps/{week}/");
   if (t.subject === "topic" && !t.output.startsWith("learning/{topic}/")) p.push("/output for a topic video must be inside learning/{topic}/");
+  if (t.subject === "research" && !t.output.startsWith("research/{topic}/videos/")) p.push("/output for a research video must be inside research/{topic}/videos/");
+  if (t.subject !== "research" && t.sources.some((s) => s.resolver === "research.report")) p.push("/sources: research.report is only for research videos");
   // Final review I2: a workspace type always makes a new folder of its own (its last segment has {n}), so it can
   // never point at a job's application/, research/ or any other folder the person keeps files in.
   if (origin === "workspace" && !/\{n\}[^/]*\/$/.test(t.output)) p.push("/output for your own video type must end in a numbered folder, like videos/my-video-{n}/");
@@ -100,7 +102,7 @@ export function resolveOutputFolder(type: VideoType, subject: VideoSubject, root
     type: type.id,
     slug: "company_slug" in subject ? subject.company_slug : undefined,
     id: "id" in subject ? subject.id : undefined,
-    topic: subject.kind === "topic" ? slugify(subject.topic, "topic") : undefined,
+    topic: subject.kind === "topic" ? slugify(subject.topic, "topic") : subject.kind === "research" ? slugify(subject.topic, "topic") : undefined,
     week: subject.kind === "week" ? subject.week : undefined,
   };
   let rel = type.output.replace(/\/$/, "");

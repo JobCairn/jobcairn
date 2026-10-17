@@ -100,6 +100,17 @@ describe("Research: the screen", () => {
     expect(await screen.findAllByText("Key figures")).not.toHaveLength(0);
   });
 
+  it("makes a research briefing video from the report", async () => {
+    const bridge = seeded();
+    renderApp(<ResearchScreen route={{ screen: "research", topic: EXPRESS_ENTRY_SLUG }} />, { bridge });
+    await userEvent.click(await screen.findByRole("button", { name: /^Make video:/ }));
+    const dialog = await screen.findByRole("dialog");
+    expect(await within(dialog).findByText("Research briefing")).toBeInTheDocument();
+    expect(await bridge.video.sources("research-briefing", { kind: "research", topic: EXPRESS_ENTRY_SLUG })).toMatchObject({
+      ready: true, folder: `research/${EXPRESS_ENTRY_SLUG}/videos/1`, files: [{ resolver: "research.report", untrusted: true }],
+    });
+  });
+
   it("exports HTML and deletes to Recently deleted", async () => {
     const bridge = seeded();
     renderApp(<ResearchScreen route={{ screen: "research", topic: EXPRESS_ENTRY_SLUG }} />, { bridge });

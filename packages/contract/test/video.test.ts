@@ -14,6 +14,10 @@ describe("video methods", () => {
     ]);
     expect(CHANGE_AREAS).toContain("video");
     expect(VIDEO_FOLDER_RE.source).toBe(CORE_RE.source);
+    expect(isVideoFolderRel("research/express-entry/videos/1")).toBe(true);
+    expect(isVideoFolderRel("research/videos")).toBe(false);
+    expect(validateArgs("video.sources", ["research-briefing", { kind: "research", topic: "express-entry" }])).toBeTruthy();
+    expect(() => validateArgs("video.sources", ["research-briefing", { kind: "research", topic: "../me" }])).toThrow();
   });
 
   it("refuses folder tricks before any handler runs (Review Focus 4)", () => {

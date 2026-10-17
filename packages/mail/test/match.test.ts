@@ -428,3 +428,22 @@ describe("system and no-reply mail from a platform is never filed by domain alon
     expect(matchMessage(h(addr("sam", "acme.example.com"), "Coffee"), [byDomain], ALEX)?.matched_by).toBe("email_match");
   });
 });
+
+describe("applicant tracking system mail (rule 6)", () => {
+  const ats = addr("no-reply", "us.greenhouse.io");
+  it("files an ATS email under the one company with an active job of that title, even from a no-reply address", () => {
+    expect(matchMessage(h(ats, "Your application for Data Engineer"), ALL, ALEX)).toEqual({ company_slug: "example-labs", job_id: "2026-01-10-data-engineer", matched_by: "subject" });
+    expect(matchMessage(h(addr("notifications", "myworkday.com"), "ML Engineer: next steps"), ALL, ALEX)).toMatchObject({ company_slug: "example-labs", job_id: "2026-01-13-ml-engineer" });
+  });
+  it("still prefers the company named in the subject", () => {
+    expect(matchMessage(h(ats, "Thank you for applying to Acme Corp"), ALL, ALEX)).toMatchObject({ company_slug: "acme-corp", matched_by: "subject" });
+  });
+  it("never matches a one-word title, a job that isn't active, a job board, or a title two companies share", () => {
+    expect(matchMessage(h(ats, "Your application for Backend Engineer (LLM)"), [{ ...LABS, email_match: [] }], ALEX)).toBeNull(); // Found, not active
+    const two: CompanyInfo = { ...ACME, slug: "acme-two", name: "Acme Two", website: "", recruiter_email: "", jobs: [job("x", "Data Engineer", "Applied")] };
+    expect(matchMessage(h(ats, "Your application for Data Engineer"), [LABS, two], ALEX)).toBeNull();
+    expect(matchMessage(h(addr("noreply", "s.seek.com.au"), "Your application for Data Engineer"), ALL, ALEX)).toBeNull();
+    const oneWord: CompanyInfo = { ...ACME, jobs: [job("y", "Engineer", "Applied")] };
+    expect(matchMessage(h(ats, "Engineer update"), [oneWord], ALEX)).toBeNull();
+  });
+});

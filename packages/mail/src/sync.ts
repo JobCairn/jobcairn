@@ -1,9 +1,10 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
-import { careerosDir, ensureAgencyCompany, layout, listAgencies, listJobs, readRecord, RecordError, updateRecord, writeFileAtomic, type Agency, type Job } from "@careeros/core";
+import { careerosDir, ensureAgencyCompany, layout, listAgencies, listJobs, readRecord, RecordError, setStatus, updateRecord, writeFileAtomic, type Agency, type Job } from "@careeros/core";
 import { isIgnored, isJobRelated, matchMessage, type CompanyInfo, type HeaderInfo, type IgnoreList } from "./match.js";
 import { parseMessage, type ParsedMessage } from "./parse.js";
+import { mailSignals, statusAdvice, type MailAdvice } from "./signals.js";
 import { explainMailError, type HeaderSummary, type MailProvider, type MailSession } from "./provider.js";
 import { cleanOrphans, isStagingRef, knownMessageIds, MAIL_REF, messageIdFor, readStored, purgeTriage, storeMessage, type StoreInput, type StoreTarget } from "./store.js";
 import identity from "@careeros/brand/identity.json" with { type: "json" };
@@ -52,7 +53,13 @@ export interface SyncOptions {
  * `repair_failed` (fix round 2, N1): duplicates whose missing timeline event couldn't be put back
  * (the job record can't be read or written). The message itself is stored, so the run goes on.
  */
-export interface SyncResult extends SyncCounts { capped: boolean; purged: number; error: string; touched: string[]; repair_failed: number }
+/** An outcome an email suggests for a job (signals.ts): never applied by sync; the person confirms it. */
+export interface StatusSuggestion { company_slug: string; job_id: string; to: string; note: string; ref: string }
+export interface SyncResult extends SyncCounts {
+  capped: boolean; purged: number; error: string; touched: string[]; repair_failed: number;
+  /** Outcomes this run's mail suggests (interview, rejection, offer, or Applied for a job you hadn't started). */
+  suggestions: StatusSuggestion[];
+}
 
 /** A stopped run's result error. Not saved as the workspace's last error: nothing went wrong. */
 export const SYNC_STOPPED = "The mail sync stopped because another workspace was opened.";
@@ -241,7 +248,7 @@ export function matchKey(companies: CompanyInfo[]): string {
 }
 
 export async function syncMail(o: SyncOptions): Promise<SyncResult> {
-  const r: SyncResult = { ...zero(), capped: false, purged: 0, error: "", touched: [], repair_failed: 0 };
+  const r: SyncResult = { ...zero(), capped: false, purged: 0, error: "", touched: [], repair_failed: 0, suggestions: [] };
   if (o.signal?.aborted) return { ...r, error: SYNC_STOPPED };
   let release: () => void;
   try { release = acquireLock(o.lockFile, o.now); }
@@ -312,6 +319,24 @@ export async function syncMail(o: SyncOptions): Promise<SyncResult> {
     catch { r.repair_failed++; }
   };
 
+  /** The job's status read now (an earlier email this run may have moved it), and what this email may do to it. */
+  const adviceFor = (t: { company_slug: string; job_id: string }, p: ParsedMessage, h: HeaderSummary): MailAdvice => {
+    let status = "";
+    try { status = readRecord("job", layout(o.root).jobFile(t.company_slug, t.job_id)).status; } catch { return { kind: "none" }; }
+    return statusAdvice(status, mailSignals(p.subject, p.text, p.html), p.date ?? h.internalDate);
+  };
+
+  /**
+   * An acknowledgement moved an Applying job to Applied: the status event carries the email's date (never later than
+   * now), so the follow-up and no-reply clocks start when the employer got the application. Only if it is still Applying.
+   */
+  const moveToApplied = (slug: string, jobId: string, note: string, date: string | null | undefined) => local(() => {
+    const t = date ? Date.parse(date) : NaN;
+    const at = new Date(Number.isNaN(t) ? o.now.getTime() : Math.min(t, o.now.getTime()));
+    if (readRecord("job", layout(o.root).jobFile(slug, jobId)).status !== "Applying") return;
+    setStatus(o.root, slug, jobId, "Applied", note, { now: at });
+  });
+
   /** `matchedOnly`: a look-back over mail handled before; only mail that now matches a company or agency is new. */
   const handle = async (s: MailSession, which: Box, h: HeaderSummary, companies: CompanyInfo[], matchedOnly = false) => {
     const from = h.from[0] ?? { name: "", address: "" };
@@ -346,15 +371,25 @@ export async function syncMail(o: SyncOptions): Promise<SyncResult> {
     }
     const id = messageIdFor(input);
     if (check(id)) { r.duplicates++; repairEvent(id); return; }
+    // What the email says about the application (signals.ts). Only mail from the employer to a job, with a body, counts.
+    const advice = target !== "triage" && target.job_id && direction === "in" && input.parsed ? adviceFor(target, input.parsed, h) : null;
+    // A conflict (two outcomes, or a signal against a final status) is never filed automatically: Mail to sort, with why.
+    if (advice?.kind === "check" && target !== "triage") {
+      input = { ...input, custom: { needs_check: { company_slug: target.company_slug, job_id: target.job_id, reason: advice.reason } } };
+    }
+    const dest: StoreTarget = advice?.kind === "check" ? "triage" : target;
     // An agency's first email: its company folder (same slug, marked a recruiter) is made so the mail can be filed there.
-    if (target !== "triage" && companies.find((c) => c.slug === target.company_slug)?.agency_only) local(() => ensureAgencyCompany(o.root, target.company_slug));
-    const stored = store(target, input, id);
+    if (dest !== "triage" && companies.find((c) => c.slug === dest.company_slug)?.agency_only) local(() => ensureAgencyCompany(o.root, dest.company_slug));
+    const stored = store(dest, input, id);
     if (input.tooLarge) r.too_large++;
     known.set(id, stored.ref);
     r.touched.push(stored.ref);
-    if (target === "triage") { r.triaged++; return; }
+    if (dest === "triage") { r.triaged++; return; }
     r.stored++;
-    if (target.job_id) ensureEvent(target.company_slug, target.job_id, direction === "in" ? "Email received" : "Email sent", (input.parsed?.subject ?? input.header.subject).slice(0, 200), id);
+    if (dest.job_id) ensureEvent(dest.company_slug, dest.job_id, direction === "in" ? "Email received" : "Email sent", (input.parsed?.subject ?? input.header.subject).slice(0, 200), id);
+    if (!dest.job_id || !advice) return;
+    if (advice.kind === "move") moveToApplied(dest.company_slug, dest.job_id, advice.note, input.parsed?.date ?? h.internalDate);
+    else if (advice.kind === "suggest") r.suggestions.push({ company_slug: dest.company_slug, job_id: dest.job_id, to: advice.to, note: advice.note, ref: stored.ref });
   };
 
   try {

@@ -69,15 +69,20 @@ Pure functions in `packages/mail/src/signals.ts`:
 - **ATS senders:** a message from a known ATS domain (greenhouse.io, lever.co, myworkday.com and the rest, the new
   `ats` list in `data/job-senders.json`) whose subject names one active job's title matches that job, even when
   the sender is a no-reply address.
-- **Conflicts go to Mail to sort:** when the matched job's status conflicts with the email's signal, or the subject
-  names a different known company than the one matched, sync files the email in Mail to sort instead of the job.
-  The re-check rules version goes to 2 so filed mail can be re-checked.
+  Rule 6 only adds matches, so filed mail needs no re-check (`RECHECK_VERSION` stays 1).
+- **Conflicts go to Mail to sort:** when the email's signals conflict with the matched job's status (or with each
+  other), sync files the email in Mail to sort instead of the job, with `custom.needs_check` (company, job, reason)
+  on its sidecar. Mail to sort shows "Needs a check: <reason>" and suggests that company.
+- **Suggestions:** `syncMail` returns them as `suggestions` (company, job, status, note, email ref). Sync never
+  applies them.
 
 The look-back on match-key changes in `sync.ts` is unchanged.
 
 ## Out of scope
 
-- Turning mail suggestions into approval cards (status_change approvals). The suggestion is computed and tested;
-  showing it is a later step.
+- Turning mail suggestions into approval cards (status_change approvals). The suggestion is computed, tested and
+  returned by sync; showing it is a later step.
+- A conflict when the subject names a different known company than the one matched: an agency's mail often names its
+  client, so this needs its own design.
 - Offer declined as its own status.
 - Reading a job's date applied back from the acknowledgement into a separate field: the status event carries it.

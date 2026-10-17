@@ -18,7 +18,12 @@ export interface CompanyInfo {
 }
 export interface HeaderInfo { direction: "in" | "out"; from: EmailAddress; to: EmailAddress[]; cc: EmailAddress[]; subject: string }
 export interface MatchResult { company_slug: string; job_id: string; matched_by: EmailMatchKind }
-export interface JobSenders { domains: string[]; words: string[] }
+export interface JobSenders {
+  domains: string[]; words: string[];
+  /** Applicant tracking systems (a subset of `domains`): their mail is about an application, so a subject naming one
+   * of your active jobs' titles is enough to file it under that job. */
+  ats?: string[];
+}
 export interface IgnoreList { senders: string[]; domains: string[] }
 
 export const JOB_SENDERS: JobSenders = senders as JobSenders;
@@ -216,6 +221,10 @@ export function websiteDomain(website: string): string {
  * re-normalizes these 29-ish strings on every call -- see the module doc comment on `matchCompany`
  * for why that matters at scale. */
 const JOB_BOARD_DOMAINS = JOB_SENDERS.domains.map(toAsciiDomain).filter(Boolean);
+const ATS_DOMAINS = (JOB_SENDERS.ats ?? []).map(toAsciiDomain).filter(Boolean);
+/** True for a (normalized) domain at or under a known applicant tracking system's (greenhouse.io, lever.co, …). */
+export const isAtsDomain = (normalizedDomain: string): boolean =>
+  !!normalizedDomain && ATS_DOMAINS.some((d) => normalizedDomain === d || normalizedDomain.endsWith(`.${d}`));
 export const isBoardDomain = (normalizedDomain: string): boolean =>
   JOB_BOARD_DOMAINS.some((d) => normalizedDomain === d || normalizedDomain.endsWith(`.${d}`));
 
@@ -500,8 +509,9 @@ export function counterparts(h: HeaderInfo, own = ""): EmailAddress[] {
  * moving to the next: (1) `recruiter_email`; (2) an address in `email_match`; (3) a counterpart's
  * domain equal to or under the company website's domain (never a free-mail or job-board domain);
  * (4) a domain or whole-word *phrase* in `email_match`; (5) the company name (legal suffix
- * stripped) or an alias, as whole words in the subject, longest name wins. Display names are never
- * consulted.
+ * stripped) or an alias, as whole words in the subject, longest name wins; (6) mail from an applicant
+ * tracking system (job-senders.json `ats`) whose subject names every word of one active job's title, when only one
+ * company has such a job. Display names are never consulted.
  *
  * Performance note (hostile input: a 100k-char subject, 10k companies, up to 10k x 100 email_match
  * domains): rules 1-3 only ever do cheap, pre-normalized string/Set work per company (counterpart
@@ -560,7 +570,21 @@ export function matchCompany(h: HeaderInfo, companies: CompanyInfo[], own = ""):
   const named = companies.filter((c) => !c.agency_only);
   const candidates = system ? named.filter((c) => !ownsDomain(c, normDomains) || jobByTitle(c, h.subject) !== "") : named;
   const byName = bestNameMatch(candidates, h.subject);
-  return byName ? { company: byName.company, matched_by: "subject" } : null;
+  if (byName) return { company: byName.company, matched_by: "subject" };
+
+  // Rule 6: an applicant tracking system's mail names the job, often not the company ("Your application for Data
+  // Analyst"). It files under the one company with an active job of that title; two companies with one is ambiguous.
+  if (!normDomains.some(isAtsDomain)) return null;
+  const byTitle = named.map((c) => ({ c, n: activeTitleWords(c, h.subject) })).filter((x) => x.n > 0).sort((a, b) => b.n - a.n);
+  if (!byTitle.length || (byTitle[1] && byTitle[1].n === byTitle[0]!.n)) return null;
+  return { company: byTitle[0]!.c, matched_by: "subject" };
+}
+
+/** The most title words of an active job (Applying, Applied, Interview) here that all appear in the subject, or 0. */
+function activeTitleWords(c: CompanyInfo, subject: string): number {
+  const subjectWords = new Set(tokenize(subject));
+  return c.jobs.filter((j) => ACTIVE.has(j.status)).map((j) => titleWords(j.title))
+    .filter((w) => w.length >= 2 && w.every((x) => subjectWords.has(x))).reduce((m, w) => Math.max(m, w.length), 0);
 }
 
 /**

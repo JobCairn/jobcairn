@@ -115,6 +115,7 @@ export function RunCard({ run, action, target, compact, stepsOpen = false, onCan
       {open && stepCount ? <StepList steps={run.steps} id={stepsId} /> : null}
 
       {run.status === "succeeded" && run.summary ? <Text role="body-sm" className="crun__summary">{run.summary}</Text> : null}
+      {run.status === "succeeded" && run.board_health?.length ? <BoardHealthNotes warnings={run.board_health} /> : null}
       {run.status === "succeeded" && run.files.length ? (
         <ul className="crun__files" aria-label="Files Claude made">
           {run.files.map((f) => (
@@ -170,6 +171,23 @@ export function RunCard({ run, action, target, compact, stepsOpen = false, onCan
       ) : null}
       {viewer.element}
     </section>
+  );
+}
+
+/** Boards that returned nothing where they usually find some, or mostly junk: what happened and what to do, one note each. */
+export function BoardHealthNotes({ warnings }: { warnings: NonNullable<ClaudeRunView["board_health"]> }) {
+  return (
+    <div className="crun__caution" role="note" aria-label="Boards to check">
+      <Icon icon={Icons.info} size="sm" />
+      <ul className="list-plain crun__caution-body">
+        {warnings.map((w) => (
+          <li key={`${w.board}-${w.kind}`}>
+            <Text role="body-sm" as="div">{w.message}</Text>
+            <Text role="body-sm" as="div" muted>{w.suggestion}</Text>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 

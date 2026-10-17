@@ -83,3 +83,18 @@ describe("a find-jobs run's boards that stopped early", () => {
     expect(screen.queryByRole("button", { name: /^Open SEEK/ })).toBeNull();
   });
 });
+
+describe("a find-jobs run's board health", () => {
+  it("shows each warning and its suggestion under a finished run", () => {
+    const board_health = [{ board: "seek", name: "SEEK", kind: "nothing" as const, message: "SEEK returned nothing this time, it usually finds about 20. Its pages may have changed.", suggestion: "Try the same search on SEEK yourself." }];
+    renderApp(<RunCard run={run({ status: "succeeded", error: "", summary: "Added 4 jobs.", board_health })} action="find_jobs" target={{ kind: "workspace" }} onCancel={() => undefined} onRetry={() => undefined} />);
+    const note = screen.getByRole("note", { name: "Boards to check" });
+    expect(note).toHaveTextContent("SEEK returned nothing this time, it usually finds about 20. Its pages may have changed.");
+    expect(note).toHaveTextContent("Try the same search on SEEK yourself.");
+  });
+
+  it("isn't there when every board was fine", () => {
+    renderApp(<RunCard run={run({ status: "succeeded", error: "" })} action="find_jobs" target={{ kind: "workspace" }} onCancel={() => undefined} onRetry={() => undefined} />);
+    expect(screen.queryByRole("note", { name: "Boards to check" })).toBeNull();
+  });
+});

@@ -78,6 +78,10 @@ export interface ClaudeRunView {
   retry?: { attempt: number; of: number; at: string };
   /** This run is a retry: which one, of how many. */
   retry_of?: { attempt: number; of: number };
+  /** A finished Find jobs run: the results each board showed (board-health.ts boardCounts), for later runs to compare. */
+  board_counts?: Record<string, number>;
+  /** A finished Find jobs run: boards that returned nothing where they usually find some, or mostly junk. Absent when all were fine. */
+  board_health?: import("./board-health.js").BoardHealthWarning[];
 }
 
 /** One refused step. `what` never holds an absolute path outside the workspace or a secret; at most 200 characters. */

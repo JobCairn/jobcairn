@@ -15,6 +15,7 @@
     "apply_via": { "type": "string", "default": "", "x-ui": { "label": "Apply via" } },
     "posted": { "type": "string", "default": "", "x-ui": { "label": "Posted" } },
     "posted_approx": { "type": "boolean", "x-ui": { "label": "Posted date is approximate" } },
+    "closes_on": { "type": "string", "pattern": "^(\\d{4}-\\d{2}-\\d{2})?$", "x-ui": { "label": "Applications close", "help": "The closing date the ad states (YYYY-MM-DD). Leave blank when it states none." } },
     "found_at": { "type": "string", "default": "" },
     "location": { "type": "string", "default": "", "x-ui": { "label": "Location" } },
     "work_mode": { "type": "string", "default": "", "x-ui": { "label": "Work mode" } },

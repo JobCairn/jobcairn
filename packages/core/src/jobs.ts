@@ -8,7 +8,7 @@ import { lockedFolderFor } from "./privacy.js";
 import { readJson, updateRecord, writeFileAtomic, writeRecord } from "./store.js";
 import { JOB_STATUSES, type Job, type JobSource, type JobStatus } from "./types.js";
 import identity from "@careeros/brand/identity.json" with { type: "json" };
-import { FOLLOW_UP_DAYS, localDate, storedPosted } from "@careeros/contract";
+import { FOLLOW_UP_DAYS, localDate, storedClosing, storedPosted } from "@careeros/contract";
 
 export function normalizeUrl(u: string): string {
   try {
@@ -95,7 +95,10 @@ export function findJobByUrl(root: string, url: string): { company_slug: string;
 
 export interface NewJobInput {
   company: string; title: string; url?: string; source?: JobSource; source_site?: string; apply_via?: string;
-  posted?: string; location?: string; work_mode?: string; job_type?: string; salary_text?: string; jd_text?: string;
+  posted?: string;
+  /** When applications close, as the ad shows it ("2026-10-31", "31 Oct"). Left out: read from jd_text when it says. */
+  closes?: string;
+  location?: string; work_mode?: string; job_type?: string; salary_text?: string; jd_text?: string;
 }
 
 export interface NewJobResult {
@@ -119,7 +122,7 @@ export function newJob(root: string, input: NewJobInput, c?: Clock, opts: Duplic
   if (hit) {
     const filled = opts.match === "url" ? [] : markSeenAgain(root, hit, {
       url: input.url ? normalizeUrl(input.url) : "", salary_text: input.salary_text, posted: input.posted, apply_via: input.apply_via,
-      site: input.source_site,
+      site: input.source_site, closes: input.closes, jd_text: input.jd_text,
     }, c);
     return { company_slug: hit.company_slug, id: hit.id, created: false, duplicate: true, filled };
   }
@@ -133,11 +136,13 @@ export function newJob(root: string, input: NewJobInput, c?: Clock, opts: Duplic
   if (!insideRoot(root, file)) throw new Error("refusing to write outside the workspace");
   // A board's "3d ago" or "30+ days ago" is stored as a date counted from when the job was found, marked approximate.
   const posted = storedPosted(input.posted, at);
+  // A closing date only when the ad states one: the value Claude read, else the ad's own words. Never a guess.
+  const closes = storedClosing(input.closes, input.jd_text, at);
   writeRecord("job", file, defaults("job", {
     id, company_slug: slug, client, title,
     source: input.source ?? "pasted", source_site: input.source_site ?? "",
     url: input.url ? normalizeUrl(input.url) : "", apply_via: input.apply_via ?? "", posted: posted.posted, ...(posted.approx ? { posted_approx: true } : {}),
-    found_at: at, location: input.location ?? "", work_mode: input.work_mode ?? "", job_type: input.job_type ?? "",
+    ...(closes ? { closes_on: closes } : {}), found_at: at, location: input.location ?? "", work_mode: input.work_mode ?? "", job_type: input.job_type ?? "",
     salary: { text: input.salary_text ?? "" },
     timeline: [{ at, event: "Found", note: input.source_site || input.source || "pasted" }],
   }));

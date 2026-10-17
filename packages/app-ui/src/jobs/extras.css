@@ -64,3 +64,6 @@
 .offer-table__total .is-best { background: var(--color-success-soft); }
 .offer-table__actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .bench-table .num { text-align: end; font-variant-numeric: tabular-nums; }
+.closing-badge { display: inline-flex; margin-top: var(--space-1); margin-right: var(--space-1); }
+.table--compact .closing-badge { margin-top: 0; }
+.closing-badge .pill { cursor: help; }

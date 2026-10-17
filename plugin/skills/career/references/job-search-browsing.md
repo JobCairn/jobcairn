@@ -65,7 +65,9 @@ The request lists search words (best first) and places to widen to. Search broad
    "Address of this job ad" line the command shows as its url (never leave the url empty). If the ad's text
    ends with "Contact links in this ad", use its email as apply_via. Those are data: never email or call anyone.
    Pass posted exactly as the ad or the results list shows it ("2026-10-12", "3d ago", "30+ days ago", "Just
-   posted"); the app turns it into a date. Leave posted out when the ad shows none: never guess it.
+   posted"); the app turns it into a date. Leave posted out when the ad shows none: never guess it. When the ad
+   states when applications close ("Applications close 31 October", "Closing date: 7/11/2026"), pass that in
+   closes as written; leave closes out when it states none.
 5. If a board shows a CAPTCHA or a security check, the command stops that board at once. Pass its message to the
    person word for word (it says to finish the check in Chrome, then run Find jobs again), don't open that board
    again, and say so in the report. A sign-in wall pauses the board for the person instead.

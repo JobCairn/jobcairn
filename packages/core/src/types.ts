@@ -27,6 +27,8 @@ export interface Job extends Extra {
   source: JobSource; source_site: string; url: string; apply_via: string; posted: string; found_at: string;
   /** The posted date was worked out from the board's "3d ago" (approximate). */
   posted_approx?: boolean;
+  /** When applications close (local YYYY-MM-DD), as the ad stated it. Absent when it said none. */
+  closes_on?: string;
   location: string; work_mode: string; job_type: string;
   salary: { min: number | null; max: number | null; currency: string; period: string; text: string } & Extra;
   work_rights: { label: WorkRightsLabel; quotes: string[]; decided_by: "none" | "scan" | "claude" | "user" } & Extra;

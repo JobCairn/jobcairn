@@ -20,7 +20,7 @@ import identity from "@careeros/brand/identity.json" with { type: "json" };
 
 const USAGE = `careeros <command>
   init <dir> [--name NAME]
-  job new --company C --title T [--url U --source ats|adzuna|browser|pasted --site S --location L --work-mode M --job-type J --salary S --posted P --apply-via A --jd-file F]
+  job new --company C --title T [--url U --source ats|adzuna|browser|pasted --site S --location L --work-mode M --job-type J --salary S --posted P --closes D --apply-via A --jd-file F]
   job event <company_slug> <id> <event> [--note N]
   job status <company_slug> <id> <status> [--note N]
   job attach <company_slug> <id> <file> --label L [--subdir application|emails|interview]
@@ -58,7 +58,7 @@ function folderArg(v: string): string {
 const OPTIONS = {
   ws: { type: "string" }, name: { type: "string" }, company: { type: "string" }, title: { type: "string" },
   url: { type: "string" }, source: { type: "string" }, site: { type: "string" }, location: { type: "string" },
-  "work-mode": { type: "string" }, "job-type": { type: "string" }, salary: { type: "string" }, posted: { type: "string" },
+  "work-mode": { type: "string" }, "job-type": { type: "string" }, salary: { type: "string" }, posted: { type: "string" }, closes: { type: "string" },
   "apply-via": { type: "string" }, "jd-file": { type: "string" }, note: { type: "string" }, label: { type: "string" },
   subdir: { type: "string" }, me: { type: "string" }, job: { type: "string" }, query: { type: "string" },
   results: { type: "string" }, kept: { type: "string" }, notes: { type: "string" }, to: { type: "string" },
@@ -124,7 +124,7 @@ export function run(argv: string[], env: NodeJS.ProcessEnv = process.env): { cod
         company: need(o.company, "company"), title: need(o.title, "title"), url: o.url as string | undefined,
         source: o.source as JobSource | undefined, source_site: o.site as string | undefined, location: o.location as string | undefined,
         work_mode: o["work-mode"] as string | undefined, job_type: o["job-type"] as string | undefined, salary_text: o.salary as string | undefined,
-        posted: o.posted as string | undefined, apply_via: o["apply-via"] as string | undefined, jd_text: jdText,
+        posted: o.posted as string | undefined, closes: o.closes as string | undefined, apply_via: o["apply-via"] as string | undefined, jd_text: jdText,
       }));
     }
     if (cmd === "job" && sub === "event") return ok(addEvent(ws, arg(2, "<company_slug>"), arg(3, "<id>"), arg(4, "<event>"), (o.note as string | undefined) ?? ""));

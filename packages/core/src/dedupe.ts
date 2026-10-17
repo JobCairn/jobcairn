@@ -1,5 +1,5 @@
 import fs from "node:fs";
-import { storedPosted } from "@careeros/contract";
+import { storedClosing, storedPosted } from "@careeros/contract";
 import { type Clock, iso } from "./clock.js";
 import { listJobs } from "./jobs.js";
 import { layout, splitClient } from "./paths.js";
@@ -123,10 +123,14 @@ export function findDuplicateJob(root: string, q: DuplicateQuery, opts: Duplicat
   return byTitle;
 }
 
-export interface SeenAgain { url?: string; salary_text?: string; posted?: string; apply_via?: string; site?: string }
+export interface SeenAgain {
+  url?: string; salary_text?: string; posted?: string; apply_via?: string; site?: string;
+  /** The closing date as the ad shows it, and the ad text (read for one when `closes` is missing). */
+  closes?: string; jd_text?: string;
+}
 
 /**
- * The job was found again: fills in the link, pay, posted date and how to apply where the job has none (never
+ * The job was found again: fills in the link, pay, posted date, closing date and how to apply where the job has none (never
  * replacing what is there), and notes "Seen again on <site> <date>" once per site and day. Returns what it filled.
  */
 export function markSeenAgain(root: string, hit: { company_slug: string; id: string }, seen: SeenAgain, c?: Clock): string[] {
@@ -142,6 +146,8 @@ export function markSeenAgain(root: string, hit: { company_slug: string; id: str
     // "3d ago" becomes a date counted from now, marked approximate (contract storedPosted).
     const posted = storedPosted(seen.posted, at);
     if (posted.posted && !j.posted) { j.posted = posted.posted; if (posted.approx) j.posted_approx = true; filled.push("posted date"); }
+    const closes = j.closes_on ? "" : storedClosing(seen.closes, seen.jd_text, at);
+    if (closes) { j.closes_on = closes; filled.push("closing date"); }
     const via = seen.apply_via?.trim();
     if (via && !j.apply_via) { j.apply_via = via; filled.push("how to apply"); }
     const note = `Seen again on ${seen.site?.trim() || "a job site"} ${at.slice(0, 10)}`;

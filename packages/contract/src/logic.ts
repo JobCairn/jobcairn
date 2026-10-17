@@ -52,7 +52,7 @@ export function jobRowFromRecord(j: JobRecord, companyName: string, eligible: bo
     company_slug: j.company_slug, id: j.id, company_name: companyName, client: j.client, title: j.title, location: j.location,
     work_mode: j.work_mode, salary_text: j.salary.text, salary_min: j.salary.min, salary_max: j.salary.max, wr_label: j.work_rights.label,
     fit: j.scores.fit.value, sponsor: j.scores.sponsor.value, status: j.status, source: j.source, source_site: j.source_site,
-    posted: j.posted, ...(j.posted_approx ? { posted_approx: true } : {}), found_at: j.found_at, eligible, pinned: j.work_rights.label === "sponsorship_offered", last_activity: last, job_type: j.job_type ?? "",
+    posted: j.posted, ...(j.posted_approx ? { posted_approx: true } : {}), ...(j.closes_on ? { closes_on: j.closes_on } : {}), found_at: j.found_at, eligible, pinned: j.work_rights.label === "sponsorship_offered", last_activity: last, job_type: j.job_type ?? "",
     sponsor_reasons: j.scores.sponsor.reasons.filter((r) => typeof r === "string" && r.trim() !== "").slice(0, SPONSOR_REASONS_SHOWN),
   };
 }

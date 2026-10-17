@@ -26,6 +26,7 @@ import { BackLink, usePageName } from "../nav";
 import { JobVideosPanel, useJobVideos } from "../video/JobVideos";
 import { JobSponsor } from "../jobs/JobSponsor";
 import { GhostPills } from "../jobs/GhostPills";
+import { ClosingBadge } from "../jobs/ClosingBadge";
 import { PayBenchmark } from "../jobs/PayBenchmark";
 import { FollowUpDate, InterviewDate } from "../jobs/JobCalendar";
 import { FreshBadge } from "../jobs/FreshBadge";
@@ -104,6 +105,7 @@ function JobView({ slug, id, tab, start }: { slug: string; id: string; tab: Tab;
             <Text role="body" muted>{d.company ? <a className="company-link" href={`#/company/${d.company.slug}`} title={`Open ${d.company.name}`}>{d.company.name}</a> : slug}{j.client ? ` · client ${j.client}` : ""} · {[j.location, j.work_mode].filter(Boolean).join(" · ")}</Text>
             <SourceBadge job={j} size="sm" showName />
             <FreshBadge row={j} />
+            <ClosingBadge row={j} />
             {rightsPill ? <Pill tone={rightsPill}>{WR_LABEL_TEXT[j.work_rights.label]}</Pill> : null}
             {!d.eligible ? <Pill tone="danger">You can't apply</Pill> : null}
             <GhostPills ghost={d.ghost} />

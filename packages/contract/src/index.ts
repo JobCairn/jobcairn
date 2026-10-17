@@ -27,6 +27,8 @@ export * from "./inbox-classify.js";
 export * from "./find-prefs.js";
 export * from "./posted-date.js";
 export * from "./posted-text.js";
+export * from "./jd-text.js";
+export * from "./closing-date.js";
 export * from "./search-text.js";
 export * from "./schedule.js";
 export * from "./find-plan.js";

@@ -26,6 +26,7 @@ export function pageKey(r: Route): string {
     case "company": return `company:${r.slug}`;
     case "recruiter": return `recruiter:${r.slug}`;
     case "learn": return r.job ? `learn:job:${r.job}` : r.topic ? `learn:topic:${r.topic}` : "learn";
+    case "research": return r.topic ? `research:${r.topic}` : "research";
     default: return r.screen;
   }
 }
@@ -80,7 +81,7 @@ export function resetTrail(): void { trail = []; emit(); }
 export function trailSnapshot(): readonly TrailEntry[] { return trail; }
 
 const SCREEN_NAMES: Partial<Record<Route["screen"], string>> = {
-  home: "Home", jobs: "Jobs", applications: "Applications", inbox: "Drop box", learn: "Learn", videos: "Videos", companies: "Companies", company: "The company", recruiters: "Recruiters", recruiter: "The recruiter",
+  home: "Home", jobs: "Jobs", applications: "Applications", inbox: "Drop box", learn: "Learn", research: "Research", videos: "Videos", companies: "Companies", company: "The company", recruiters: "Recruiters", recruiter: "The recruiter",
   searches: "Searches", approvals: "Approvals", privacy: "Privacy", settings: "Settings", job: "The job", apply: "The application", resume: "The resume", video: "The video",
   resumes: "Resumes", "resume-variant": "The resume",
 };
@@ -109,6 +110,7 @@ export function fallbackFor(r: Route): Route | null {
     case "video": return jobOfFolder(r.folder) ?? { screen: "videos" };
     case "company": return { screen: "companies" };
     case "recruiter": return { screen: "recruiters" };
+    case "research": return r.topic ? { screen: "research" } : null;
     case "learn": {
       if (!r.job) return r.topic ? { screen: "learn" } : null;
       const [slug, id] = r.job.split("/");

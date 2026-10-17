@@ -19,6 +19,8 @@ import {
   Ellipsis, LayoutGrid, Link2, List, Rows3,
   // Guide reader: callouts and section marks (ui/learn-visual)
   BookA, CodeXml, Layers, Lightbulb, Scale, TriangleAlert, Workflow,
+  // Research any topic (ui/research)
+  Printer, RefreshCw, Telescope,
 } from "lucide-react";
 import { GLYPHS as GLYPH_NODES, makeGlyph, type GlyphName } from "./glyphs";
 
@@ -155,6 +157,10 @@ export const Icons = {
   concepts: Layers,
   compare: Scale,
   flow: Workflow,
+  // Research any topic (ui/research)
+  research: Telescope,
+  refresh: RefreshCw,
+  print: Printer,
 } satisfies Record<string, IconGlyph>;
 export type IconKey = keyof typeof Icons;
 /** The AI-action glyph under a stable name (same component as Icons.ai). */

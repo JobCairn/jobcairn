@@ -11,7 +11,7 @@ import { LOCKABLE_DIRS } from "./types.js";
  * Recently deleted can put it back where it was. Entries older than TRASH_DAYS are removed when the app opens.
  */
 export const TRASH_DAYS = 30;
-export const TRASH_KINDS = ["job", "company", "resume", "topic", "video", "job_file"] as const;
+export const TRASH_KINDS = ["job", "company", "resume", "topic", "video", "job_file", "research"] as const;
 export type TrashKind = (typeof TRASH_KINDS)[number];
 /** An entry's folder name: when it was deleted, then the kind and a slug of its name. */
 export const TRASH_ID = /^\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}-\d{3}Z-[a-z-]{1,20}-[a-z0-9-]{1,80}$/;

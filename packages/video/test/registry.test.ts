@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { lengthKey, loadRegistry, resolveOutputFolder, validateVideoType } from "../src/registry.js";
 import { BUILTIN_TYPES, sampleCopy } from "./helpers.js";
 
-const IDS = ["application-summary", "company-briefing", "interview-prep", "jd-walkthrough", "pitch", "skill-gap-lesson", "weekly-recap"];
+const IDS = ["application-summary", "company-briefing", "interview-prep", "jd-walkthrough", "pitch", "research-briefing", "skill-gap-lesson", "weekly-recap"];
 const custom = (root: string, name: string, body: unknown) => {
   fs.mkdirSync(path.join(root, "settings/video-types"), { recursive: true });
   fs.writeFileSync(path.join(root, "settings/video-types", name), typeof body === "string" ? body : JSON.stringify(body));
@@ -12,7 +12,7 @@ const custom = (root: string, name: string, body: unknown) => {
 const base = () => JSON.parse(fs.readFileSync(path.join(BUILTIN_TYPES, "jd-walkthrough.json"), "utf8")) as Record<string, unknown>;
 
 describe("built-in types", () => {
-  it("all seven validate and load", () => {
+  it("all eight validate and load", () => {
     const r = loadRegistry({ builtinDir: BUILTIN_TYPES });
     expect(r.errors).toEqual([]);
     expect(r.types.map((t) => t.id).sort()).toEqual(IDS);
@@ -24,7 +24,24 @@ describe("built-in types", () => {
     expect(r.forEntry("job").map((t) => t.id).sort()).toEqual(["company-briefing", "interview-prep", "jd-walkthrough", "pitch"]);
     expect(r.forEntry("home").map((t) => t.id)).toEqual(["weekly-recap"]);
     expect(r.forEntry("apply.review").map((t) => t.id)).toEqual(["application-summary"]);
-    expect(r.forEntry("all")).toHaveLength(7);
+    expect(r.forEntry("research").map((t) => t.id)).toEqual(["research-briefing"]);
+    expect(r.forEntry("all")).toHaveLength(8);
+  });
+});
+
+describe("research videos", () => {
+  const research = () => JSON.parse(fs.readFileSync(path.join(BUILTIN_TYPES, "research-briefing.json"), "utf8")) as Record<string, unknown>;
+  it("go in the topic's own videos folder, numbered", () => {
+    const root = sampleCopy();
+    const t = loadRegistry({ builtinDir: BUILTIN_TYPES }).byId("research-briefing")!;
+    expect(resolveOutputFolder(t, { kind: "research", topic: "express-entry" }, root)).toBe("research/express-entry/videos/1");
+    fs.mkdirSync(path.join(root, "research/express-entry/videos/1"), { recursive: true });
+    expect(resolveOutputFolder(t, { kind: "research", topic: "express-entry" }, root)).toBe("research/express-entry/videos/2");
+    expect(() => resolveOutputFolder(t, { kind: "topic", topic: "x" }, root)).toThrow(/not a topic/);
+  });
+  it("refuse an output outside research/{topic}/videos/ and the report resolver on other subjects", () => {
+    expect(validateVideoType({ ...research(), output: "research/{topic}/{n}/" }, "builtin").problems.join(" ")).toMatch(/inside research\/\{topic\}\/videos/);
+    expect(validateVideoType({ ...base(), sources: [{ resolver: "research.report", required: true }] }, "builtin").problems.join(" ")).toMatch(/only for research videos/);
   });
 });
 
@@ -52,7 +69,7 @@ describe("workspace types", () => {
     expect(errs["order.json"]).toMatch(/in order/);
     expect(errs["brief.json"]).toMatch(/\{visa_expiry\}/);
     expect(errs["named-wrong.json"]).toMatch(/file name/);
-    expect(r.types).toHaveLength(8);
+    expect(r.types).toHaveLength(9);
   });
   it("skips a types folder that is a link", () => {
     const root = sampleCopy();

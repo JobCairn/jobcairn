@@ -51,6 +51,7 @@ function useSubjects() {
       if (t.kind === "company") return companies.get(t.company_slug) ?? "A company";
       if (t.kind === "topic") return t.company_slug && t.id ? `${t.label} · ${jobsBy.get(`${t.company_slug}/${t.id}`) ?? "a job"}` : t.label;
       if (t.kind === "resume_variant") return `Resume version: ${t.label}`;
+      if (t.kind === "research") return `Research: ${t.label}`;
       return "Your search";
     };
   }, [jobs.data]);

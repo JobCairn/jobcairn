@@ -12,7 +12,8 @@ description: >-
   rubrics, pull achievements out of past conversations, or check whether their
   resume pipeline can be trusted — even if they don't say the word "resume" (e.g.
   "should I apply to this?", "score this job", "is my experience section strong?",
-  "pull more from my convos", "can I trust this chain?").
+  "pull more from my convos", "can I trust this chain?"). Also researches
+  job-search topics (visas, pay, job markets) with cited sources.
 ---
 
 # Career
@@ -75,6 +76,7 @@ just flag that traceability can't be verified without master docs.
 | After any tailored resume or cover letter; "double-check this draft", "is this defensible?" | Second-pass review | `references/workflow-second-pass-review.md` |
 | "Write my LinkedIn profile / About / headline", "draft a cover letter", "prep STAR stories for this interview" | 7. LinkedIn & Adjacent | `references/workflow-linkedin-and-adjacent.md` |
 | "Find jobs", "search the boards", "check my sign-in" (every job search run; the Chrome steps apply when it browses Chrome) | 8. Job Search | `references/job-search-browsing.md` |
+| "Research a topic", "how does Express Entry work?", "482 vs 186", "pay for this role in this city" | 9. Topic Research | `references/topic-research.md` |
 
 When the ask is ambiguous, ask one short clarifying question rather than guessing
 the workflow — the workflows have different outputs and it's cheap to confirm.
@@ -150,6 +152,9 @@ Only load the one reference file for the workflow in play; don't preload the res
 - `references/job-search-browsing.md` — Workflow 8: what to search and keep in a
   find-jobs run, the Do and Don't rules for browsing job boards with
   `./.careeros/bin/jobcairn-chrome`, and the search steps.
+- `references/topic-research.md` — Workflow 9: researching any topic (visas, pay, job
+  markets) from official sources first, citing and date-stamping every fact, no advice
+  wording, and the report.json the app draws.
 - `references/writing-style-and-verbs.md` — SAR framing, anti-AI-slop writing
   standard, mandatory critique-and-rewrite pass, strong verbs, level-matching,
   strict accuracy rules. Read whenever drafting or rewriting candidate-facing prose.

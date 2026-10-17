@@ -12,13 +12,13 @@ export const SLIDE_SCENE_TYPES: readonly SceneType[] = ["title", "stat", "compar
 export const SCENE_WORD_CAP = 12;
 /** Scenes the cap never applies to: a quiz question and code need their words. */
 export const WORD_CAP_EXEMPT: readonly SceneType[] = ["quiz", "code-typing", "code-highlight", "code-morph", "code-diff"];
-export const ENTRY_POINTS = ["job", "job.gaps", "job.interview", "company", "apply.review", "learn.topic", "home", "chat"] as const;
+export const ENTRY_POINTS = ["job", "job.gaps", "job.interview", "company", "apply.review", "learn.topic", "research", "home", "chat"] as const;
 export type EntryPoint = (typeof ENTRY_POINTS)[number];
-export const SUBJECT_KINDS = ["job", "company", "topic", "week"] as const;
+export const SUBJECT_KINDS = ["job", "company", "topic", "week", "research"] as const;
 export type SubjectKind = (typeof SUBJECT_KINDS)[number];
 export const VOICE_TYPES = ["guide", "interview", "slides"] as const;
 export type VoiceType = (typeof VOICE_TYPES)[number];
-export const SOURCE_RESOLVERS = ["gap", "job.jd", "job.must_haves", "job.score", "history", "profile", "company.research", "company.record", "interview.questions", "application.files", "index.stats", "learning.guide"] as const;
+export const SOURCE_RESOLVERS = ["gap", "job.jd", "job.must_haves", "job.score", "history", "profile", "company.research", "company.record", "interview.questions", "application.files", "index.stats", "learning.guide", "research.report"] as const;
 export type SourceResolver = (typeof SOURCE_RESOLVERS)[number];
 export const STAGE_IDS = ["request", "sources", "write", "check", "review", "narrate", "captions", "media", "expand", "lint", "draft", "final", "save"] as const;
 export type StageId = (typeof STAGE_IDS)[number];
@@ -45,7 +45,9 @@ export type VideoSubject =
   | { kind: "job"; company_slug: string; id: string }
   | { kind: "company"; company_slug: string; id?: string }
   | { kind: "topic"; topic: string; company_slug?: string; id?: string }
-  | { kind: "week"; week: string };
+  | { kind: "week"; week: string }
+  /** A research topic's folder name under research/. */
+  | { kind: "research"; topic: string };
 export interface VideoOptions {
   length_s?: number; mode?: VideoMode; note?: string;
   /** Sound effects for this video: "off" leaves them out. Absent: the Settings > Videos choice (subtle by default). */

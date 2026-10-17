@@ -12,6 +12,7 @@ export const MOCK_VIDEO_TYPES: VideoTypeView[] = [
   { id: "interview-prep", label: "Interview prep", description: "Likely questions with think time and model answers.", subject: "job", entry_points: ["job.interview", "job"], length: L(60, 150, 600), modes: ["practice", "watch"], writer: "claude", origin: "builtin" },
   { id: "pitch", label: "Tell me about yourself", description: "Your answer for this job, from your history only.", subject: "job", entry_points: ["job", "job.interview"], length: L(30, 60, 180), modes: [], writer: "claude", origin: "builtin" },
   { id: "application-summary", label: "Application summary", description: "What you are about to send and why it fits.", subject: "job", entry_points: ["apply.review"], length: L(30, 60, 180), modes: [], writer: "claude", origin: "builtin" },
+  { id: "research-briefing", label: "Research briefing", description: "A short slide video of a research report: the summary, key figures, steps and sources.", subject: "research", entry_points: ["research"], length: L(30, 120, 600), modes: [], writer: "claude", origin: "builtin" },
   { id: "weekly-recap", label: "Weekly recap", description: "Your week in numbers and what to do next.", subject: "week", entry_points: ["home"], length: L(30, 50, 60), modes: [], writer: "template", origin: "builtin" },
 ];
 
@@ -33,6 +34,7 @@ function folderFor(type: VideoTypeView, s: VideoSubjectArg, n: number): string {
     case "pitch": return `${job}/interview/pitch-${n}`;
     case "application-summary": return `${job}/application/summary-video`;
     case "weekly-recap": return `recaps/${s.kind === "week" ? s.week : "2026-W03"}`;
+    case "research-briefing": return `research/${s.kind === "research" ? s.topic : "topic"}/videos/${n}`;
     default: return `${job}/videos/${type.id}-${n}`;
   }
 }
@@ -43,6 +45,7 @@ function mockSource(s: VideoSubjectArg): VideoSourcesView["files"][number] {
     case "week": return { rel: `recaps/${s.week}/stats.json`, resolver: "index.stats", required: true, untrusted: false };
     case "company": return { rel: `companies/${s.company_slug}/research.md`, resolver: "company.research", required: true, untrusted: true };
     case "topic": return { rel: "settings/profile.json", resolver: "profile", required: true, untrusted: false };
+    case "research": return { rel: `research/${s.topic}/report.json`, resolver: "research.report", required: true, untrusted: true };
     default: return { rel: `companies/${s.company_slug}/jobs/${s.id}/jd.md`, resolver: "job.jd", required: true, untrusted: true };
   }
 }

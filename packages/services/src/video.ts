@@ -20,6 +20,7 @@ import { learnHandlers } from "./learn.js";
 import { learnHubHandlers } from "./learn-hub.js";
 import { defaultWriter } from "./video-claude.js";
 import { listLegacyVideos, makingMs, posterFor } from "./video-list-extra.js";
+import { researchGet } from "./topic-research.js";
 
 export interface VideoHost {
   runner: ProcessRunner; pluginDir: string; gsapFile: string; platform: NodeJS.Platform; home: string; env: Record<string, string | undefined>;
@@ -246,11 +247,15 @@ export function listVideos(ctx: ServiceContext, filter: VideoListFilter): VideoL
     if (!names.has(slug)) { try { names.set(slug, readRecord("company", layout(root).companyFile(slug)).name); } catch { names.set(slug, slug); } }
     return names.get(slug)!;
   };
+  const researchName = (slug: string): string => {
+    try { return researchGet(ctx, slug).topic.title; } catch { return slug.replace(/-/g, " "); }
+  };
   const contextOf = (subject: VideoSubjectArg): string => {
     if (subject.kind === "job") {
       try { return `${readRecord("job", layout(root).jobFile(subject.company_slug, subject.id)).title} at ${companyName(subject.company_slug)}`; } catch { return companyName(subject.company_slug); }
     }
     if (subject.kind === "company") return companyName(subject.company_slug);
+    if (subject.kind === "research") return researchName(subject.topic);
     return subject.kind === "topic" ? subject.topic : subject.week;
   };
   const out: VideoListItem[] = [];

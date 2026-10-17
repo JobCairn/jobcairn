@@ -119,10 +119,10 @@ export interface Integrations extends Extra {
 }
 export interface Sponsors extends Extra { schema: number; employers: Extra[]; custom: Record<string, unknown> }
 
-export interface VideoSubjectRecord extends Extra { kind: "job" | "company" | "topic" | "week"; company_slug?: string; id?: string; topic?: string; week?: string }
+export interface VideoSubjectRecord extends Extra { kind: "job" | "company" | "topic" | "week" | "research"; company_slug?: string; id?: string; topic?: string; week?: string }
 export interface VideoTypeRecord extends Extra {
   schema: number; id: string; label: string; description: string; version: number; entry_points: string[];
-  subject: "job" | "company" | "topic" | "week"; writer: "claude" | "template"; skill: "video-explainer" | "video-slides";
+  subject: "job" | "company" | "topic" | "week" | "research"; writer: "claude" | "template"; skill: "video-explainer" | "video-slides";
   voice_type: "guide" | "interview" | "slides"; length: { min_s: number; target_s: number; max_s: number };
   scene_types: string[]; scene_counts: Record<string, { min: number; max: number }>;
   sources: { resolver: string; required: boolean; glob?: string }[]; brief_template: string; rules: string[];

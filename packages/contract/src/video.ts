@@ -2,7 +2,7 @@ import type { ActionTarget } from "./actions.js";
 import type { MakingRate } from "./video-lengths.js";
 import { ArgError, arr, int, obj, oneOf, opt, relPath, slug, str, type V } from "./validate.js";
 
-export const VIDEO_SCREENS = ["job", "job.gaps", "job.interview", "company", "apply.review", "learn.topic", "home", "chat", "all"] as const;
+export const VIDEO_SCREENS = ["job", "job.gaps", "job.interview", "company", "apply.review", "learn.topic", "research", "home", "chat", "all"] as const;
 export type VideoScreen = (typeof VIDEO_SCREENS)[number];
 export const CAPTION_STYLES = ["rail", "pill", "highlight", "none"] as const;
 export const VIDEO_STATUSES = ["writing", "checking", "review", "narrating", "rendering", "preview", "done", "failed", "cancelled"] as const;
@@ -10,7 +10,7 @@ export const VIDEO_STAGE_IDS = ["request", "sources", "write", "check", "review"
 export const INSTALLABLE_TOOLS = ["ffmpeg", "chrome", "hyperframes", "supertonic", "whisper"] as const;
 const SLUG = "[a-z0-9]+(?:-[a-z0-9]+)*";
 /** Same pattern as core's VIDEO_FOLDER_RE (a test keeps them equal). */
-export const VIDEO_FOLDER_RE = new RegExp(`^(?:recaps/\\d{4}-W\\d{2}(?:-\\d{4}-\\d{2}-\\d{2}(?:-\\d{1,2})?)?|(?:learning/${SLUG}|companies/${SLUG}(?:/jobs/${SLUG})?)(?:/[a-z0-9][a-z0-9_-]{0,60}){1,3})$`);
+export const VIDEO_FOLDER_RE = new RegExp(`^(?:recaps/\\d{4}-W\\d{2}(?:-\\d{4}-\\d{2}-\\d{2}(?:-\\d{1,2})?)?|(?:learning/${SLUG}|research/${SLUG}|companies/${SLUG}(?:/jobs/${SLUG})?)(?:/[a-z0-9][a-z0-9_-]{0,60}){1,3})$`);
 export const RUN_ID_RE = /^vr-[a-z0-9-]{1,60}$/;
 export const VIDEO_TYPE_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 const WEEK_RE = /^\d{4}-W(0[1-9]|[1-4]\d|5[0-3])$/;
@@ -20,7 +20,9 @@ export type VideoSubjectArg =
   | { kind: "job"; company_slug: string; id: string }
   | { kind: "company"; company_slug: string; id?: string }
   | { kind: "topic"; topic: string; company_slug?: string; id?: string }
-  | { kind: "week"; week: string };
+  | { kind: "week"; week: string }
+  /** A research topic: its folder name under research/ (spec 2026-10-17-research-any-topic). */
+  | { kind: "research"; topic: string };
 /**
  * `review`: "always" stops for the person's review once the script is written; "if_problems" (the default for a new
  * request) goes straight on to narrate and render the final video when the script passes its checks, and stops
@@ -28,7 +30,7 @@ export type VideoSubjectArg =
  */
 export interface VideoOptionsArg { length_s?: number; mode?: "practice" | "watch"; note?: string; existing?: "replace" | "keep_copy"; review?: "always" | "if_problems"; sound?: "on" | "off" }
 export interface VideoTypeView {
-  id: string; label: string; description: string; subject: "job" | "company" | "topic" | "week"; entry_points: VideoScreen[];
+  id: string; label: string; description: string; subject: "job" | "company" | "topic" | "week" | "research"; entry_points: VideoScreen[];
   length: { min_s: number; target_s: number; max_s: number }; modes: ("practice" | "watch")[]; writer: "claude" | "template"; origin: "builtin" | "workspace";
   /** The length Make video starts on: the saved default for this type (Settings > Video), else the type's target. */
   default_s?: number;
@@ -130,6 +132,7 @@ const topic: V<string> = (v, at) => {
 const jobSubject = obj({ kind: oneOf(["job"] as const), company_slug: slug, id: slug });
 const companySubject = obj({ kind: oneOf(["company"] as const), company_slug: slug, id: opt(slug) });
 const topicSubject = obj({ kind: oneOf(["topic"] as const), topic, company_slug: opt(slug), id: opt(slug) });
+const researchSubject = obj({ kind: oneOf(["research"] as const), topic: str({ min: 1, max: 64, pattern: /^[a-z0-9]+(-[a-z0-9]+)*$/ }) });
 const weekSubject = obj({ kind: oneOf(["week"] as const), week: str({ min: 8, max: 8, pattern: WEEK_RE }) });
 export const videoSubject: V<VideoSubjectArg> = (v, at) => {
   const kind = typeof v === "object" && v !== null ? (v as { kind?: unknown }).kind : undefined;
@@ -140,7 +143,8 @@ export const videoSubject: V<VideoSubjectArg> = (v, at) => {
   if (kind === "company") return companySubject(v, at) as VideoSubjectArg;
   if (kind === "topic") return topicSubject(v, at) as VideoSubjectArg;
   if (kind === "week") return weekSubject(v, at) as VideoSubjectArg;
-  throw new ArgError(`${at}.kind must be job, company, topic or week`);
+  if (kind === "research") return researchSubject(v, at) as VideoSubjectArg;
+  throw new ArgError(`${at}.kind must be job, company, topic, week or research`);
 };
 export const videoOptions = obj({
   length_s: opt(int(10, 600)), mode: opt(oneOf(["practice", "watch"] as const)), note: opt(str({ max: 500, multiline: true })),
@@ -175,5 +179,5 @@ export function fmtDuration(seconds: number | null): string {
 }
 
 export function videoSection(subject: VideoSubjectArg): VideoListItem["section"] {
-  return subject.kind === "topic" ? "topics" : subject.kind === "week" ? "recaps" : subject.kind === "company" ? "companies" : "jobs";
+  return subject.kind === "topic" || subject.kind === "research" ? "topics" : subject.kind === "week" ? "recaps" : subject.kind === "company" ? "companies" : "jobs";
 }

@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "id": "research-briefing",
+  "label": "Research briefing",
+  "description": "A short slide video of a research report: the summary, the key figures, the steps and where the facts come from.",
+  "version": 1,
+  "entry_points": ["research"],
+  "subject": "research",
+  "writer": "claude",
+  "skill": "video-slides",
+  "voice_type": "slides",
+  "length": { "min_s": 30, "target_s": 120, "max_s": 600 },
+  "scene_types": ["title", "bullet-build", "stat", "comparison", "flowchart", "recap-card", "sequence", "icon-grid", "diagram", "checklist", "timeline", "chart", "kinetic", "matrix"],
+  "scene_counts": { "title": { "min": 1, "max": 1 }, "recap-card": { "min": 1, "max": 1 } },
+  "sources": [
+    { "resolver": "research.report", "required": true }
+  ],
+  "brief_template": "This video briefs {name} on {gap}: what it is, the key figures, the steps, and where the facts come from.",
+  "rules": [
+    "Use only facts in the research report (report.json and report.md). Every scene cites the report and the source URL behind each fact.",
+    "Open with a title scene that says the topic and the report's \"as of\" date.",
+    "Show the key figures as stat scenes, the steps as a timeline, comparisons as a comparison or matrix, and the report's numbers as a chart only when it has three or more.",
+    "Say plainly when the report says a rule or number changes often, and what it couldn't confirm.",
+    "General information only: never tell the viewer what to do about their own visa, legal, tax or money situation.",
+    "Close with a recap-card that names the main official sources and the \"as of\" date."
+  ],
+  "facts": "strict",
+  "extras": [],
+  "output": "research/{topic}/videos/{n}/",
+  "media": "none",
+  "modes": []
+}

@@ -16,6 +16,8 @@ export const EXTRACT_CHARS = 4000;
 // prompt as the job ad and company research text do.
 export const UNTRUSTED_RESOLVERS: ReadonlySet<SourceResolver> = new Set([
   "job.jd", "company.research", "application.files", "job.must_haves", "company.record",
+  // A research report is Claude's summary of public web pages: data, never instructions.
+  "research.report",
 ]);
 export const CANDIDATE_RESOLVERS: ReadonlySet<SourceResolver> = new Set(["history", "profile"]);
 
@@ -45,6 +47,7 @@ const MISSING: Record<SourceResolver, [string, FixAction]> = {
   "application.files": ["Prepare the application first.", "prepare-application"],
   "index.stats": ["There are no numbers for this week.", "none"],
   "learning.guide": ["There is no guide for this topic yet.", "none"],
+  "research.report": ["Research this topic first. The video is made from its report.", "none"],
 };
 
 // Resolvers whose "required and missing" state can be caused by readSafe refusing a
@@ -53,7 +56,7 @@ const MISSING: Record<SourceResolver, [string, FixAction]> = {
 // "can't check locked folders" reason instead of the resolver's usual message when
 // workspace.json itself can't be read (fix round 1, Important item 5).
 const READS_FILES: ReadonlySet<SourceResolver> = new Set([
-  "job.jd", "job.score", "history", "company.research", "application.files", "interview.questions", "learning.guide",
+  "job.jd", "job.score", "history", "company.research", "application.files", "interview.questions", "learning.guide", "research.report",
 ]);
 
 // Exported so the fact check (Task 7) shares this exact resolver instead of a second
@@ -78,6 +81,16 @@ function safeLockedFolderFor(root: string, file: string, c?: Clock): string | nu
 function safeSegment(s: string | undefined): string | undefined {
   if (s === undefined) return undefined;
   try { assertSegment(s, "subject segment"); return s; } catch { return undefined; }
+}
+
+/** A research topic's title from research/<slug>/topic.json (read through readSafe), else the folder name in words. */
+function researchTitle(root: string, topic: string, clock?: Clock): string {
+  const slug = safeSegment(topic);
+  if (!slug) return "";
+  const r = readSafe(root, `research/${slug}/topic.json`, clock);
+  let title = "";
+  try { const t = r ? (JSON.parse(r.text) as { title?: unknown }).title : undefined; title = typeof t === "string" ? t : ""; } catch { title = ""; }
+  return title.replace(/[\p{Cc}\p{Cf}]/gu, " ").replace(/\s+/g, " ").trim().slice(0, 80) || slug.replace(/-/g, " ");
 }
 
 /**
@@ -351,6 +364,8 @@ export function buildSourcePack(req: SourceRequest): SourcePack {
   }
   if (subject.kind === "topic") facts.gap = subject.topic;
   if (subject.kind === "week") facts.week = subject.week;
+  // A research topic's name: its topic.json title (the app wrote it), else the folder name in words.
+  if (subject.kind === "research") facts.gap = researchTitle(root, subject.topic, clock);
 
   const cautions: string[] = [];
   const add = (rel: string, resolver: SourceResolver, required: boolean): boolean => {
@@ -440,6 +455,16 @@ export function buildSourcePack(req: SourceRequest): SourcePack {
         } catch {
           ok = false; // not a real ISO week (e.g. "2026-W54"); a missing source, not a crash
         }
+        break;
+      }
+      case "research.report": {
+        if (subject.kind !== "research") break;
+        // The folder name, checked, never `folder`: a caller-supplied folder can't steer this read outside research/.
+        const slug = safeSegment(subject.topic);
+        if (!slug) break;
+        const md = add(`research/${slug}/report.md`, "research.report", src.required);
+        const json = add(`research/${slug}/report.json`, "research.report", src.required);
+        ok = md || json;
         break;
       }
       case "learning.guide": {

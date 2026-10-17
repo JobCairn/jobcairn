@@ -2,7 +2,7 @@ import crypto from "node:crypto";
 import identity from "@careeros/brand/identity.json" with { type: "json" };
 import { layout, listAgencies, listJobs, readRecord, readSearches } from "@careeros/core";
 import {
-  BREADTH_QUERIES, EXPERIENCE_WORDS, JOB_TYPE_WORDS, jobSearchRightsRule, MIN_RELEVANT_PER_PLACE, MIN_SKILL_OVERLAP, searchPlan, skillsIn, WR_STATUSES,
+  BREADTH_QUERIES, EXPERIENCE_WORDS, JOB_TYPE_WORDS, jobSearchRightsRule, localDate, MIN_RELEVANT_PER_PLACE, MIN_SKILL_OVERLAP, searchPlan, skillsIn, WR_STATUSES,
   type ActionId, type ActionTarget, type SearchOverride, type SearchPlan, type SearchPrefs, type WorkRightsStatus,
 } from "@careeros/contract";
 import { jobDetail } from "../read.js";
@@ -189,6 +189,19 @@ function topicLines(root: string, t: Extract<ActionTarget, { kind: "topic" }>): 
   return out;
 }
 
+/** Research a topic's context: the topic, today's date, the person's city and target roles (to make the answer relevant). */
+function researchLines(root: string, t: Extract<ActionTarget, { kind: "research" }>, now: Date): string[] {
+  const out = [`- Topic: ${v(t.label, 80)}`, `- Today: ${localDate(now)}`];
+  let p: Record<string, unknown> = {};
+  try { p = readRecord("profile", layout(root).profile) as unknown as Record<string, unknown>; } catch { /* no profile yet */ }
+  const contact = (p.contact ?? {}) as Record<string, unknown>;
+  const city = v(contact.city, 80);
+  if (city) out.push(`- I live in: ${city}`);
+  const roles = list(((p.targets ?? {}) as Record<string, unknown>).roles, 5);
+  if (roles) out.push(`- My target roles: ${roles}`);
+  return out;
+}
+
 /**
  * Find jobs' search rules: fixed words outside the data fence (the fence holds only values and says it isn't
  * instructions). Each rule names the value it uses, and is left out when that value isn't set. Broad on purpose
@@ -255,6 +268,7 @@ export function webContext(root: string, id: ActionId, t: ActionTarget, now: Dat
   }
   else if (id === "research_company" && t.kind === "company") lines = companyLines(root, t.company_slug);
   else if (id === "study_topic" && t.kind === "topic") lines = topicLines(root, t);
+  else if (id === "research_topic" && t.kind === "research") lines = researchLines(root, t, now);
   else if (id === "find_recruiters") lines = recruiterLines(root);
   else if (id === "check_recruiters") lines = checkLines(root);
   else return "";

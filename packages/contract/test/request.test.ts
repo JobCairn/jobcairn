@@ -12,6 +12,7 @@ const TARGET: Record<string, ActionTarget> = {
   workspace: { kind: "workspace" }, company: { kind: "company", company_slug: "acme-corp" }, job: ACME,
   topic: { kind: "topic", topic: "kubernetes", label: "Kubernetes", company_slug: "acme-corp", id: "2026-01-12-ai-engineer" },
   resume_variant: { kind: "resume_variant", variant: "backend-heavy", label: "Backend-heavy" },
+  research: { kind: "research", topic: "express-entry-in-canada", label: "Express Entry in Canada" },
 };
 const INFO = { title: "AI Engineer", company: "Acme Corp", now: "2026-01-15T09:00:00.000Z" };
 const NONCE = "0123456789abcdef";
@@ -487,7 +488,8 @@ describe("web runs get a cited-sources evidence rule", () => {
     const info = { company: "Acme Corp", title: "AI Engineer", now: "2026-10-10T05:00:00.000Z", work_rights: "citizen" as const };
     let checked = 0;
     for (const id of WEB_ACTION_IDS) {
-      const t = id === "find_jobs" ? { kind: "workspace" as const } : id === "study_topic" ? { kind: "topic" as const, topic: "rag", label: "RAG" } : { kind: "company" as const, company_slug: "acme-corp" };
+      const t = id === "find_jobs" ? { kind: "workspace" as const } : id === "study_topic" ? { kind: "topic" as const, topic: "rag", label: "RAG" }
+        : id === "research_topic" ? { kind: "research" as const, topic: "express-entry", label: "Express Entry" } : { kind: "company" as const, company_slug: "acme-corp" };
       let p: string;
       try { p = buildActionPrompt(id, t as never, info as never); } catch { continue; }
       checked++;

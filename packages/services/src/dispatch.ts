@@ -32,6 +32,7 @@ import { recruiterAddHandlers } from "./recruiters-add.js";
 import { networkHandlers } from "./network.js";
 import { resumeHandlers } from "./resume.js";
 import { resumesHandlers } from "./resumes.js";
+import { researchHandlers } from "./topic-research.js";
 import { resumeFillHandlers } from "./resume-fill.js";
 import { linkHandlers, secretHandlers } from "./secrets.js";
 import { settingsHandlers } from "./settings.js";
@@ -49,7 +50,7 @@ export const HANDLERS: HandlerTable = {
   ...workspaceHandlers, ...switcherHandlers, ...readHandlers, ...companyHandlers, ...recruiterHandlers, ...recruiterAddHandlers, ...settingsHandlers, ...fileHandlers, ...filePreviewHandlers, ...inboxHandlers, ...learnHandlers, ...learnHubHandlers, ...guideHandlers,
   ...applyHandlers, ...privacyHandlers, ...approvalHandlers, ...secretHandlers, ...linkHandlers, ...actionHandlers,
   ...docsHandlers, ...claudeEngineHandlers, ...composerHandlers, ...ttsHandlers, ...resumeHandlers, ...tourHandlers, ...videoHandlers, ...videoLearnHandlers, ...chromeHandlers, ...scheduleHandlers,
-  ...resumeFillHandlers, ...jobLinkHandlers, ...resumesHandlers, ...trashHandlers,
+  ...resumeFillHandlers, ...jobLinkHandlers, ...resumesHandlers, ...researchHandlers, ...trashHandlers,
   ...mailAccountHandlers, ...mailReadHandlers, ...mailAiHandlers, ...mailRecheckHandlers, ...mailSyncHandlers, ...mailSendHandlers,
   ...setupHandlers, ...updateHandlers, ...networkHandlers, ...jobExtraHandlers,
 };
@@ -80,6 +81,7 @@ export const MUTATION_AREAS: Partial<Record<MethodName, ChangeArea[]>> = {
   "docs.export": ["jobs"],
   "claude.consent": ["claude", "settings"], "claude.setAutoMode": ["claude", "settings"], "claude.repair": ["claude", "settings"], "claude.run": ["claude"], "claude.testRun": ["claude"], "claude.cancel": ["claude"], "tts.generatePreviews": ["settings"], "tts.previewVoice": ["settings"],
   "resume.save": ["jobs"], "resume.restore": ["jobs"], "resume.suggestion": ["jobs"], "resumes.newVariant": ["jobs"], "resumes.duplicate": ["jobs"], "resumes.remove": ["jobs", "home", "trash"],
+  "research.create": ["learn"], "research.update": ["learn"], "research.exportHtml": ["learn"], "research.exportPdf": ["learn"],
   "profile.fillFromResume": ["settings", "jobs", "home"], "profile.markFillSeen": ["settings", "home"],
   "learn.setProgress": ["learn", "home"], "guide.setDismissed": ["home", "learn"], "guide.setSkipped": ["home", "learn"],
   // mail.get marks a message opened, which changes Home's unread count; the open message itself doesn't need a reload.

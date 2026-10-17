@@ -4,6 +4,7 @@ import { SCORE_TIERS } from "./score.js";
 import { languageRule, type SpokenLanguage } from "./languages.js";
 import { RESEARCH_FILE, researchAgeAt, researchRule } from "./research.js";
 import { makeNonce, NOT_REQUESTED, noteRule, requestSection, validateRequest, type RequestChoices } from "./request.js";
+import { REPORT_SHAPE } from "./topic-research.js";
 import identity from "@careeros/brand/identity.json" with { type: "json" };
 
 /**
@@ -15,12 +16,13 @@ export const ACTION_IDS = [
   "skill_gap_video", "jd_walkthrough_video", "company_background_video", "interview_prep_video",
   "pitch_video", "application_summary_video", "weekly_recap_video", "rewrite_resume", "suggest_targets", "tailor_resume_variant",
   "chrome_check", "draft_email", "outreach_note", "find_recruiters", "check_recruiters", "recruiter_email", "recruiter_job_email",
+  "research_topic",
 ] as const;
 export type ActionId = (typeof ACTION_IDS)[number];
 /** Skills shipped in the CareerOS plugin (plugin/skills/<name>/SKILL.md). */
 export const PLUGIN_SKILLS = ["career", "video-explainer", "video-slides", "video-captions", "voice"] as const;
 export type PluginSkill = (typeof PLUGIN_SKILLS)[number];
-export const TARGET_KINDS = ["workspace", "company", "job", "topic", "resume_variant"] as const;
+export const TARGET_KINDS = ["workspace", "company", "job", "topic", "resume_variant", "research"] as const;
 export type TargetKind = (typeof TARGET_KINDS)[number];
 export type ActionTarget =
   | { kind: "workspace" }
@@ -31,7 +33,9 @@ export type ActionTarget =
    * A general version of the resume, for no one ad ("backend-heavy", "for consulting firms"): its folder
    * resume-variants/<variant>/ and its focus, which goes into the prompt as a quoted line (TOPIC_LABEL characters).
    */
-  | { kind: "resume_variant"; variant: string; label: string };
+  | { kind: "resume_variant"; variant: string; label: string }
+  /** A research topic (spec 2026-10-17-research-any-topic): its folder research/<topic>/ and its title (TOPIC_LABEL characters). */
+  | { kind: "research"; topic: string; label: string };
 export type ActionGroup = "career" | "video";
 export type ActionStatus = "blocked" | "idle" | "pending" | "ready";
 export interface ActionOutput { path: string; exists: boolean; at: string }
@@ -98,8 +102,9 @@ export interface ActionDef {
    * "studio": offered only by Resume Studio; "profile": only by "Fill from my resume" in Settings > Profile;
    * "resumes": only by the Resumes screen; "chrome": only by Settings › Search in my Chrome. None shows in generic
    * action lists or the generic composer. "mail": only the email composer. "recruiters": only the Recruiters screen.
+   * "research": only the Research screen.
    */
-  surface?: "studio" | "profile" | "resumes" | "chrome" | "mail" | "recruiters";
+  surface?: "studio" | "profile" | "resumes" | "chrome" | "mail" | "recruiters" | "research";
 }
 
 /**
@@ -396,6 +401,20 @@ export const ACTIONS: { readonly [K in ActionId]: ActionDef & { id: K } } = {
       "Write outreach.md with exactly two sections. \"## Note\": the first line is \"Subject: \" and a short subject, then a note of 3 to 4 lines that starts with a greeting (use a name only if the ad gives one) and ends with \"Regards,\" and my first name. \"## LinkedIn connection note\": one paragraph of at most 300 characters, counting spaces.",
     ],
   },
+  research_topic: {
+    id: "research_topic", group: "career", target: "research", label: "Research a topic", button: "Research", done: "Report ready", skills: ["career"], surface: "research",
+    // A web run (no workspace reads): main puts the topic, today's date and the person's city in front of the request.
+    // The app renders report.json with its own components (never HTML from Claude) and falls back to report.md.
+    folder: "research/{topic}", outputs: ["{folder}/report.md", "{folder}/report.json"],
+    steps: [
+      "Research {label} for my job search, with the career skill's topic research method (references/topic-research.md). If my extra preferences below ask questions, answer each one. The report is as of today, {date}.",
+      "Prefer official sources: government, regulator and agency sites first (for example a country's immigration department, its official occupation lists or its statistics office), then well-known industry sources. Open each page to check it says what you cite, and note the date you read it.",
+      "Give a source for every fact. Mark anything you could not confirm, and say plainly when a rule or number changes often (for example invitation rounds, score cut-offs, caps or pay data). Give general information only: never tell me what to do about my own visa, legal, tax or money situation, and say where a registered adviser can help.",
+      "Write report.md: a level-one heading with the topic, the line \"As of {date}\", a short summary, then short sections with bullet lists, numbered steps where there is a process, Markdown tables for comparisons, a section \"What we couldn't confirm\", and a numbered Sources list with each page's title, URL and the date you read it. No raw HTML and no images.",
+      `Write report.json as one JSON object and nothing else, with the same facts in this shape: ${REPORT_SHAPE}`,
+      "In report.json use plain text only: no Markdown, HTML or links inside the text. Use empty lists for parts that don't apply. Footnotes are source ids from the sources list. Every source url is the https page you read. Chart values are plain numbers from your sources, with the unit in unit; use a chart only when you have three or more comparable numbers.",
+    ],
+  },
   suggest_targets: {
     id: "suggest_targets", group: "career", target: "workspace", label: "Suggest target roles and skills", button: "Suggest targets", done: "Suggestions ready", skills: ["career"], surface: "profile",
     // A workspace-only run (no web): it reads the one resume named below and writes one small JSON file the app shows
@@ -417,7 +436,7 @@ for (const d of Object.values(ACTIONS)) {
 Object.freeze(ACTIONS);
 
 /** Actions that read public web pages. They get no workspace reads, so their prompts never point at workspace files. */
-export const WEB_ACTION_IDS: readonly ActionId[] = Object.freeze(["find_jobs", "research_company", "study_topic", "chrome_check", "find_recruiters", "check_recruiters"] as ActionId[]);
+export const WEB_ACTION_IDS: readonly ActionId[] = Object.freeze(["find_jobs", "research_company", "study_topic", "chrome_check", "find_recruiters", "check_recruiters", "research_topic"] as ActionId[]);
 /** Actions that browse the person's Chrome (jobcairn-chrome). chrome_check never falls back to web search; find_recruiters browses only in recruiters mode (no raw page text) and falls back to web only. */
 export const BROWSER_ACTION_IDS: readonly ActionId[] = Object.freeze(["find_jobs", "chrome_check", "find_recruiters"] as ActionId[]);
 /** The no-fabrication rule for web runs: facts come from the request and from public pages, cited. */
@@ -544,7 +563,7 @@ export function actionsFor(kind: TargetKind, group?: ActionGroup): ActionId[] {
 
 export function actionKey(id: ActionId, t: ActionTarget): string {
   const part = t.kind === "workspace" ? "workspace" : t.kind === "company" ? t.company_slug : t.kind === "job" ? `${t.company_slug}--${t.id}`
-    : t.kind === "resume_variant" ? `variant-${t.variant}` : `topic-${topicSlug(t.topic)}`;
+    : t.kind === "resume_variant" ? `variant-${t.variant}` : t.kind === "research" ? `research-${t.topic}` : `topic-${topicSlug(t.topic)}`;
   return `${id}--${part}`;
 }
 
@@ -584,6 +603,10 @@ export function actionVars(t: ActionTarget, info: PromptInfo): Record<string, st
   }
   if (t.kind === "resume_variant") {
     v.variant = t.variant;
+    v.label = quoted(t.label);
+  }
+  if (t.kind === "research") {
+    v.topic = topicSlug(t.topic);
     v.label = quoted(t.label);
   }
   if (t.kind === "topic") {
@@ -658,6 +681,7 @@ function targetLine(t: ActionTarget, v: Record<string, string>): string {
     case "job": return `Job: "${v.title}" at ${v.company_name} (folder ${v.job}).`;
     case "topic": return `Topic: ${v.label} (folder learning/${v.topic}).`;
     case "resume_variant": return `Resume version: ${v.label} (folder resume-variants/${v.variant}).`;
+    case "research": return `Research topic: ${v.label} (folder research/${v.topic}).`;
   }
 }
 

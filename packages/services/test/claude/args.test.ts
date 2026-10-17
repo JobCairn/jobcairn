@@ -12,6 +12,7 @@ const TARGETS: Record<string, ActionTarget> = {
   job: { kind: "job", company_slug: "acme-corp", id: "2026-01-12-ai-engineer" },
   topic: { kind: "topic", topic: "kubernetes", label: "Kubernetes", company_slug: "acme-corp", id: "2026-01-12-ai-engineer" },
   resume_variant: { kind: "resume_variant", variant: "backend-heavy", label: "Backend-heavy" },
+  research: { kind: "research", topic: "express-entry", label: "Express Entry" },
 };
 const NOW = "2026-01-15T09:00:00.000Z";
 

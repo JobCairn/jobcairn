@@ -23,6 +23,7 @@ const NEEDS: Record<VideoTypeView["subject"], string> = {
   company: "Open a job or a company first, then make this video from there.",
   topic: "Open a Learn topic or a skill gap first, then make this video from there.",
   week: "",
+  research: "Open a research report first, then make this video from there.",
 };
 
 /** A missing source's fix, as the catalogue action that makes the file (one click, A's "Start with" pattern). */
@@ -37,17 +38,19 @@ export function subjectFor(type: Pick<VideoTypeView, "subject">, target: ActionT
         ? { kind: "topic", topic: target.label, ...(target.company_slug && target.id ? { company_slug: target.company_slug, id: target.id } : {}) }
         : null;
     case "week": return { kind: "week", week: isoWeek(now) };
+    case "research": return target?.kind === "research" ? { kind: "research", topic: target.topic } : null;
   }
 }
 
 export function targetFromRoute(route: Route): ActionTarget {
   if (route.screen === "job" || route.screen === "apply") return { kind: "job", company_slug: route.slug, id: route.id };
   if (route.screen === "learn" && route.topic) return { kind: "topic", topic: route.topic, label: route.topic.replace(/-/g, " ") };
+  if (route.screen === "research" && route.topic) return { kind: "research", topic: route.topic, label: route.topic.replace(/-/g, " ") };
   return { kind: "workspace" };
 }
 
 export function screenForTarget(target: ActionTarget): VideoScreen {
-  return target.kind === "job" ? "job" : target.kind === "company" ? "company" : target.kind === "topic" ? "learn.topic" : "home";
+  return target.kind === "job" ? "job" : target.kind === "company" ? "company" : target.kind === "topic" ? "learn.topic" : target.kind === "research" ? "research" : "home";
 }
 
 const SPONSOR_RE = /sponsor|visa/i;

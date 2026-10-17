@@ -12,6 +12,7 @@ export function runRoute(run: ClaudeRunView): Route | null {
   }
   if (t.kind === "workspace") return run.action === "find_jobs" ? { screen: "jobs" } : null;
   if (t.kind === "resume_variant") return { screen: "resumes" };
+  if (t.kind === "research") return { screen: "research", topic: t.topic };
   return null;
 }
 
@@ -95,6 +96,7 @@ export function resultLink(run: ClaudeRunView): { label: string; to: Route | nul
       case "tailor_application": if (job) return { label: "Review application", to: { screen: "apply", ...job, step: "review" } }; break;
       case "find_jobs": return { label: "Open jobs", to: { screen: "jobs" } };
       case "study_topic": if (t.kind === "topic") return { label: "Open guide", to: { screen: "learn", topic: t.topic } }; break;
+      case "research_topic": if (t.kind === "research") return { label: "Open report", to: { screen: "research", topic: t.topic } }; break;
       case "tailor_resume_variant": if (t.kind === "resume_variant") return { label: "Open resume", to: { screen: "resume-variant", variant: t.variant } }; break;
       default: break;
     }

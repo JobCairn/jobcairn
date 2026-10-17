@@ -20,6 +20,8 @@ const FILES: Record<string, { label: string; icon: ComposerIcon; always?: boolea
   "notes.md": { label: "Notes", icon: FileIcon },
   "pitch.md": { label: "Pitch", icon: FileIcon },
   "draft.mp4": { label: "Draft video", icon: VideoIcon },
+  "report.md": { label: "Report", icon: FileIcon },
+  "report.json": { label: "Report data", icon: CheckIcon },
 };
 
 /** File chips for "What Claude will create": the outputs, then the optional extras that have a friendly name. */
@@ -72,6 +74,7 @@ export function requestSentence(id: ActionId, info: { title?: string; company?: 
     case "tailor_resume_variant": return `Claude will write a version of your resume aimed at ${topic || "this focus"}, from your own files only.`;
     case "recruiter_email": return "Claude will draft a general enquiry to this recruiter from your own files. You review and send it.";
     case "recruiter_job_email": return `Claude will draft an email to the recruiter about ${job} from your own files. You review and send it.`;
+    case "research_topic": return `Claude will research ${topic || "this topic"} on the web, official sources first, and cite every fact.`;
     case "outreach_note": return `Claude will draft a short note to the hiring manager for ${job}, naming one real result from your files. You send it yourself.`;
   }
 }

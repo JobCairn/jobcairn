@@ -41,6 +41,7 @@ export function targetOfSubject(s: VideoListItem["subject"]): ActionTarget {
   if (s.kind === "job") return { kind: "job", company_slug: s.company_slug, id: s.id };
   if (s.kind === "company") return { kind: "company", company_slug: s.company_slug };
   if (s.kind === "topic") return { kind: "topic", topic: slugOfTopic(s.topic), label: s.topic, ...(s.company_slug && s.id ? { company_slug: s.company_slug, id: s.id } : {}) };
+  if (s.kind === "research") return { kind: "research", topic: s.topic, label: s.topic.replace(/-/g, " ") };
   return { kind: "workspace" };
 }
 

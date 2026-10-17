@@ -20,7 +20,13 @@ const ME_MAP: [string, string][] = [
 const HANDLED_TOP = new Set(["Company", "Job-Hunt-Sponsorship", ...ME_MAP.map((m) => m[0])]);
 const SKIP_DIRS = new Set(["node_modules", ".git", ".next", "dist", "build", ".wrangler", ".turbo", ".vercel", "__pycache__", ".claude"]);
 const MAX_BYTES = 25 * 1024 * 1024;
-const STATUS_MAP: Record<string, JobStatus> = { Screening: "Interview", Interviewing: "Interview", Withdrawn: "Skipped", Closed: "Skipped" };
+// Withdrawn imports as itself (a final status since 2026-10-17); a closed ad you never applied for stays Skipped.
+const STATUS_MAP: Record<string, JobStatus> = { Screening: "Interview", Interviewing: "Interview", Closed: "Skipped", Ghosted: "No response", "No Response": "No response" };
+
+/** A legacy tracker's status in this app's words: the same word when it is one of ours, else mapped, else Found. */
+export function legacyStatus(s: string | undefined): JobStatus {
+  return (JOB_STATUSES as readonly string[]).includes(s ?? "") ? (s as JobStatus) : (STATUS_MAP[s ?? ""] ?? "Found");
+}
 
 type Legacy = Record<string, unknown> & {
   company?: string; role?: string; source?: string; source_url?: string; apply_via?: string; posted?: string; location?: string;
@@ -208,7 +214,7 @@ export function importLegacy(src: string, dest: string, opts: { dryRun?: boolean
       const labels = new Map((app.files ?? []).filter((f) => f.path).map((f) => [String(f.path), String(f.label ?? f.path)]));
       const files = importJobFiles(dir, path.dirname(jobFile), report, src, dest, labels);
       const scan = app.rights_scan ?? {};
-      const status = (JOB_STATUSES as readonly string[]).includes(app.status ?? "") ? (app.status as JobStatus) : (STATUS_MAP[app.status ?? ""] ?? "Found");
+      const status = legacyStatus(app.status);
       updateRecord("job", jobFile, (j) => {
         j.status = status;
         j.work_rights = { label: label(app.sponsorship), quotes: [...strings(scan.positive), ...strings(scan.weak_positive), ...strings(scan.hard), ...strings(scan.soft)], decided_by: app.rights_scan ? "scan" : "none" };

@@ -1,4 +1,4 @@
-export const JOB_STATUSES = ["Found", "Saved", "Applying", "Applied", "Interview", "Offer", "Rejected", "Skipped"] as const;
+export const JOB_STATUSES = ["Found", "Saved", "Applying", "Applied", "Interview", "Offer", "Rejected", "No response", "Withdrawn", "Skipped"] as const;
 export type JobStatus = (typeof JOB_STATUSES)[number];
 export const WR_LABELS = ["sponsorship_offered", "visa_ok", "silent", "citizen_pr_only", "clearance"] as const;
 export type WorkRightsLabel = (typeof WR_LABELS)[number];

@@ -51,4 +51,34 @@ describe("Applications", () => {
     await userEvent.click(within(list).getByRole("button", { name: "Fit 70+" }));
     expect(within(list).queryAllByRole("button", { name: /^Prepare:/ }).length).toBeLessThan(15);
   });
+  it("offers applications with no reply for 60 days as No response, and changes only what you confirm", async () => {
+    const f = loadFixture();
+    const applied = f.jobs.find((j) => j.job.status === "Applied")!;
+    const old = new Date(Date.now() - 70 * 86_400_000).toISOString();
+    applied.job.timeline = applied.job.timeline.map((e) => ({ ...e, at: old }));
+    applied.job.found_at = old;
+    const bridge = new MockBridge({ fixture: f });
+    renderApp(<ApplicationsScreen />, { bridge });
+    const banner = await screen.findByRole("region", { name: "Applications with no reply" });
+    expect(within(banner).getByText("1 application has had no reply for 60 days. Mark it No response?")).toBeInTheDocument();
+    // Nothing changes until you confirm.
+    expect((await bridge.jobs.get(applied.job.company_slug, applied.job.id)).job.status).toBe("Applied");
+    await userEvent.click(within(banner).getByRole("button", { name: "Review applications with no reply" }));
+    expect(within(banner).getByRole("checkbox")).toBeChecked();
+    await userEvent.click(within(banner).getByRole("button", { name: "Mark 1 as No response" }));
+    const after = (await bridge.jobs.get(applied.job.company_slug, applied.job.id)).job;
+    expect(after.status).toBe("No response");
+    expect(after.timeline.at(-1)).toMatchObject({ event: "Status: No response", note: "No reply for 60 days" });
+  });
+  it("hides the no-reply banner for the session with Not now", async () => {
+    const f = loadFixture();
+    const applied = f.jobs.find((j) => j.job.status === "Applied")!;
+    const old = new Date(Date.now() - 70 * 86_400_000).toISOString();
+    applied.job.timeline = applied.job.timeline.map((e) => ({ ...e, at: old }));
+    applied.job.found_at = old;
+    renderApp(<ApplicationsScreen />, { bridge: new MockBridge({ fixture: f }) });
+    const banner = await screen.findByRole("region", { name: "Applications with no reply" });
+    await userEvent.click(within(banner).getByRole("button", { name: /^Not now/ }));
+    expect(screen.queryByRole("region", { name: "Applications with no reply" })).not.toBeInTheDocument();
+  });
 });

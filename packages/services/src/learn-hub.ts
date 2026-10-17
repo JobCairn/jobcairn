@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { careerosDir, layout, readRecord, writeFileAtomic } from "@careeros/core";
 import {
-  gapsFrom, jobsToLearn, learnEntries, ME_DIRS, sanitizeProgress, skillGaps, skillsIn,
+  FINAL_STATUSES, gapsFrom, jobsToLearn, learnEntries, ME_DIRS, sanitizeProgress, skillGaps, skillsIn,
   type JobRecord, type JobToLearn, type LearnHub, type LearnProgress, type ProgressMap,
 } from "@careeros/contract";
 import type { ServiceContext } from "./context.js";
@@ -94,7 +94,7 @@ function isScored(ctx: ServiceContext, root: string, job: JobRecord): boolean {
 export interface JobFacts extends JobToLearn { scored: boolean; eligible: boolean; status: string; found_at: string; preparing: boolean }
 
 const PREPARING = new Set(["Applying", "Applied", "Interview", "Offer"]);
-const CLOSED = new Set(["Skipped", "Rejected"]);
+const CLOSED = new Set<string>(FINAL_STATUSES);
 /** A job still in play for skill suggestions. */
 export const isActiveJob = (j: { eligible: boolean; status: string }) => j.eligible && !CLOSED.has(j.status);
 
@@ -153,7 +153,7 @@ export function learnHub(ctx: ServiceContext): LearnHub {
   const entries = learnEntries(data, readProgress(root), mtime(root));
   const jobs = jobFacts(ctx, root, { withText: true });
   const topics = new Set(data.topics.filter((t) => t.items.length).map((t) => t.slug));
-  // "Appears in N of M jobs" counts only jobs still in play: eligible, not Skipped or Rejected.
+  // "Appears in N of M jobs" counts only jobs still in play: eligible, not in a final status (Rejected, No response, Withdrawn, Skipped).
   const active = jobs.filter(isActiveJob);
   const suggestions = skillGaps({ jobs: active.map((j) => j.text), have: ownSkillsText(ctx, root), declared: declaredSkills(root), started: (s) => topics.has(s) });
   return { entries, suggestions, ...jobsToLearn(jobs.map(({ text: _t, eligible: _e, status: _s, found_at: _f, preparing: _p, ...j }) => j)), jobs: jobs.length };

@@ -43,6 +43,8 @@ export interface JobRow {
   ghost?: import("./ghost.js").GhostFlags;
   /** Applied with no reply yet: the day to follow up (local YYYY-MM-DD, see followUpOn). Missing otherwise. */
   follow_up_on?: string;
+  /** Follow-ups sent on the application (application-rules.ts followUpsSent). Missing when none. */
+  follow_ups?: number;
 }
 export interface JobQuery {
   text?: string; statuses?: JobStatus[]; showIneligible?: boolean; labels?: WorkRightsLabel[]; location?: string; modes?: string[];

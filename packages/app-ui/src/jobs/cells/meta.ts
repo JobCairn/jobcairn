@@ -73,6 +73,8 @@ const STATUS_VIEW: Record<JobStatus, StatusView> = {
   Interview: { word: "Interview", tone: "success", icon: "interview" },
   Offer: { word: "Offer", tone: "success", icon: "offer", strong: true },
   Rejected: { word: "Rejected", tone: "danger", icon: "rejected" },
+  "No response": { word: "No response", tone: "muted", icon: "noResponse" },
+  Withdrawn: { word: "Withdrawn", tone: "muted", icon: "withdrawn" },
   Skipped: { word: "Skipped", tone: "muted", icon: "skipped" },
 };
 export const statusView = (s: JobStatus): StatusView => STATUS_VIEW[s] ?? { word: s, tone: "neutral", icon: "found" };

@@ -23,6 +23,7 @@ import { AddJobDialog } from "../addjob/AddJobDialog";
 import { GhostPills } from "../jobs/GhostPills";
 import { FreshBadge } from "../jobs/FreshBadge";
 import { useDelete } from "../trash";
+import { QuietBanner } from "../applications/QuietBanner";
 
 export type { JobsForm } from "../jobs/filters";
 export { queryFromForm } from "../jobs/filters";
@@ -255,6 +256,7 @@ export function JobsScreen({ route }: { route: Route }) {
       <AddJobDialog open={adding} onClose={() => setAdding(false)} />
       {del.element}
       <ChromeRunStrip />
+      {isApply ? null : <QuietBanner />}
       {list.error ? <ErrorState title="Jobs can't load" text={list.error} /> : null}
       {/* The table is there while the list loads too, so the filters never jump. */}
       {list.data || !list.error ? (

@@ -39,7 +39,8 @@ const APPLY_TEXT: Record<JobStatus, { label: string; primary: boolean }> = {
   Found: { label: "Prepare application", primary: true }, Saved: { label: "Prepare application", primary: true },
   Applying: { label: "Continue application", primary: true }, Applied: { label: "View application", primary: false },
   Interview: { label: "View application", primary: false }, Offer: { label: "View application", primary: false },
-  Rejected: { label: "View application", primary: false }, Skipped: { label: "Prepare application", primary: false },
+  Rejected: { label: "View application", primary: false }, "No response": { label: "View application", primary: false },
+  Withdrawn: { label: "View application", primary: false }, Skipped: { label: "Prepare application", primary: false },
 };
 
 const TABS = ["description", "score", "files", "videos", "timeline", "gaps", "interview", "activity", "mail", "outreach"] as const;

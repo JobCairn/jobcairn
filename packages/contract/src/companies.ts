@@ -2,7 +2,7 @@
 // sponsor list), with what the person has going on there: jobs, best fit, last activity and how far their
 // applications got. Sponsorship facts ride along on every row, but screens show them only to people who need
 // sponsorship. Pure, so the services and the UI's mock bridge build the exact same rows.
-import type { JobStatus } from "./constants.js";
+import { FINAL_STATUSES, type JobStatus } from "./constants.js";
 import type { CompanyContacts } from "./contacts.js";
 import type { FileKind, JobRecord, JobRow, SponsorEvidenceItem, SponsorRow, SponsorStatusKey } from "./types.js";
 
@@ -47,9 +47,9 @@ export interface CompanyDetail {
 export interface CompanyInput { slug: string; name: string; website: string }
 export interface CompanyMailStat { company_slug: string; count: number; last: string }
 
-/** Furthest first. Rejected and Skipped rank below every live status. */
-export const STAGE_ORDER: readonly JobStatus[] = ["Offer", "Interview", "Applied", "Applying", "Saved", "Found", "Rejected", "Skipped"];
-const CLOSED: JobStatus[] = ["Rejected", "Skipped"];
+/** Furthest first. The final statuses rank below every live status. */
+export const STAGE_ORDER: readonly JobStatus[] = ["Offer", "Interview", "Applied", "Applying", "Saved", "Found", "Rejected", "No response", "Withdrawn", "Skipped"];
+const CLOSED = FINAL_STATUSES;
 
 /** A route-safe slug from a name ("Example Labs Pty Ltd" -> "example-labs-pty-ltd"). Never empty. */
 export function nameSlug(name: string): string {

@@ -28,7 +28,7 @@ import { isLockedKind, LOCKABLE_DIRS,
   buildCompanyDetail, buildCompanyRows, COMPANY_SKIP, CONTACTS_FILE, readCompanyContacts, type CompanyFile,
   agencyActivity, agencyAddresses, agencyPatchArgs, agencyThreads, addRecruiterArgs, applyAgencyPatch, buildAgencyRows, localDate, parseAgencyLines, type AddRecruiterInput, type AgencyAddClean,
   type AgencyAddResult, type AgencyEmails, type AgencyImportResult, type AgencyPatch, type AgencyRecordView, type AgencyRow, type CompanyRow, type VideoListItem, type VideoSubjectArg,
-  parseDraftSuggestion, RECRUITER_EMAIL_IDS, SUGGESTION_UNREADABLE, type DraftSuggestion,
+  parseDraftSuggestion, RECRUITER_EMAIL_IDS, SUGGESTION_UNREADABLE, type DraftSuggestion, isFinalStatus,
 } from "@careeros/contract";
 import { DEMO_SCORE, DEMO_SCORE_MD } from "../score/demo";
 import { ALEX_LONG_RESUME, ALEX_RESUME, mockRewrite, RESUME_JOB } from "./resume-fixture";
@@ -1346,9 +1346,9 @@ export class MockBridge implements CareerosBridge {
     const topics = new Set(data.topics.filter((t) => t.items.length).map((t) => t.slug));
     return {
       entries: this.entries(),
-      // Like services: count only active jobs (eligible, not Skipped or Rejected); profile keywords are declared skills.
+      // Like services: count only active jobs (eligible, not in a final status); profile keywords are declared skills.
       suggestions: skillGaps({
-        jobs: jobs.filter((j) => j.eligible && j.status !== "Skipped" && j.status !== "Rejected").map((j) => j.text), have: this.ownText(),
+        jobs: jobs.filter((j) => j.eligible && !isFinalStatus(j.status)).map((j) => j.text), have: this.ownText(),
         declared: (getPath(this.f.profile, "targets.keywords") as string[] | undefined) ?? [], started: (s) => topics.has(s),
       }),
       ...jobsToLearn(jobs.map(({ text: _t, eligible: _e, status: _s, found_at: _f, preparing: _p, ...j }) => j)),

@@ -3,8 +3,9 @@ import { freshFirst } from "./freshness.js";
 import { FOLLOW_UP_DAYS, homeAnalytics, type HomeGoals, type JobEvent, type SearchLogEntry } from "./analytics.js";
 import { JOB_TYPES, jobFacets, jobPredicates, SPONSOR_TIERS, type JobType, type SponsorTier } from "./job-filters.js";
 import { hiddenAsStale } from "./ghost.js";
+import { followUpsSent, followUpTimes, MAX_FOLLOW_UPS } from "./application-rules.js";
 import { salaryBenchmarks } from "./salary-benchmark.js";
-import { JOB_SOURCES, JOB_STATUSES, WR_LABELS, type JobSource, type JobStatus, type LockableDir, type WorkRightsLabel, type WorkRightsStatus } from "./constants.js";
+import { JOB_SOURCES, JOB_STATUSES, SENT_STATUSES, WR_LABELS, type JobSource, type JobStatus, type LockableDir, type WorkRightsLabel, type WorkRightsStatus } from "./constants.js";
 import type {
   AccessRequestView, ApplyState, ApprovalView, FileKind, HomeSummary, InboxItem, JobFile, JobList, JobQuery, JobRecord, JobRow, MailNextUp, NextUpItem, PrivacyState,
   WeekPoint,
@@ -26,7 +27,7 @@ const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
 /**
  * The day to follow up on an application (local YYYY-MM-DD), or "" when there is none: the job must be Applied with no
  * reply since. It is the date saved when the status moved to Applied (custom.follow_up_on), else FOLLOW_UP_DAYS after
- * that status change.
+ * that status change. After a follow-up the next one is due FOLLOW_UP_DAYS after it; after MAX_FOLLOW_UPS there is none.
  */
 export function followUpOn(j: Pick<JobRecord, "status" | "timeline"> & { custom?: Record<string, unknown> }): string {
   if (j.status !== "Applied") return "";
@@ -34,9 +35,15 @@ export function followUpOn(j: Pick<JobRecord, "status" | "timeline"> & { custom?
   if (!applied.length) return "";
   const at = Math.max(...applied);
   if (j.timeline.some((e) => isReply(e.event) && Date.parse(e.at) > at)) return "";
+  const sent = followUpTimes(j.timeline);
+  if (sent.length >= MAX_FOLLOW_UPS) return "";
   const saved = j.custom?.follow_up_on;
-  if (typeof saved === "string" && DATE_ONLY.test(saved) && !Number.isNaN(Date.parse(saved)) && saved >= localDate(new Date(at))) return saved;
-  return localDate(new Date(at + FOLLOW_UP_DAYS * DAY));
+  const first = typeof saved === "string" && DATE_ONLY.test(saved) && !Number.isNaN(Date.parse(saved)) && saved >= localDate(new Date(at)) ? saved
+    : localDate(new Date(at + FOLLOW_UP_DAYS * DAY));
+  const last = sent.at(-1);
+  if (last === undefined || last < at) return first;
+  const next = localDate(new Date(last + FOLLOW_UP_DAYS * DAY));
+  return next > first ? next : first;
 }
 
 /** True when a follow-up date is set and today (local) is on or after it. */
@@ -47,8 +54,9 @@ export function followUpIsDue(followUp: string | undefined, now: Date): boolean 
 export function jobRowFromRecord(j: JobRecord, companyName: string, eligible: boolean): JobRow {
   const last = j.timeline.reduce((m, ev) => (ev.at > m ? ev.at : m), j.found_at);
   const follow = followUpOn(j);
+  const followUps = followUpsSent(j.timeline);
   return {
-    ...(follow ? { follow_up_on: follow } : {}),
+    ...(follow ? { follow_up_on: follow } : {}), ...(followUps ? { follow_ups: followUps } : {}),
     company_slug: j.company_slug, id: j.id, company_name: companyName, client: j.client, title: j.title, location: j.location,
     work_mode: j.work_mode, salary_text: j.salary.text, salary_min: j.salary.min, salary_max: j.salary.max, wr_label: j.work_rights.label,
     fit: j.scores.fit.value, sponsor: j.scores.sponsor.value, status: j.status, source: j.source, source_site: j.source_site,
@@ -97,7 +105,7 @@ export function sanitizeJobQuery(x: unknown): JobQuery {
   const o = (typeof x === "object" && x !== null && !Array.isArray(x) ? (x as Record<string, unknown>) : {}) as Record<string, unknown>;
   const q: JobQuery = {};
   if (isStr(o.text, 200)) q.text = o.text;
-  const statuses = enumArray<JobStatus>(o.statuses, JOB_STATUSES, 8);
+  const statuses = enumArray<JobStatus>(o.statuses, JOB_STATUSES, JOB_STATUSES.length);
   if (statuses) q.statuses = statuses;
   if (typeof o.showIneligible === "boolean") q.showIneligible = o.showIneligible;
   const labels = enumArray<WorkRightsLabel>(o.labels, WR_LABELS, 5);
@@ -247,7 +255,7 @@ export function gapsFrom(job: JobRecord): string[] {
   return out;
 }
 
-const CLOSED: JobStatus[] = ["Applied", "Interview", "Offer", "Rejected"];
+const CLOSED = SENT_STATUSES;
 
 /** Where an application stands: prepare -> review -> handoff -> confirm -> done. */
 export function applyStep(status: JobStatus, files: JobFile[], approval: ApprovalView | null): ApplyState["step"] {

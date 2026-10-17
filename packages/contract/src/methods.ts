@@ -33,7 +33,7 @@ const note = (max: number) => str({ max, multiline: true });
 const requiredNote = (max: number) => str({ min: 1, max, multiline: true });
 
 export const jobQuery = obj({
-  text: opt(text(200)), statuses: opt(arr(oneOf(JOB_STATUSES), { max: 8 })), showIneligible: opt(bool),
+  text: opt(text(200)), statuses: opt(arr(oneOf(JOB_STATUSES), { max: JOB_STATUSES.length })), showIneligible: opt(bool),
   labels: opt(arr(oneOf(WR_LABELS), { max: 5 })), location: opt(text(120)), modes: opt(arr(required(20), { max: 5 })),
   salaryMin: opt(num(0, 10_000_000)), sources: opt(arr(oneOf(JOB_SOURCES), { max: 4 })), fitMin: opt(num(0, 100)),
   sponsorMin: opt(num(0, 100)), since: opt(str({ max: 30, pattern: /^\d{4}-\d{2}-\d{2}/ })),

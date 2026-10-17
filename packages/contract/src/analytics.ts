@@ -3,7 +3,7 @@
 // same functions, so the dev preview and the app compute numbers the same way.
 import type { JobSource, JobStatus, WorkRightsLabel, WorkRightsStatus } from "./constants.js";
 import { prioritiseSponsorship, showSponsorship, sponsorshipFocus, type SponsorshipFocus } from "./candidate.js";
-import { WR_LABELS } from "./constants.js";
+import { isFinalStatus, WR_LABELS } from "./constants.js";
 import { isReply } from "./logic.js";
 import { localDate } from "./actions.js";
 import type { JobRow } from "./types.js";
@@ -242,7 +242,7 @@ function stageEvents(r: JobRow, evs: JobEvent[]): { at: number; stage: number }[
     const at = time(e.at);
     if (at === null) continue;
     if (e.event === "Found") { out.push({ at, stage: 0 }); found = true; continue; }
-    const m = /^Status: (\w+)$/.exec(e.event);
+    const m = /^Status: (\S.*)$/.exec(e.event);
     if (!m) continue;
     const s = STATUS_STAGE[m[1] as JobStatus];
     out.push({ at, stage: s ?? -1 });
@@ -253,10 +253,10 @@ function stageEvents(r: JobRow, evs: JobEvent[]): { at: number; stage: number }[
   return out.sort((a, b) => a.at - b.at).filter((e, i, all) => i === 0 || e.stage !== all[i - 1]!.stage);
 }
 
-/** The furthest funnel stage a job reached (0 Found … 5 Offer). A rejection means it was at least applied. */
+/** The furthest funnel stage a job reached (0 Found … 5 Offer). A rejection, no reply or withdrawal means it was at least applied. */
 export function reachedStage(status: JobStatus, entries: { stage: number }[]): number {
   const fromEvents = entries.reduce((m, e) => Math.max(m, e.stage), 0);
-  const fromStatus = STATUS_STAGE[status] ?? (status === "Rejected" ? 3 : 0);
+  const fromStatus = STATUS_STAGE[status] ?? (status === "Rejected" || status === "No response" || status === "Withdrawn" ? 3 : 0);
   return Math.max(fromEvents, fromStatus);
 }
 
@@ -354,7 +354,7 @@ export function homeAnalytics(input: {
   });
 
   // Opportunity map: open and active roles you can apply for.
-  const active = eligible.filter((r) => r.status !== "Rejected" && r.status !== "Skipped");
+  const active = eligible.filter((r) => !isFinalStatus(r.status));
   const points: MapPoint[] = active.filter((r) => r.fit !== null && r.sponsor !== null).map((r) => ({
     ...ref(r), fit: r.fit!, sponsor: r.sponsor!, wr_label: r.wr_label, status: r.status, applied: (reachedOf.get(key(r.company_slug, r.id)) ?? 0) >= 3,
   }));
@@ -407,7 +407,7 @@ export function homeAnalytics(input: {
   const sources = [...sites.values()].sort((a, b) => b.kept - a.kept || (b.seen ?? 0) - (a.seen ?? 0) || a.site.localeCompare(b.site));
 
   // 482 salary bands over shortlisted roles (kept and still open, or already applied).
-  const shortlisted = eligible.filter((r) => (reachedOf.get(key(r.company_slug, r.id)) ?? 0) >= 1 && r.status !== "Rejected" && r.status !== "Skipped");
+  const shortlisted = eligible.filter((r) => (reachedOf.get(key(r.company_slug, r.id)) ?? 0) >= 1 && !isFinalStatus(r.status));
   const band = (): SalaryBand => ({ count: 0, jobs: [] });
   const salary: SalaryCheck = { thresholds: { ...SALARY_THRESHOLDS }, shortlisted: shortlisted.length, specialist: band(), core: band(), below: band(), notStated: band() };
   for (const r of shortlisted) {

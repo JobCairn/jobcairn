@@ -490,6 +490,9 @@ html[data-modality="pointer"] :is(.rail-stat, .tour-help, .app-version):focus-vi
 .video-sources { gap: var(--space-1); }
 .video-failed { border-color: var(--color-danger); }
 .video-note { display: flex; align-items: flex-start; gap: var(--space-2); border-color: var(--color-warning); background: var(--color-warning-soft); }
+/* Applications and Jobs: applications with no reply for 60 days (applications/QuietBanner.tsx). */
+.quiet-banner { border-color: var(--color-warning); background: var(--color-warning-soft); }
+.quiet-banner > .row { align-items: center; }
 .video-actions { gap: var(--space-4); }
 .video-actions__group { gap: var(--space-2); }
 .video-qa { gap: var(--space-2); }

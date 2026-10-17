@@ -1,3 +1,4 @@
+import { RESEARCH_STALE_DAYS } from "./research.js";
 import { ArgError, arr, bool, httpsUrl, int, num, obj, oneOf, opt, str, type V } from "./validate.js";
 
 /**
@@ -9,8 +10,6 @@ import { ArgError, arr, bool, httpsUrl, int, num, obj, oneOf, opt, str, type V }
 export const RESEARCH_DIR = "research";
 /** actions.ts topicLabel, repeated here so this module doesn't import actions.ts (which imports REPORT_SHAPE from here). */
 const topicLabel = (s: string) => s.replace(/[^\p{L}\p{N} +#./()&,'-]/gu, " ").replace(/\s+/g, " ").trim().slice(0, 80).trim();
-/** A report older than this many days shows "Needs refresh". */
-export const RESEARCH_STALE_DAYS = 30;
 export const RESEARCH_DEPTHS = ["quick", "thorough"] as const;
 export type ResearchDepth = (typeof RESEARCH_DEPTHS)[number];
 /** The largest report.json the app reads. */

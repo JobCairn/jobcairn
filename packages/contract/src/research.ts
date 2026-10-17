@@ -40,10 +40,13 @@ export interface ResearchAge {
  * date. A date in the future counts as today.
  */
 export function researchAge(md: string, modifiedAt: string, now: Date): ResearchAge | null {
-  const stated = researchedOn(md);
-  const at = stated || modifiedAt;
-  const day = stated || (Number.isNaN(Date.parse(modifiedAt)) ? "" : localDate(new Date(modifiedAt)));
-  if (!day) return null;
+  return researchAgeAt(researchedOn(md) || modifiedAt, now);
+}
+
+/** The age on `now` of research done at `at`: a YYYY-MM-DD day, or an ISO time read as a local day. Null when it isn't a date. */
+export function researchAgeAt(at: string, now: Date): ResearchAge | null {
+  const day = /^\d{4}-\d{2}-\d{2}$/.test(at) ? at : Number.isNaN(Date.parse(at)) || !at ? "" : localDate(new Date(at));
+  if (!day || Number.isNaN(Date.parse(`${day}T00:00:00Z`))) return null;
   const days = Math.max(0, Math.round((Date.parse(`${localDate(now)}T00:00:00Z`) - Date.parse(`${day}T00:00:00Z`)) / DAY));
   return { at, days, stale: days > RESEARCH_STALE_DAYS };
 }

@@ -5,7 +5,7 @@ import { isLockedKind, LOCKABLE_DIRS,
   type ActionId, type ActionPrepared, type ActionStatusView, type ActionTarget, type FolderProbe, type Probe, type PromptInfo,
   defaultOptions, isNotRequested, optionsFor, optionValueOk, searchPrefsFrom, skillSuggestions, validateOptions, withSavedSearchOptions, type ComposeView, type OptionValue,
   applyJobQuery, withGhostFlags, compareSalary, jobCalendarEvent, offerOf, type CalendarKind, type OfferDetails, applyStep, buildSponsorRows, approvalDigestText, buildApplyPrompt, fileKind, gapsFrom, pickScore, homeSummary, isEligible, isSafeHttpsUrl, jobRowFromRecord,
-  prioritiseSponsorship, validateArgs, isDefaultLength, VIDEO_LENGTH_PATH, videoLengthPath, type VideoTypeView,
+  prioritiseSponsorship, validateArgs, checkLanguages, detectLanguageNeeds, spokenLanguages, RESEARCH_FILE, researchAge, isDefaultLength, VIDEO_LENGTH_PATH, videoLengthPath, type VideoTypeView,
   type UpdateStatus, type UpdateView,
   type AccessRequestView, type ActivityEntry, type AppInfo, type ApplyState, type ApprovalView, type CareerosBridge, type ChangeArea,
   type ChangeEvent, type ClaimLink, type DroppedFile, type FiledEntry, type FolderSummary, type InboxOverview, type Grant, type InboxItem, type InboxSuggestion, type InboxTarget, type JobDetail, classifyText, type DocKind,
@@ -523,7 +523,15 @@ export class MockBridge implements CareerosBridge {
   private emit(...areas: ChangeArea[]): void { for (const l of [...this.listeners]) l({ areas }); }
   private iso(): string { return this.now.toISOString(); }
   private status(): WorkRightsStatus { return (getPath(this.f.profile, "work_rights.status") as WorkRightsStatus) ?? "unknown"; }
-  private rows() { return this.f.jobs.map((j) => jobRowFromRecord(j.job, j.company.name, isEligible(this.status(), j.job.work_rights.label))); }
+  private rows() {
+    // Languages as main reads them (services languages.ts): only a blocker or a warning marks a row.
+    const have = spokenLanguages(getPath(this.f.profile, "languages"));
+    return this.f.jobs.map((j) => {
+      const row = jobRowFromRecord(j.job, j.company.name, isEligible(this.status(), j.job.work_rights.label));
+      const lang = have.length ? checkLanguages(detectLanguageNeeds(j.description), have) : null;
+      return lang && lang.verdict !== "unknown" ? { ...row, lang } : row;
+    });
+  }
   private find(slug: string, id: string): FixtureJob {
     const j = this.f.jobs.find((x) => x.job.company_slug === slug && x.job.id === id);
     if (!j) throw new Error(`no job ${slug}/${id}`);
@@ -545,6 +553,7 @@ export class MockBridge implements CareerosBridge {
       files: [...listed, ...(this.appFiles.get(`${j.job.company_slug}/${j.job.id}`) ?? [])], gaps: gapsFrom(j.job),
       eligible: isEligible(this.status(), j.job.work_rights.label), score: this.score(base, j),
       salaryBenchmark: compareSalary(jobRowFromRecord(j.job, j.company.name, true), this.rows()),
+      language: checkLanguages(detectLanguageNeeds(j.description), spokenLanguages(getPath(this.f.profile, "languages"))),
     };
   }
   private score(base: string, j: FixtureJob): JobDetail["score"] {
@@ -645,7 +654,7 @@ export class MockBridge implements CareerosBridge {
     const job = deriveTarget(t, "job");
     if (job?.kind === "job") {
       const j = this.find(job.company_slug, job.id);
-      return { title: j.job.title, company: j.company.name, work_rights: this.status() };
+      return { title: j.job.title, company: j.company.name, work_rights: this.status(), languages: spokenLanguages(getPath(this.f.profile, "languages")) };
     }
     const company = deriveTarget(t, "company");
     if (company?.kind === "company") {
@@ -1463,8 +1472,11 @@ export class MockBridge implements CareerosBridge {
       const row = all.find((r) => r.slug === key) ?? all.find((r) => r.key === key);
       if (!row) throw new Error("That company isn't in this workspace.");
       const records = row.slug ? this.f.jobs.filter((j) => j.job.company_slug === row.slug).map((j) => j.job) : [];
-      return buildCompanyDetail(row, this.rows(), records, row.slug ? this.companyFiles(row.slug) : [],
-        row.slug ? readCompanyContacts(this.f.texts[`companies/${row.slug}/${CONTACTS_FILE}`]) : null);
+      const files = row.slug ? this.companyFiles(row.slug) : [];
+      const d = buildCompanyDetail(row, this.rows(), records, files, row.slug ? readCompanyContacts(this.f.texts[`companies/${row.slug}/${CONTACTS_FILE}`]) : null);
+      // Research age as main works it out (services research.ts): the Researched line, else the file's time.
+      const research = files.find((x) => x.path === RESEARCH_FILE);
+      return { ...d, research: research ? researchAge(this.f.texts[research.rel] ?? "", research.at, this.now) : null };
     }),
   };
 

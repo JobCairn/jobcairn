@@ -10,9 +10,9 @@
  * A person's own find is never refused for its place or pay: those come back as warnings and, once saved, a
  * "Check the location" note. Unlike Claude's job_new, nothing here goes through the find-jobs refusal rules.
  */
-import { addEvent, findDuplicateJob, layout, newJob, readRecord, setStatus, updateRecord } from "@careeros/core";
+import { addEvent, findDuplicateJob, layout, newJob, readRecord, setStatus, slugify, updateRecord } from "@careeros/core";
 import {
-  adAddress, checkJobPlace, guessFromAd, jobAdKey, routeJobLink, salaryBelowFloor, scanWorkRights,
+  adAddress, checkJobPlace, classifyJobHost, guessFromAd, jobAdKey, jobHostWarning, routeJobLink, salaryBelowFloor, scanWorkRights,
   type JobAddStatus, type JobAdded, type JobDraft, type JobDuplicate, type JobPreview, type JobPreviewResult, type PreviewNeed,
   type AdMeta,
 } from "@careeros/contract";
@@ -103,7 +103,18 @@ function finish(root: string, draft: Omit<JobDraft, "rights" | "rights_quotes">,
     work_mode: one(draft.work_mode, 40), job_type: one(draft.job_type, 40), salary: one(draft.salary, 120), posted: one(draft.posted, 40),
     apply_via: one(draft.apply_via, 300), source_site: one(draft.source_site, 80), jd_text: jd, rights: rights.label, rights_quotes: rights.quotes,
   };
-  return { ok: true, preview: { draft: d, via, duplicate: findDuplicate(root, d), warnings: warningsFor(root, d) } };
+  const host = d.url ? hostWarning(root, d.url, d.company) : "";
+  return { ok: true, preview: { draft: d, via, duplicate: findDuplicate(root, d), warnings: [...(host ? [host] : []), ...warningsFor(root, d)] } };
+}
+
+/**
+ * A link from a host that isn't a known board or the company's own site (its saved website, or a host that names it),
+ * or that imitates a board's address: a plain warning, never a refusal (contract classifyJobHost).
+ */
+function hostWarning(root: string, url: string, company: string): string {
+  let website = "";
+  try { website = company.trim() ? readRecord("company", layout(root).companyFile(slugify(company))).website : ""; } catch { /* not saved yet */ }
+  return jobHostWarning(classifyJobHost(url, company, website), company);
 }
 
 function fromText(ctx: ServiceContext, text: string, url: string, via: "text" | "file", extra: { meta?: AdMeta; apply_via?: string } = {}): JobPreviewResult {

@@ -136,6 +136,19 @@ describe("jobs.preview and jobs.add", () => {
     expect(p.draft).toMatchObject({ url: "https://www.linkedin.com/jobs/view/4012345678/", title: "Senior AI Engineer", company: "Acme Corp", work_mode: "Hybrid", source_site: "LinkedIn", rights: "citizen_pr_only" });
   });
 
+  it("warns, without refusing, about a link from a look-alike or unknown host, and not about the company's own site", async () => {
+    const x = setup();
+    const text = "Senior AI Engineer\nAcme Corp\nHybrid\n\nBuild agents.";
+    const fake = ok(await x.call<JobPreviewResult>("jobs.preview", { url: "https://seek-jobs.com.au/job/81234567", text }));
+    expect(fake.warnings[0]).toMatch(/^This link is on seek-jobs\.com\.au, which looks like SEEK but isn't SEEK's own address \(seek\.com\.au\)\./);
+    const unknown = ok(await x.call<JobPreviewResult>("jobs.preview", { url: "https://jobs.example.net/role/9", text }));
+    expect(unknown.warnings[0]).toBe("This link is on jobs.example.net, which isn't a job board we know or Acme Corp's own site. Check the ad is real before you apply or share any details.");
+    const own = ok(await x.call<JobPreviewResult>("jobs.preview", { url: "https://careers.acme.com.au/role/9", text }));
+    expect(own.warnings.join(" ")).not.toMatch(/This link is on/);
+    const board = ok(await x.call<JobPreviewResult>("jobs.preview", { url: "https://www.linkedin.com/jobs/view/4012345678/", text }));
+    expect(board.warnings.join(" ")).not.toMatch(/This link is on/);
+  });
+
   it("reads a LinkedIn ad's layout: company first, then title, then 'Place · posted · applicants'", async () => {
     const x = setup();
     x.host.now = () => new Date(2026, 9, 11, 10, 0);

@@ -28,6 +28,8 @@ export interface ActionButtonProps {
    * Never when it's ready, blocked or pending. When Claude isn't set up, the usual setup line shows instead.
    */
   autoStart?: boolean;
+  /** Its result is out of date (company research over 30 days old): when ready, show the button itself instead of the done pill and Redo. */
+  again?: boolean;
 }
 
 /** Says what happened when a followed run ends, naming the result. */
@@ -70,7 +72,7 @@ export function ActionButton(props: ActionButtonProps) {
 /** Actions you run again and again: when one is done, its own button stays (not "Redo") next to its last result. */
 const REPEATABLE: ReadonlySet<string> = new Set(["find_jobs", "chrome_check", "check_recruiters"]);
 
-function ClaudeActionButton({ action, target, label, ariaLabel, variant = "secondary", size = "sm", before, autoStart }: ActionButtonProps) {
+function ClaudeActionButton({ action, target, label, ariaLabel, variant = "secondary", size = "sm", before, autoStart, again = false }: ActionButtonProps) {
   const bridge = useBridge();
   const toast = useToast();
   const { busy, run } = useAction();
@@ -144,12 +146,13 @@ function ClaudeActionButton({ action, target, label, ariaLabel, variant = "secon
           {s.status === "ready" ? (
             <>
               {/* An action you run again and again (Find jobs) keeps its own button: its last report is one click away. */}
-              {REPEATABLE.has(action)
+              {/* So does a result that has gone stale (old company research): its Refresh button replaces the done pill. */}
+              {REPEATABLE.has(action) || again
                 ? <Button size={size} variant={variant} icon={Icons.ai} loading={working} aria-label={name} title={def.label} onClick={() => void ask()}>{text}</Button>
                 : <Pill tone="success">{def.done}</Pill>}
               {made[0] ? <Button size="sm" variant="ghost" icon={Icons.file} aria-label={`View files: ${name}`} title="Open in the app" onClick={() => viewer.open(made[0]!.path)}>{REPEATABLE.has(action) ? "Last report" : "View"}</Button> : null}
               <Button size="sm" variant="ghost" icon={Icons.showInFolder} aria-label={`Show files: ${name}`} title="Show in folder" onClick={() => reveal(s.folder)} />
-              {claudeWrites(action) && !REPEATABLE.has(action) ? <Button size="sm" variant="ghost" icon={Icons.redo} loading={working} aria-label={`Redo: ${name}`} onClick={() => void ask()}>Redo</Button> : null}
+              {claudeWrites(action) && !REPEATABLE.has(action) && !again ? <Button size="sm" variant="ghost" icon={Icons.redo} loading={working} aria-label={`Redo: ${name}`} onClick={() => void ask()}>Redo</Button> : null}
               <ComposeButton action={action} target={target} name={name} />
             </>
           ) : null}

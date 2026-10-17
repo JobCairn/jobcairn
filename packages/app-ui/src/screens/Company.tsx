@@ -1,5 +1,5 @@
 import { Button, cx, Icons, Table, Tabs, Text, type Column } from "@careeros/brand";
-import { JOB_STATUSES, type ActionTarget, type CompanyFile, type JobRow } from "@careeros/contract";
+import { JOB_STATUSES, RESEARCH_STALE_DAYS, researchAgeText, type ActionTarget, type CompanyFile, type JobRow } from "@careeros/contract";
 import { useBridge, useLoad } from "../bridge-context";
 import { ActionButton } from "../components/ActionButton";
 import { DateText } from "../components/DateText";
@@ -106,7 +106,12 @@ function CompanyView({ slug, tab }: { slug: string; tab: Tab }) {
         </div>
         <div className="job-head__actions">
           {site ? <Button icon={Icons.openExternal} onClick={() => openLink(site, "the website")}>Open website</Button> : null}
-          {target ? <ActionButton action="research_company" target={target} size="md" /> : (
+          {target && d.research?.stale ? (
+            <span className="row">
+              <Text role="body-sm" muted as="span" id="company-research-age">{researchAgeText(d.research.days)}</Text>
+              <ActionButton action="research_company" target={target} size="md" label="Refresh" again ariaLabel={`Refresh the research on ${displayName(c.name)}`} />
+            </span>
+          ) : target ? <ActionButton action="research_company" target={target} size="md" /> : (
             <span className="row"><Button size="md" disabled aria-describedby="company-research-why">Research company</Button><Text role="body-sm" muted id="company-research-why">{noFolder}</Text></span>
           )}
           {/* Only a company with a folder can be deleted; a list-only employer is sponsorship research, not the person's item. */}
@@ -156,6 +161,16 @@ function CompanyView({ slug, tab }: { slug: string; tab: Tab }) {
         ) : null}
         {shown === "research" ? (
           <div className="stack job-panel">
+            {d.research && target ? (
+              <div className="row" data-research-age={d.research.stale ? "stale" : "fresh"}>
+                <Text role="body-sm" muted={!d.research.stale} as="p">
+                  {d.research.stale
+                    ? `${researchAgeText(d.research.days)}. Research older than ${RESEARCH_STALE_DAYS} days may be out of date, so Claude won't reuse it when scoring or tailoring until it's refreshed.`
+                    : `${researchAgeText(d.research.days)}.`}
+                </Text>
+                {d.research.stale ? <ActionButton action="research_company" target={target} label="Refresh" again ariaLabel={`Refresh the research on ${displayName(c.name)}`} /> : null}
+              </div>
+            ) : null}
             {d.files.length ? (
               <ul className="list-plain" data-tour="company-files">
                 {d.files.map((f) => (

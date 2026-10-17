@@ -43,6 +43,8 @@ export interface CompanyDetail {
   timeline: CompanyEvent[];
   /** The careers page and published emails from contacts.json (Research company), or null when there are none yet. */
   contacts: CompanyContacts | null;
+  /** How old research.md is (research.ts), or null/absent when there's none. Optional: older bridges leave it out. */
+  research?: import("./research.js").ResearchAge | null;
 }
 export interface CompanyInput { slug: string; name: string; website: string }
 export interface CompanyMailStat { company_slug: string; count: number; last: string }

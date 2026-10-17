@@ -28,6 +28,20 @@
         "notes": { "type": "string", "default": "", "x-ui": { "label": "Notes" } }
       }
     },
+    "languages": {
+      "type": "array", "default": [],
+      "x-ui": { "label": "Languages you speak", "help": "Add each language you can work in, English too. Jobs marks ads that need a language you haven't listed, or a higher level. Left empty, nothing is checked." },
+      "items": {
+        "type": "object", "required": ["language", "level"],
+        "properties": {
+          "language": { "type": "string", "minLength": 1, "x-ui": { "label": "Language" } },
+          "level": {
+            "enum": ["basic", "conversational", "professional", "native"], "default": "professional",
+            "x-ui": { "label": "Level", "options": { "basic": "Basic", "conversational": "Conversational", "professional": "Professional", "native": "Native or fluent" } }
+          }
+        }
+      }
+    },
     "targets": {
       "type": "object", "default": {},
       "properties": {

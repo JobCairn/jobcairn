@@ -1,8 +1,8 @@
-// Table cells for a job's Fit, Sponsor likelihood, Status and Work rights. Each pairs an icon or bar with a word,
+// Table cells for a job's Fit, Sponsor likelihood, Status, Work rights and Languages. Each pairs an icon or bar with a word,
 // so colour is never the only signal; the full wording is the tooltip and the screen-reader text.
 import type { MouseEvent } from "react";
 import { cx, Icon, Icons } from "@careeros/brand";
-import { SPONSOR_REASONS_SHOWN, type JobStatus, type SponsorshipFocus, type WorkRightsLabel } from "@careeros/contract";
+import { SPONSOR_REASONS_SHOWN, type JobStatus, type LanguageCheck, type SponsorshipFocus, type WorkRightsLabel } from "@careeros/contract";
 import { ScoreMeter } from "../../components/ScoreMeter";
 import { fitView, rightsView, sponsorView, statusView } from "./meta";
 import "./cells.css";
@@ -64,6 +64,22 @@ export function RightsCell({ label, focus }: { label: WorkRightsLabel; focus: Sp
       <Icon icon={Icons[v.icon]} size="sm" className="cell-tag__icon" />
       <span className="cell-tag__word" aria-hidden="true">{v.short}</span>
       <span className="sr-only">{v.full}</span>
+    </span>
+  );
+}
+
+/**
+ * What the ad needs in languages against the profile: a crossed shield for a language the person hasn't listed
+ * ("Needs German"), a watch-out mark for a higher level than declared. Nothing when it's fine or unknown.
+ */
+export function LanguageCell({ check }: { check: LanguageCheck | undefined }) {
+  if (!check || check.verdict === "unknown") return null;
+  const block = check.verdict === "block";
+  return (
+    <span className={cx("cell-tag", `cell-tone--${block ? "danger" : "warning"}`)} title={check.text}>
+      <Icon icon={block ? Icons.sponsorNo : Icons.watchOut} size="sm" className="cell-tag__icon" />
+      <span className="cell-tag__word" aria-hidden="true">{check.short}</span>
+      <span className="sr-only">{check.text}</span>
     </span>
   );
 }

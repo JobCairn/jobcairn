@@ -37,6 +37,25 @@ certification/clearance, non-negotiable location, an absolute years floor — th
 recommendation caps at **Nah** or **Definite No Go** regardless of the numbers.
 Name the deal-breaker explicitly.
 
+### Languages
+
+Read the ad's language needs for the role itself, not the language the ad is
+written in. Only explicit wording counts: "fluent in German", "Japanese
+required", "Mandarin speaking", "bilingual English and Korean". A language the
+ad calls desirable, preferred or a plus doesn't. Compare each need with the
+Languages list in the profile (`settings/profile.json`, `languages`: Basic,
+Conversational, Professional, Native or fluent):
+
+| The ad | The profile | Result |
+|---|---|---|
+| Requires a language that isn't listed | Has at least one language | **Deal-breaker.** Cap at Nah or Definite No Go and quote the ad's words. |
+| Asks a higher level than listed ("fluent" against Conversational) | | **Flag, then score.** Say so, quoting both the ad and the listed level. Not a deal-breaker. |
+| Same or lower level, or no level stated | | Fine. Nothing to say. |
+| Any need | Lists no languages | Don't assume any language, English included. Quote the need and say to add languages to the profile. |
+
+When unsure whether a stated bar is above the listed level, flag it rather
+than pass it. The JobCairn app applies the same rule to mark ads in Jobs.
+
 ## Recommendation tiers
 
 Map both scores (and deal-breakers) to exactly one tier:

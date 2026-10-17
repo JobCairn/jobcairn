@@ -10,10 +10,11 @@ import {
   applyJobQuery, approvalDigestText, compareSalary, fileKind, gapsFrom, homeSummary, isEligible, jobRowFromRecord, prioritiseSponsorship, sanitizeJobQuery,
   type AccessRequestView, type ApprovalView, type HomeSummary, type InboxItem, type JobDetail, type JobFile, type JobList, type JobQuery,
   type JobRecord, type JobRow, type JobStatus, type SavedView, type SearchList, type SearchRow, type SponsorRow, type WorkRightsStatus,
-  buildSponsorRows, compareBoardSites, type SponsorCompanyInput, type SponsorJobInput,
+  buildSponsorRows, checkLanguages, compareBoardSites, detectLanguageNeeds, type SponsorCompanyInput, type SponsorJobInput,
 } from "@careeros/contract";
 import { analyticsInputs } from "./analytics.js";
 import { withGhosts } from "./ghost.js";
+import { profileLanguages, withLanguages } from "./languages.js";
 import { jobScore } from "./score.js";
 import type { ServiceContext } from "./context.js";
 import type { HandlerTable } from "./handlers.js";
@@ -190,7 +191,7 @@ export const readHandlers = {
   // handler is safe to call directly (as the test suite and any in-process caller do).
   "jobs.list": (ctx: ServiceContext, q: JobQuery): JobList => {
     const root = ctx.requireRoot();
-    return applyJobQuery(withGhosts(root, jobRows(root), ctx.now()), sanitizeJobQuery(q), prioritiseSponsorship(profileStatus(root)), ctx.now());
+    return applyJobQuery(withLanguages(root, withGhosts(root, jobRows(root), ctx.now())), sanitizeJobQuery(q), prioritiseSponsorship(profileStatus(root)), ctx.now());
   },
   "jobs.get": (ctx: ServiceContext, slug: string, id: string): JobDetail => {
     const root = ctx.requireRoot();
@@ -199,7 +200,8 @@ export const readHandlers = {
     const rows = jobRows(root);
     const ghost = withGhosts(root, rows, ctx.now()).find((r) => r.company_slug === slug && r.id === id)?.ghost;
     const salaryBenchmark = compareSalary(jobRowFromRecord(d.job, d.company?.name ?? slug, d.eligible), rows);
-    return { ...d, ...(ghost ? { ghost } : {}), salaryBenchmark };
+    const language = checkLanguages(detectLanguageNeeds(d.description), profileLanguages(root));
+    return { ...d, ...(ghost ? { ghost } : {}), salaryBenchmark, language };
   },
   "jobs.setStatus": (ctx: ServiceContext, slug: string, id: string, status: JobStatus, note: string) => {
     const root = ctx.requireRoot();

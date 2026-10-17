@@ -43,6 +43,8 @@ export interface JobRow {
   ghost?: import("./ghost.js").GhostFlags;
   /** Applied with no reply yet: the day to follow up (local YYYY-MM-DD, see followUpOn). Missing otherwise. */
   follow_up_on?: string;
+  /** The ad needs a language the profile doesn't list, or a higher level (languages.ts). Absent when fine or unknown. */
+  lang?: import("./languages.js").LanguageCheck;
 }
 export interface JobQuery {
   text?: string; statuses?: JobStatus[]; showIneligible?: boolean; labels?: WorkRightsLabel[]; location?: string; modes?: string[];
@@ -69,6 +71,8 @@ export interface JobDetail {
   ghost?: import("./ghost.js").GhostFlags;
   /** The stated pay against similar saved ads (salary-benchmark.ts), or null/absent when there aren't enough. */
   salaryBenchmark?: import("./salary-benchmark.js").SalaryComparison | null;
+  /** The ad's language needs against the profile (languages.ts), or null when nothing needs a look. Optional: older bridges leave it out. */
+  language?: import("./languages.js").LanguageCheck | null;
 }
 export interface SavedView { name: string; query: JobQuery }
 export interface WeekPoint { week: string; found: number; applied: number; replies: number }

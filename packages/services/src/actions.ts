@@ -10,6 +10,8 @@ import type { ServiceContext } from "./context.js";
 import type { HandlerTable } from "./handlers.js";
 import { lockIdHistory, recordedLockIds } from "./integrity.js";
 import { jobDetail } from "./read.js";
+import { profileLanguages } from "./languages.js";
+import { companyResearchAt } from "./research.js";
 import { savedRequest } from "./request-store.js";
 import { WEB_ACTIONS } from "./claude/args.js";
 import { resumeTextRel } from "./resume-fill.js";
@@ -141,7 +143,9 @@ export function promptInfo(root: string, t: ActionTarget): PromptInfo {
   const job = deriveTarget(t, "job");
   if (job?.kind === "job") {
     const d = jobDetail(root, job.company_slug, job.id);
-    return { title: d.job.title, company: d.company?.name ?? job.company_slug, work_rights };
+    // The language rule and the research age go into score, tailor and interview prep prompts (research.ts, languages.ts).
+    const researched_at = companyResearchAt(root, job.company_slug);
+    return { title: d.job.title, company: d.company?.name ?? job.company_slug, work_rights, languages: profileLanguages(root), ...(researched_at ? { researched_at } : {}) };
   }
   const company = deriveTarget(t, "company");
   if (company?.kind === "company") return { company: readRecord("company", layout(root).companyFile(company.company_slug)).name, work_rights };

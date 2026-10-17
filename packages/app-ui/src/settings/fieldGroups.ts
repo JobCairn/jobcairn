@@ -9,6 +9,7 @@ const GROUPS: Partial<Record<SettingsKind, GroupDef[]>> = {
   profile: [
     { id: "about-you", title: "About you", icon: Icons.user, match: (p) => top(p) === "contact" },
     { id: "work-rights", title: "Work rights", icon: Icons.privacy, match: (p) => top(p) === "work_rights" },
+    { id: "languages", title: "Languages", icon: Icons.interview, match: (p) => top(p) === "languages" },
     // Target roles and job types are search filters (Settings › Search); what's left here describes you.
     { id: "roles", title: "Experience", icon: Icons.target, match: (p) => top(p) === "targets" },
     { id: "locations", title: "Where you want to work", icon: Icons.company, match: (p) => top(p) === "locations" },

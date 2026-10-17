@@ -8,7 +8,11 @@ import type { VideoListItem } from "./video.js";
 import type { ScoreResult } from "./score.js";
 import type { JobFacets, JobType, SponsorTier } from "./job-filters.js";
 
-export interface FieldDef { path: string; label: string; type: string; options: string[]; optionLabels: Record<string, string>; help: string; pattern: string; fields: FieldDef[] }
+export interface FieldDef {
+  path: string; label: string; type: string; options: string[]; optionLabels: Record<string, string>; help: string; pattern: string; fields: FieldDef[];
+  /** A list row's choice that starts set to the schema's default (core fields.ts). Only on list sub-fields. */
+  default?: string;
+}
 export interface TimelineEvent { at: string; event: string; note: string }
 export interface FileRef { path: string; label: string; at: string }
 export interface JobRecord {
@@ -47,6 +51,8 @@ export interface JobRow {
   ghost?: import("./ghost.js").GhostFlags;
   /** Applied with no reply yet: the day to follow up (local YYYY-MM-DD, see followUpOn). Missing otherwise. */
   follow_up_on?: string;
+  /** The ad needs a language the profile doesn't list, or a higher level (languages.ts). Absent when fine or unknown. */
+  lang?: import("./languages.js").LanguageCheck;
 }
 export interface JobQuery {
   text?: string; statuses?: JobStatus[]; showIneligible?: boolean; labels?: WorkRightsLabel[]; location?: string; modes?: string[];
@@ -73,6 +79,8 @@ export interface JobDetail {
   ghost?: import("./ghost.js").GhostFlags;
   /** The stated pay against similar saved ads (salary-benchmark.ts), or null/absent when there aren't enough. */
   salaryBenchmark?: import("./salary-benchmark.js").SalaryComparison | null;
+  /** The ad's language needs against the profile (languages.ts), or null when nothing needs a look. Optional: older bridges leave it out. */
+  language?: import("./languages.js").LanguageCheck | null;
 }
 export interface SavedView { name: string; query: JobQuery }
 export interface WeekPoint { week: string; found: number; applied: number; replies: number }

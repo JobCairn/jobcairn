@@ -1,4 +1,4 @@
-import { buildActionPrompt, localDate } from "./actions.js";
+import { buildActionPrompt, localDate, type PromptInfo } from "./actions.js";
 import { freshFirst } from "./freshness.js";
 import { FOLLOW_UP_DAYS, homeAnalytics, type HomeGoals, type JobEvent, type SearchLogEntry } from "./analytics.js";
 import { JOB_TYPES, jobFacets, jobPredicates, SPONSOR_TIERS, type JobType, type SponsorTier } from "./job-filters.js";
@@ -259,8 +259,8 @@ export function applyStep(status: JobStatus, files: JobFile[], approval: Approva
 }
 
 /** Apply's prompt is the tailor action's prompt, so Apply and every other Claude action read the same way. */
-export function buildApplyPrompt(title: string, company: string, slug: string, id: string): string {
-  return buildActionPrompt("tailor_application", { kind: "job", company_slug: slug, id }, { title, company });
+export function buildApplyPrompt(title: string, company: string, slug: string, id: string, more: Pick<PromptInfo, "languages" | "researched_at" | "now"> = {}): string {
+  return buildActionPrompt("tailor_application", { kind: "job", company_slug: slug, id }, { title, company, ...more });
 }
 
 /** JSON with object keys sorted at every level, so one record always gives the same text. */

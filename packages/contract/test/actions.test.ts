@@ -266,6 +266,35 @@ describe("prompts", () => {
     expect(p).not.toMatch(/careeros job event/);
   });
 
+  it("gives score_job the language rule from the profile, and assumes no language when it lists none", () => {
+    const p = buildActionPrompt("score_job", ACME, { ...INFO, languages: [{ language: "English", level: "native" }, { language: "German", level: "basic" }] });
+    expect(p).toContain("My languages: English (Native or fluent), German (Basic).");
+    expect(p).toMatch(/requires a language not on this list, that's a deal-breaker/);
+    expect(buildActionPrompt("score_job", ACME, INFO)).toMatch(/doesn't list my languages, so don't assume any/);
+    // Tailor scores first when there's no score yet, so it gets the same rule; Apply's prompt stays the tailor prompt.
+    const langs = { languages: [{ language: "English", level: "native" as const }], researched_at: "2025-11-20", now: INFO.now };
+    expect(buildActionPrompt("tailor_application", ACME, { title: "AI Engineer", company: "Acme Corp", ...langs })).toContain("My languages: English (Native or fluent).");
+    expect(buildApplyPrompt("AI Engineer", "Acme Corp", "acme-corp", "2026-01-12-ai-engineer", langs))
+      .toBe(buildActionPrompt("tailor_application", ACME, { title: "AI Engineer", company: "Acme Corp", ...langs }));
+  });
+
+  it("tells score, tailor and interview prep how old the company research is, and not to reuse stale research", () => {
+    const fresh = { ...INFO, researched_at: "2026-01-05" };
+    const stale = { ...INFO, researched_at: "2025-11-20" };
+    for (const id of ["score_job", "tailor_application", "interview_prep"] as const) {
+      expect(buildActionPrompt(id, ACME, fresh), id).toContain("companies/acme-corp/research.md is 10 days old. You may use it as background");
+      expect(buildActionPrompt(id, ACME, stale), id).toMatch(/research\.md is 56 days old, older than 30 days, so it is stale\. Don't reuse its facts as current/);
+      // No research, or no time to count from: no line at all (never an empty step).
+      expect(buildActionPrompt(id, ACME, INFO), id).not.toMatch(/research\.md is|\n\n\n/);
+    }
+    expect(buildActionPrompt("tailor_application", ACME, { title: "AI Engineer", company: "Acme Corp", researched_at: "2025-11-20" })).not.toMatch(/stale/);
+  });
+
+  it("asks Research company to date its research", () => {
+    expect(buildActionPrompt("research_company", ON.company, INFO)).toContain("\"Researched: 2026-01-15\"");
+    expect(buildActionPrompt("research_company", ON.company, { company: "Acme Corp" })).toContain("\"Researched: today's date as YYYY-MM-DD\"");
+  });
+
   it("keeps the Apply prompt as the tailor action's prompt", () => {
     expect(buildApplyPrompt("AI Engineer", "Acme Corp", "acme-corp", "2026-01-12-ai-engineer"))
       .toBe(buildActionPrompt("tailor_application", ACME, { title: "AI Engineer", company: "Acme Corp" }));

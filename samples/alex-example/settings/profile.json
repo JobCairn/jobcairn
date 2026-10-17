@@ -15,6 +15,10 @@
     "visa_expiry": "2028-06-30",
     "notes": ""
   },
+  "languages": [
+    { "language": "English", "level": "professional" },
+    { "language": "Hindi", "level": "native" }
+  ],
   "targets": {
     "roles": [
       "AI Engineer",

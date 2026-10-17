@@ -17,7 +17,7 @@ import { EMPTY_FORM, activeFilters, formFromParams, formFromQuery, paramsFromFor
 import { JobQuickFilters } from "../jobs/QuickFilters";
 import { SourceBadge } from "../source/SourceBadge";
 import { useSponsorshipFocus } from "../useSponsorshipFocus";
-import { FitCell, RightsCell, SponsorCell, StatusCell } from "../jobs/cells/cells";
+import { FitCell, LanguageCell, RightsCell, SponsorCell, StatusCell } from "../jobs/cells/cells";
 import { fitView, sponsorView } from "../jobs/cells/meta";
 import { AddJobDialog } from "../addjob/AddJobDialog";
 import { GhostPills } from "../jobs/GhostPills";
@@ -46,6 +46,12 @@ const rightsCol = (focus: SponsorshipFocus): Column<JobRow> => ({
   text: (r) => (rightsTone(r.wr_label, focus) ? WR_LABEL_TEXT[r.wr_label] : ""), sortValue: (r) => WR_LABELS.indexOf(r.wr_label),
   render: (r) => <RightsCell label={r.wr_label} focus={focus} />,
 });
+/** Languages the ad needs that the profile doesn't list (a blocker) or lists at a lower level (a warning). Hidden when no row has one. */
+const LANG_COL: Column<JobRow> = {
+  key: "lang", header: "Language", width: "9rem", hideWhenEmpty: true, isEmpty: (r) => !r.lang || r.lang.verdict === "unknown",
+  text: (r) => r.lang?.text ?? "", sortValue: (r) => (r.lang?.verdict === "block" ? 2 : r.lang?.verdict === "warn" ? 1 : 0), firstSort: "desc",
+  render: (r) => <LanguageCell check={r.lang} />,
+};
 /** Work-rights filter choices: someone who doesn't need sponsorship only sees the labels that can affect them. */
 const rightsOptions = (focus: SponsorshipFocus) => WR_LABELS.filter((l) => rightsTone(l, focus) !== null);
 const WHERE_COL: Column<JobRow> = {
@@ -77,7 +83,7 @@ const STATUS_COL: Column<JobRow> = { key: "status", header: "Status", width: "6.
 
 /** The sponsor-score column only exists for a candidate sponsorship is relevant to (showSponsorship). */
 function jobColumns(focus: SponsorshipFocus, showSponsorship: boolean, onDelete?: (r: JobRow) => void): Column<JobRow>[] {
-  return [ROLE_COL, rightsCol(focus), WHERE_COL, SALARY_COL, FIT_COL, ...(showSponsorship ? [SPONSOR_COL] : []), POSTED_COL, FOUND_COL, onDelete ? withDelete(onDelete) : STATUS_COL];
+  return [ROLE_COL, rightsCol(focus), LANG_COL, WHERE_COL, SALARY_COL, FIT_COL, ...(showSponsorship ? [SPONSOR_COL] : []), POSTED_COL, FOUND_COL, onDelete ? withDelete(onDelete) : STATUS_COL];
 }
 
 /**

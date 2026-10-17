@@ -1,6 +1,8 @@
 import { jobSearchRightsRule, showSponsorship } from "./candidate.js";
 import { topicSlug, type WorkRightsStatus } from "./constants.js";
 import { SCORE_TIERS } from "./score.js";
+import { languageRule, type SpokenLanguage } from "./languages.js";
+import { RESEARCH_FILE, researchAgeAt, researchRule } from "./research.js";
 import { makeNonce, NOT_REQUESTED, noteRule, requestSection, validateRequest, type RequestChoices } from "./request.js";
 import identity from "@careeros/brand/identity.json" with { type: "json" };
 
@@ -46,6 +48,10 @@ export interface PromptInfo {
   title?: string; company?: string; now?: string; n?: number; work_rights?: WorkRightsStatus;
   /** The resume "Fill from my resume" copied into me/resumes (its text version). Checked with RESUME_REL; else the folder. */
   resume?: string;
+  /** The profile's Languages list, for the score and tailor language rule. Absent or empty: unknown, none assumed. */
+  languages?: readonly SpokenLanguage[];
+  /** When the company's research.md was researched (YYYY-MM-DD, or its modified time), or absent when there is none. */
+  researched_at?: string;
 }
 /** A resume copied into the workspace by "Fill from my resume": me/resumes/<plain file name>. */
 export const RESUME_REL = /^me\/resumes\/[A-Za-z0-9][A-Za-z0-9 _().-]{0,119}$/;
@@ -151,6 +157,8 @@ export const ACTIONS: { readonly [K in ActionId]: ActionDef & { id: K } } = {
     steps: [
       "Score this job with the career skill's job evaluation workflow (Workflow 2).",
       "Read {job}/jd.md and my evidence in me/history and me/resumes.",
+      "{language_rule}",
+      "{research_rule}",
       "In score.md give the fit (0 to 100), the interview odds (0 to 100), one recommendation tier ({tiers}) with why, a \"Must-haves\" list that marks each one met, partly met or not met with one line of evidence, and \"What would change this\". Use short headings and bullet lists, not tables.",
       "Finish by calling the score_record tool once with the same result: fit, interview_odds, tier, recommendation, must_haves (text, status met, partial or not_met, evidence), nice_to_haves, changes and summary. It saves the score and marks the job as scored.",
     ],
@@ -161,6 +169,8 @@ export const ACTIONS: { readonly [K in ActionId]: ActionDef & { id: K } } = {
     steps: [
       "Prepare my application for this job. Score before you write: if {job}/score.md is missing, score the job first (Workflow 2).",
       "Read {job}/jd.md and my history in me/history and me/resumes.",
+      "{language_rule}",
+      "{research_rule}",
       "Write a tailored resume (resume.md, Workflow 1) and a cover letter (cover-letter.md, Workflow 7). Answer any application questions from the ad in answers.md.",
       "Use plain Markdown with standard section headings (Summary, Experience, Education, Skills) and no tables or images, so the PDF and Word exports stay ATS-safe.",
       "Write claims.json: a list of {\"claim\": \"...\", \"source\": \"...\"} that links every claim in the resume and the letter to the file it came from.",
@@ -172,6 +182,7 @@ export const ACTIONS: { readonly [K in ActionId]: ActionDef & { id: K } } = {
     steps: [
       "Prepare me for interviews for this job with the career skill (Workflow 7, STAR interview prep).",
       "Read {job}/jd.md and my evidence in me/history and me/resumes.",
+      "{research_rule}",
       "Start questions.md with the heading \"# Interview prep:\" followed by the company name. List the questions they are likely to ask and, for each, a STAR answer outline that names its evidence file.",
     ],
   },
@@ -183,6 +194,7 @@ export const ACTIONS: { readonly [K in ActionId]: ActionDef & { id: K } } = {
       "Research {company_name} for my job hunt, as the company context step of the career skill's job evaluation (Workflow 2). Start from the company details given with this request.",
       "Read only public pages: the company's own site, careers page, engineering blog and recent news. Cite the URL for every fact.",
       "In research.md cover {research_topics}. Mark anything you could not confirm.",
+      "Start research.md with the company name as a heading and then the line \"Researched: {research_day}\", so the app knows when it goes stale.",
     ],
   },
   study_topic: {
@@ -534,10 +546,16 @@ export function actionVars(t: ActionTarget, info: PromptInfo): Record<string, st
     v.date = localDate(new Date(info.now));
     v.week = isoWeek(new Date(`${v.date}T12:00:00Z`));
   }
+  v.research_day = v.date ?? "today's date as YYYY-MM-DD";
+  v.language_rule = languageRule(info.languages ?? []);
+  v.research_rule = "";
   if (t.kind === "company" || t.kind === "job") {
     v.slug = t.company_slug;
     v.company = `companies/${t.company_slug}`;
     v.company_name = quoted(info.company || t.company_slug);
+    // Research older than 30 days isn't reused as current (research.ts). Without a time to count from, no line.
+    const age = info.researched_at && info.now && ISO_INSTANT.test(info.now) ? researchAgeAt(info.researched_at, new Date(info.now)) : null;
+    v.research_rule = researchRule(age, `${v.company}/${RESEARCH_FILE}`);
   }
   if (t.kind === "job") {
     v.id = t.id;
@@ -691,7 +709,8 @@ export function buildActionPrompt(id: ActionId, target: ActionTarget, info: Prom
     `Use the ${main} skill from the ${identity.name} plugin${more.length ? `, with ${more.join(" and ")}` : ""}.`,
     ...(def.videoType ? [`${identity.name} video type: ${def.videoType}. Put every file for this video in ${folder}/.`] : []),
     "",
-    ...def.steps.map((s) => fillTemplate(s, vars)),
+    // A step that fills to nothing (no company research yet) is left out.
+    ...def.steps.map((s) => fillTemplate(s, vars)).filter((s) => s.trim() !== ""),
     ...(contacts ? [CONTACTS_STEP] : []),
     "",
     ...prefs,

@@ -25,6 +25,16 @@
       "visa_expiry": "2028-06-30",
       "notes": ""
     },
+    "languages": [
+      {
+        "language": "English",
+        "level": "professional"
+      },
+      {
+        "language": "Hindi",
+        "level": "native"
+      }
+    ],
     "targets": {
       "roles": [
         "AI Engineer",
@@ -266,6 +276,48 @@
         "help": "",
         "pattern": "",
         "fields": []
+      },
+      {
+        "path": "languages",
+        "label": "Languages you speak",
+        "type": "object[]",
+        "options": [],
+        "optionLabels": {},
+        "help": "Add each language you can work in, English too. Jobs marks ads that need a language you haven't listed, or a higher level. Left empty, nothing is checked.",
+        "pattern": "",
+        "fields": [
+          {
+            "path": "language",
+            "label": "Language",
+            "type": "string",
+            "options": [],
+            "optionLabels": {},
+            "help": "",
+            "pattern": "",
+            "fields": []
+          },
+          {
+            "path": "level",
+            "label": "Level",
+            "type": "enum",
+            "options": [
+              "basic",
+              "conversational",
+              "professional",
+              "native"
+            ],
+            "optionLabels": {
+              "basic": "Basic",
+              "conversational": "Conversational",
+              "professional": "Professional",
+              "native": "Native or fluent"
+            },
+            "help": "",
+            "pattern": "",
+            "fields": [],
+            "default": "professional"
+          }
+        ]
       },
       {
         "path": "targets.roles",

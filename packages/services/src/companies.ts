@@ -3,8 +3,9 @@ import path from "node:path";
 import { insideRoot, layout, readRecord } from "@careeros/core";
 import {
   buildCompanyDetail, buildCompanyRows, COMPANY_SKIP, CONTACTS_FILE, CONTACTS_MAX_BYTES, fileKind, readCompanyContacts, type CompanyContacts, type CompanyDetail, type CompanyFile, type CompanyInput, type CompanyMailStat,
-  type CompanyRow, type JobRecord,
+  type CompanyRow, type JobRecord, researchAgeAt,
 } from "@careeros/contract";
+import { companyResearchAt } from "./research.js";
 import type { ServiceContext } from "./context.js";
 import type { HandlerTable } from "./handlers.js";
 import { jobRows, query, sponsors } from "./read.js";
@@ -85,7 +86,9 @@ function detail(ctx: ServiceContext, key: string): CompanyDetail {
   const records = row.slug
     ? query<{ json: string }>(root, "SELECT json FROM jobs").map((r) => JSON.parse(r.json) as JobRecord).filter((j) => j.company_slug === row.slug)
     : [];
-  return buildCompanyDetail(row, jobs, records, row.slug ? companyFiles(root, row.slug) : [], row.slug ? companyContacts(root, row.slug) : null);
+  const d = buildCompanyDetail(row, jobs, records, row.slug ? companyFiles(root, row.slug) : [], row.slug ? companyContacts(root, row.slug) : null);
+  const at = row.slug ? companyResearchAt(root, row.slug) : "";
+  return { ...d, research: at ? researchAgeAt(at, ctx.now()) : null };
 }
 
 export const companyHandlers = {

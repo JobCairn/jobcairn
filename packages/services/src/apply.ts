@@ -8,6 +8,8 @@ import { realDirInRoot } from "./files.js";
 import type { HandlerTable } from "./handlers.js";
 import { lockedFor } from "./integrity.js";
 import { withEmail } from "./mail-read.js";
+import { profileLanguages } from "./languages.js";
+import { companyResearchAt } from "./research.js";
 import { appApprovals, approvalView, jobDetail, jobDirRel, rememberAppApproval, touch } from "./read.js";
 import identity from "@careeros/brand/identity.json" with { type: "json" };
 
@@ -92,7 +94,9 @@ export function applyState(ctx: ServiceContext, slug: string, id: string): Apply
     company_slug: slug, id, title: d.job.title, company_name: company,
     url: [d.job.apply_via, d.job.url].find((u) => u.startsWith("https://")) ?? "",
     step: applyStep(d.job.status, files, approval), files, claims: readClaims(ctx, root, slug, id), approval,
-    prompt: buildApplyPrompt(d.job.title, company, slug, id), apply_email: applyEmailOf(d.job.apply_via),
+    // The same language and research lines as the tailor action's own run (promptInfo).
+    prompt: buildApplyPrompt(d.job.title, company, slug, id, { languages: profileLanguages(root), researched_at: companyResearchAt(root, slug) || undefined, now: ctx.now().toISOString() }),
+    apply_email: applyEmailOf(d.job.apply_via),
   };
 }
 

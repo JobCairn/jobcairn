@@ -55,6 +55,8 @@ export interface Profile extends Extra {
   schema: number;
   contact: { name: string; email: string; phone: string; city: string; links: string[] } & Extra;
   work_rights: { status: WorkRightsStatus; visa_subclass: string; visa_expiry: string; notes: string } & Extra;
+  /** Languages the person can work in. Empty (the default) means unknown: no language is assumed. */
+  languages?: ({ language: string; level: "basic" | "conversational" | "professional" | "native" } & Extra)[];
   targets: { roles: string[]; keywords: string[]; seniority: string; job_types: string[] } & Extra;
   locations: ({ place: string; modes: ("onsite" | "hybrid" | "remote")[]; will_relocate: boolean } & Extra)[];
   salary: { min: number | null; currency: string; includes_super: boolean } & Extra;

@@ -108,6 +108,7 @@ function JobView({ slug, id, tab, start }: { slug: string; id: string; tab: Tab;
             <ClosingBadge row={j} />
             {rightsPill ? <Pill tone={rightsPill}>{WR_LABEL_TEXT[j.work_rights.label]}</Pill> : null}
             {!d.eligible ? <Pill tone="danger">You can't apply</Pill> : null}
+            <LanguagePill check={d.language} />
             <GhostPills ghost={d.ghost} />
           </div>
         </div>
@@ -263,6 +264,25 @@ function JobFileRow({ f, onOpen }: { f: JobFile; onOpen?: () => void }) {
 }
 
 /** The ad as a reading view: key facts first, then the ad itself at a comfortable measure. */
+/**
+ * The ad's language needs against the profile, beside the work-rights pills: "Needs German" (a blocker) or a check on
+ * the level (a warning), the full sentence and the ad's words on hover. With no languages in the profile, a link to
+ * add them.
+ */
+function LanguagePill({ check }: { check: JobDetail["language"] }) {
+  if (!check) return null;
+  const quote = check.issues[0]?.quote ? ` The ad says: "${check.issues[0].quote}"` : "";
+  if (check.verdict === "unknown") {
+    return (
+      <>
+        <Pill title={`${check.text}${quote}`}>{check.short}</Pill>
+        <a className="company-link" href={toHash({ screen: "settings", tab: "profile", section: "languages" })} aria-label="Add your languages to your profile">Add languages</a>
+      </>
+    );
+  }
+  return <Pill tone={check.verdict === "block" ? "danger" : "warning"} title={`${check.text}.${quote}`}>{check.short}</Pill>;
+}
+
 function JobDescription({ text, baseDir, title, rights, focus }: { text: string; baseDir: string; title: string; rights: WorkRightsLabel; focus: SponsorshipFocus }) {
   const jd = parseJd(text, title);
   return (

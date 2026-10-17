@@ -11,6 +11,17 @@ import "../mail/compose.css";
 
 export const EMPTY_DRAFT: DraftInput = { to: "", cc: "", subject: "", body: "", attach: [], in_reply_to: "", references: [], purpose: "" };
 
+/**
+ * What Write with Claude starts on: a reply answers an email; a draft opened from the follow-up or thank-you
+ * templates (Outreach) keeps that purpose, so Claude's grounding and the follow-up limit apply; else an application.
+ */
+export function draftPurpose(d: Pick<DraftInput, "in_reply_to" | "subject">): EmailPurpose {
+  if (d.in_reply_to) return "reply";
+  if (/^\s*following up:/i.test(d.subject)) return "follow_up";
+  if (/^\s*thank you:/i.test(d.subject)) return "thank_you";
+  return "application";
+}
+
 /** A reply goes to Reply-To when there is one, else the sender, and carries In-Reply-To and References so Gmail threads it. */
 export function replyInput(v: MailMessageView): DraftInput {
   const who = v.reply_to[0] ?? v.from;
@@ -112,7 +123,7 @@ export function DraftEditor({ slug, id, draftId, initial, files, onClose, attach
     setView("write");
   }, []);
   const undo = () => { if (before) { set(before); setBefore(null); } };
-  const purpose: EmailPurpose = initial.in_reply_to ? "reply" : "application";
+  const purpose = draftPurpose(initial);
 
   return (
     <form className="stack draft-editor compose" aria-label="Email draft" onSubmit={(e) => { e.preventDefault(); void onSave(); }}>

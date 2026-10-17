@@ -46,6 +46,12 @@ describe("follow-up limit", () => {
     expect(followUpOn({ status: "Applied", timeline: two })).toBe("");
     expect(MAX_FOLLOW_UPS).toBe(2);
   });
+  it("keeps the follow-up after an acknowledgement email, which isn't a reply", () => {
+    const applied = "2026-10-01T02:00:00.000Z";
+    const ack = { event: "Email received", at: "2026-10-02T02:00:00.000Z", note: "Thank you for applying", signal: "acknowledged" };
+    expect(followUpOn({ status: "Applied", timeline: [ev("Status: Applied", applied), ack] })).toBe(localDate(new Date("2026-10-08T02:00:00.000Z")));
+    expect(followUpOn({ status: "Applied", timeline: [ev("Status: Applied", applied), { ...ack, signal: undefined }] })).toBe("");
+  });
   it("explains why Follow up is off only once the limit is reached", () => {
     expect(followUpLimitText(1)).toBe("");
     expect(followUpLimitText(2)).toMatch(/followed up twice/);

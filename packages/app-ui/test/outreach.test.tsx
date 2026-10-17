@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { ACTIONS, buildActionPrompt } from "@careeros/contract";
 import { MockBridge, loadFixture } from "../src/mock/MockBridge";
 import { JobScreen } from "../src/screens/Job";
+import { draftPurpose } from "../src/components/DraftEditor";
 import { renderApp } from "./render";
 
 const ROUTE = { screen: "job", slug: "acme-corp", id: "2026-01-12-ai-engineer", tab: "outreach" } as const;
@@ -91,6 +92,18 @@ describe("Follow-up limit and thank-you prompt", () => {
     renderApp(<JobScreen route={ROUTE} />, { bridge: new MockBridge({ fixture: f }) });
     expect(await screen.findByText(/You've followed up twice/)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Open follow-up draft" })).not.toBeInTheDocument();
+  });
+  it("opens the follow-up draft with Write with Claude already on Follow-up, so its grounding and limit apply", async () => {
+    const f = loadFixture();
+    const j = job(f);
+    j.status = "Applied";
+    j.timeline.push({ at: "2026-01-20T00:00:00.000Z", event: "Status: Applied", note: "" });
+    renderApp(<JobScreen route={ROUTE} />, { bridge: new MockBridge({ fixture: f }) });
+    await userEvent.click(await screen.findByRole("button", { name: "Open follow-up draft" }));
+    expect(await screen.findByRole("radio", { name: "Follow-up" })).toHaveAttribute("aria-checked", "true");
+    expect(draftPurpose({ in_reply_to: "", subject: "Thank you: AI Engineer interview" })).toBe("thank_you");
+    expect(draftPurpose({ in_reply_to: "<m1@example.org>", subject: "Following up: x" })).toBe("reply");
+    expect(draftPurpose({ in_reply_to: "", subject: "AI Engineer application" })).toBe("application");
   });
   it("once an interview is logged, the job page offers the thank-you note", async () => {
     const f = loadFixture();

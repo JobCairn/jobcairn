@@ -582,7 +582,18 @@ describe("status rules for mail (spec 2026-10-17-statuses-followups-mail-rules)"
     const ev = j.timeline.find((e) => e.event === "Status: Applied")!;
     expect(ev.at).toBe("2026-01-14T12:00:00.000Z");
     expect(ev.note).toMatch(/^Moved to Applied: the employer acknowledged your application/);
-    expect(s.timeline()).toContain("Email received");
+    // The acknowledgement is marked, so it never counts as the reply that ends the follow-up.
+    expect(j.timeline.find((e) => e.event === "Email received")).toMatchObject({ signal: "acknowledged" });
+  });
+  it("marks an acknowledgement on a job you had already set to Applied, and changes nothing else", async () => {
+    const s = setup();
+    setStatus(s, "Applied");
+    s.provider.add("inbox", rawMessage({ id: "ack2", subject: "Application received: AI Engineer", text: "Hi Alex,\r\n\r\nThanks for applying." }));
+    const r = await syncMail(s.opts());
+    expect(r).toMatchObject({ stored: 1, suggestions: [] });
+    const j = record(s);
+    expect(j.status).toBe("Applied");
+    expect(j.timeline.find((e) => e.event === "Email received")).toMatchObject({ signal: "acknowledged" });
   });
 
   it("never sets an outcome from mail: a rejection is only a suggestion", async () => {

@@ -47,7 +47,8 @@ without that click. Drafts never count: only Applied jobs are offered.
   Claude for a follow-up draft then fails with the same reason.
 - **Grounding:** Claude's follow-up draft (draft_email, purpose Follow-up) may only use claims already in the resume
   and cover letter sent for this job (`application/resume.md`, `application/cover-letter.md`); 60 to 120 words;
-  subject starts "Following up:" so it is counted. The career skill carries the same rule.
+  subject starts "Following up:" so it is counted. The career skill carries the same rule. A draft opened from the
+  follow-up (or thank-you) template starts Write with Claude on that purpose.
 - **Thank-you prompt:** once an interview is logged (status Interview, or an interview time that has passed), the
   job page shows a prompt to send a thank-you note (the existing `thankYouTemplate`). It goes away once a
   thank-you email is sent or the job moves on.
@@ -73,6 +74,8 @@ Pure functions in `packages/mail/src/signals.ts`:
 - **Conflicts go to Mail to sort:** when the email's signals conflict with the matched job's status (or with each
   other), sync files the email in Mail to sort instead of the job, with `custom.needs_check` (company, job, reason)
   on its sidecar. Mail to sort shows "Needs a check: <reason>" and suggests that company.
+- **An acknowledgement isn't a reply:** its "Email received" event carries `signal: "acknowledged"`, and
+  `followUpOn` skips it, so the follow-up still comes due (whether sync or you set Applied).
 - **Suggestions:** `syncMail` returns them as `suggestions` (company, job, status, note, email ref). Sync never
   applies them.
 

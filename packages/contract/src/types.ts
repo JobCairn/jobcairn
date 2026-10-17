@@ -9,7 +9,11 @@ import type { ScoreResult } from "./score.js";
 import type { JobFacets, JobType, SponsorTier } from "./job-filters.js";
 
 export interface FieldDef { path: string; label: string; type: string; options: string[]; optionLabels: Record<string, string>; help: string; pattern: string; fields: FieldDef[] }
-export interface TimelineEvent { at: string; event: string; note: string }
+export interface TimelineEvent {
+  at: string; event: string; note: string;
+  /** "acknowledged" on an employer's "we've received your application" email (mail signals.ts): it isn't a reply. */
+  signal?: string;
+}
 export interface FileRef { path: string; label: string; at: string }
 export interface JobRecord {
   id: string; company_slug: string; client: string | null; title: string; source: JobSource; source_site: string; url: string;

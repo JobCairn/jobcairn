@@ -11,6 +11,10 @@ describe("mailSignals", () => {
     expect(mailSignals("AI Engineer", "Thank you for applying. We'd like to invite you to an interview next week.")).toEqual(["interview"]);
     expect(mailSignals("Your application", "Thank you for your application. We regret to inform you that we won't be moving forward with your application.")).toEqual(["rejected"]);
     expect(mailSignals("Letter of offer", "We're delighted to offer you the role.")).toEqual(["offer"]);
+    for (const no of ["Unfortunately you have not been shortlisted.", "We have decided not to progress your application.",
+      "We will pursue other candidates whose experience is closer.", "On this occasion you have been unsuccessful."]) {
+      expect(mailSignals("AI Engineer", `Thank you for applying. ${no}`)).toEqual(["rejected"]);
+    }
   });
   it("never reads a footer or a quoted earlier email", () => {
     const footer = ["Hi Alex,", "Quick question about your availability.", "", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j",

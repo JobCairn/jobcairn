@@ -34,7 +34,8 @@ export function followUpOn(j: Pick<JobRecord, "status" | "timeline"> & { custom?
   const applied = j.timeline.filter((e) => e.event === "Status: Applied").map((e) => Date.parse(e.at)).filter((t) => !Number.isNaN(t));
   if (!applied.length) return "";
   const at = Math.max(...applied);
-  if (j.timeline.some((e) => isReply(e.event) && Date.parse(e.at) > at)) return "";
+  // An acknowledgement ("we've received your application") is not a reply: the follow-up still stands.
+  if (j.timeline.some((e) => isReply(e.event) && e.signal !== "acknowledged" && Date.parse(e.at) > at)) return "";
   const sent = followUpTimes(j.timeline);
   if (sent.length >= MAX_FOLLOW_UPS) return "";
   const saved = j.custom?.follow_up_on;

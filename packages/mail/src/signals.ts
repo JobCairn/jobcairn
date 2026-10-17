@@ -33,6 +33,8 @@ const PHRASES: Record<MailSignal, RegExp[]> = {
     /\b(?:decided|chosen) to (?:proceed|move forward|progress|go ahead) with (?:other|another|a different) (?:candidate|applicant)s?\b/,
     /\b(?:have|has) not been successful\b/, /\byour application (?:was|has been|is) unsuccessful\b/, /\bunsuccessful on this occasion\b/,
     /\b(?:position|role|vacancy) has (?:now )?been filled\b/, /\bnot (?:be )?(?:progressing|proceeding) (?:further )?with your application\b/,
+    /\b(?:have|has|were|was) been unsuccessful\b/, /\bnot (?:been )?(?:shortlisted|selected)\b/, /\bdecided not to (?:progress|proceed with|move forward with) your application\b/,
+    /\b(?:pursue|pursuing|proceed with|progress with) other (?:candidates|applicants)\b/,
   ],
   offer: [
     /\b(?:pleased|delighted|happy|excited) to (?:offer you|extend (?:you )?an offer)\b/, /\b(?:letter|offer) of (?:offer|employment)\b/,

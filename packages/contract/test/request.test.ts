@@ -190,7 +190,7 @@ describe("the note: sanitizer", () => {
 
 describe("the note: the request's own file names", () => {
   it("allows plain mentions of this action's own output files", () => {
-    expect(outputNames("tailor_application")).toEqual(["resume.md", "cover-letter.md", "claims.json", "answers.md"]);
+    expect(outputNames("tailor_application")).toEqual(["resume.md", "cover-letter.md", "claims.json", "answers.md", "review.json"]);
     const own = outputNames("tailor_application");
     for (const ok of ["Keep resume.md to 1 page.", "In cover-letter.md, mention my move to Sampletown.", "Keep RESUME.md short."]) {
       expect(noteProblems(ok, own), ok).toEqual([]);

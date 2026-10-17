@@ -786,3 +786,11 @@ tr.has-row-actions { position: relative; }
 .row-delete--overlay { position: absolute; right: var(--space-2); top: 50%; transform: translateY(-50%); opacity: 0; background: var(--color-surface-hover); }
 tr.has-row-actions:hover .row-delete--overlay, tr.has-row-actions:focus-within .row-delete--overlay, .row-delete--overlay:focus-visible { opacity: 1; }
 @media (hover: none) { .row-delete--overlay { opacity: 1; } }
+
+/* ATS check of the exported resume (AtsChecklist) and Claude's review card (Apply › Review). */
+.ats-check__list { display: grid; gap: var(--space-2); }
+.ats-check__item { display: flex; gap: var(--space-2); align-items: flex-start; }
+.ats-check__item.is-pass > svg { color: var(--color-success); }
+.ats-check__item.is-warn > svg, .ats-check__stale { color: var(--color-warning); }
+.review-edit__old { text-decoration: line-through; }
+.review-list { display: grid; gap: var(--space-3); }

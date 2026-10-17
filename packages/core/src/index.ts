@@ -27,3 +27,4 @@ export * from "./videos.js";
 export * from "./score.js";
 export * from "./trash.js";
 export * from "./recruiters.js";
+export * from "./facts.js";

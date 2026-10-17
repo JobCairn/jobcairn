@@ -356,6 +356,20 @@ function copy(ctx: ServiceContext, ref: ResumeRef, file: string, format: ResumeC
   try { ctx.host.shell.copyText(format === "md" ? visibleMarkdown(model, style.hidden) : toPlainText(model, style.hidden)); return true; } catch { return false; }
 }
 
+/**
+ * Changes a job's resume or cover letter from outside the studio (a stretch bullet softened or dropped on the Apply
+ * screen), versioned like a studio edit so it can be undone. `next` returns null when the change no longer applies;
+ * then nothing is written and false comes back.
+ */
+export function reviseDraft(ctx: ServiceContext, slug: string, id: string, file: string, next: (cur: string) => string | null): boolean {
+  const app = appDir(ctx, ctx.requireRoot(), slug, id);
+  const cur = readResume(app.abs, file);
+  const after = next(cur);
+  if (after === null) return false;
+  if (after !== cur) writeResume(ctx, app.abs, file, cur, after, "manual");
+  return true;
+}
+
 /** The style a source's export should follow (docs.export), or undefined when it has no style file. */
 export function exportStyle(ctx: ServiceContext, root: string, slug: string, id: string, file: string): ResumeStyle | undefined {
   try {

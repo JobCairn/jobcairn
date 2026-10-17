@@ -8,6 +8,8 @@ import type { AddRecruiterInput, AgencyAddResult, AgencyEmails, AgencyImportResu
 import type { NetworkPerson, NetworkStatus } from "./network.js";
 import type { JobStatus, JobSubdir, LockableDir, SecretName, SettingsKind } from "./constants.js";
 import type { ExportFormat, ExportSource, ExportState } from "./exports.js";
+import type { AtsCheckView } from "./ats-check.js";
+import type { StretchChoice } from "./review.js";
 import type { FilePreview } from "./file-preview.js";
 import type { SetupToolId, SetupView } from "./setup.js";
 import type { ScheduleView, SearchSchedule } from "./schedule.js";
@@ -120,6 +122,14 @@ export interface CareerosBridge {
     prepare(slug: string, id: string): Promise<ApplyState>;
     requestApproval(slug: string, id: string): Promise<ApplyState>;
     markApplied(slug: string, id: string): Promise<ApplyState>;
+    /**
+     * A stretch bullet from Claude's review (item `index`, whose text must still be `text`). keep: you confirm it is
+     * true, so it is saved as a confirmed fact in me/history. soften or drop: the resume or letter is changed (a new
+     * version in the Resume Studio's history).
+     */
+    stretch(slug: string, id: string, index: number, text: string, choice: StretchChoice): Promise<ApplyState>;
+    /** Saves fact `index` from Claude's review (whose text must still be `fact`) to me/history/confirmed-facts.md. */
+    saveFact(slug: string, id: string, index: number, fact: string): Promise<ApplyState>;
   };
   inbox: {
     list(): Promise<InboxItem[]>; add(paths: string[]): Promise<InboxItem[]>; file(name: string, target: InboxTarget, note: string): Promise<InboxItem[]>; overview(): Promise<InboxOverview>;
@@ -347,6 +357,8 @@ export interface CareerosBridge {
     state(slug: string, id: string): Promise<ExportState>;
     /** Writes application/export/<source>.<format>. Refuses to replace existing files unless `overwrite`. */
     export(slug: string, id: string, sources: ExportSource[], formats: ExportFormat[], overwrite: boolean): Promise<ExportState>;
+    /** The ATS check of the exported resume (PDF, or Word when there's no PDF); null when it hasn't been exported. */
+    check(slug: string, id: string): Promise<AtsCheckView | null>;
   };
   tts: {
     /** Which voice engine reading aloud will use right now, in plain words. */
@@ -499,6 +511,7 @@ export function createRemoteBridge(t: Transport): CareerosBridge {
     apply: {
       state: (s, i) => c("apply.state", s, i), prepare: (s, i) => c("apply.prepare", s, i),
       requestApproval: (s, i) => c("apply.requestApproval", s, i), markApplied: (s, i) => c("apply.markApplied", s, i),
+      stretch: (s, i, n, t, ch) => c("apply.stretch", s, i, n, t, ch), saveFact: (s, i, n, f) => c("apply.saveFact", s, i, n, f),
     },
     inbox: {
       list: () => c("inbox.list"), add: (p) => c("inbox.add", p), file: (n, tg, note) => c("inbox.file", n, tg, note), overview: () => c("inbox.overview"),
@@ -569,7 +582,7 @@ export function createRemoteBridge(t: Transport): CareerosBridge {
       progress: () => c("chrome.progress"), answer: (b, a) => c("chrome.answer", b, a),
     },
     schedule: { get: () => c("schedule.get"), save: (s, o) => c("schedule.save", s, o) },
-    docs: { state: (s, i) => c("docs.state", s, i), export: (s, i, so, f, o) => c("docs.export", s, i, so, f, o) },
+    docs: { state: (s, i) => c("docs.state", s, i), export: (s, i, so, f, o) => c("docs.export", s, i, so, f, o), check: (s, i) => c("docs.check", s, i) },
     tts: {
       status: () => c("tts.status"), speak: (tx, o, src, r) => c("tts.speak", tx, o, src, r), cancel: (r) => c("tts.cancel", r),
       previews: () => c("tts.previews"), generatePreviews: (l) => c("tts.generatePreviews", l), clearCache: () => c("tts.clearCache"),

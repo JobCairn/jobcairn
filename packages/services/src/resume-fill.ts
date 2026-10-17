@@ -67,10 +67,16 @@ export function sniffResume(bytes: Uint8Array, name: string): ResumeKind {
   return /^(?:#{1,6} |\*\*|- |\* )|\]\(https?:/m.test(text) ? "markdown" : "text";
 }
 
-type WorkerReply = { ok: true; text: string } | { ok: false; reason: "pdf" | "word" | "locked" };
+/** `pages`: a PDF's page count (a Word file has no fixed pages). */
+type WorkerReply = { ok: true; text: string; pages?: number } | { ok: false; reason: "pdf" | "word" | "locked" };
 
 /** PDF and Word text, from a worker with a deadline and a bounded heap. */
 function extractIsolated(kind: "pdf" | "word", bytes: Uint8Array, name: string, workerUrl = WORKER_URL): Promise<string> {
+  return extractDocument(kind, bytes, name, workerUrl).then((r) => r.text);
+}
+
+/** Like extractIsolated, with the PDF's page count (null for Word). The ATS check of an export uses it (docs.check). */
+export function extractDocument(kind: "pdf" | "word", bytes: Uint8Array, name: string, workerUrl = WORKER_URL): Promise<{ text: string; pages: number | null }> {
   const cant = () => new Error(kind === "pdf"
     ? `"${name}" can't be read as a PDF. Try saving it again, or use a Word or text version.`
     : `"${name}" can't be read as a Word document. Try saving it again as .docx or PDF.`);
@@ -84,7 +90,7 @@ function extractIsolated(kind: "pdf" | "word", bytes: Uint8Array, name: string, 
     const finish = (fn: () => void) => { if (done) return; done = true; clearTimeout(timer); void worker.terminate(); fn(); };
     const timer = setTimeout(() => finish(() => reject(new Error(`"${name}" took too long to read. Try a simpler copy, such as a Word or text version.`))), EXTRACT_TIMEOUT_MS);
     worker.once("message", (r: WorkerReply) => finish(() => {
-      if (r.ok) resolve(r.text);
+      if (r.ok) resolve({ text: r.text, pages: typeof r.pages === "number" ? r.pages : null });
       else reject(r.reason === "locked" ? new Error(`"${name}" is password-protected. Save a copy without a password, then try again.`) : cant());
     }));
     worker.once("error", () => finish(() => reject(cant())));

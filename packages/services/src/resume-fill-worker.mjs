@@ -70,8 +70,9 @@ async function pdfText(bytes) {
     if (line) { out.push(line); size += line.length + 1; }
     out.push("");
   }
+  const pages = doc.numPages;
   try { await doc.destroy(); } catch { /* finished anyway */ }
-  return { ok: true, text: out.join("\n").slice(0, MAX_TEXT) };
+  return { ok: true, text: out.join("\n").slice(0, MAX_TEXT), pages };
 }
 
 async function main() {

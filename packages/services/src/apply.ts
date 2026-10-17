@@ -1,7 +1,10 @@
 import fs from "node:fs";
 import path from "node:path";
-import { insideRoot, isEmailAddress, listApprovals, proposeApproval, setStatus, writeFileAtomic } from "@careeros/core";
-import { applyStep, buildApplyPrompt, fileKind, type ApplyState, type ClaimLink, type JobFile } from "@careeros/contract";
+import { addConfirmedFact, addEvent, insideRoot, isEmailAddress, listApprovals, proposeApproval, setStatus, writeFileAtomic } from "@careeros/core";
+import {
+  applyStep, applyStretch, buildApplyPrompt, fileKind, parseReview, REVIEW_REL,
+  type ApplicationReview, type ApplyState, type ClaimLink, type JobFile, type ReviewStretch, type StretchChoice,
+} from "@careeros/contract";
 import type { ServiceContext } from "./context.js";
 import { isPlaceholderFile } from "./placeholder.js";
 import { realDirInRoot } from "./files.js";
@@ -9,6 +12,7 @@ import type { HandlerTable } from "./handlers.js";
 import { lockedFor } from "./integrity.js";
 import { withEmail } from "./mail-read.js";
 import { appApprovals, approvalView, jobDetail, jobDirRel, rememberAppApproval, touch } from "./read.js";
+import { reviseDraft } from "./resume.js";
 import identity from "@careeros/brand/identity.json" with { type: "json" };
 
 /**
@@ -72,6 +76,80 @@ function readClaims(ctx: ServiceContext, root: string, slug: string, id: string)
   } catch { return null; }
 }
 
+/** review.json as the app shows it (parseReview), plus the raw object so a decision can be written back into it. */
+function readReviewFile(ctx: ServiceContext, root: string, slug: string, id: string): { review: ApplicationReview; raw: Record<string, unknown>; abs: string } | null {
+  const dir = appDirForReading(ctx, root, slug, id);
+  if (!dir) return null;
+  const abs = path.join(dir, REVIEW_REL);
+  try {
+    const st = fs.lstatSync(abs);
+    if (!st.isFile() || st.nlink !== 1 || st.size > MAX_REVIEW_BYTES) return null;
+    const raw = JSON.parse(fs.readFileSync(abs, "utf8")) as unknown;
+    const review = parseReview(raw);
+    return review ? { review, raw: raw as Record<string, unknown>, abs } : null;
+  } catch { return null; }
+}
+const MAX_REVIEW_BYTES = 512 * 1024;
+
+/**
+ * The review item at `index` in review.json's `key` list, which must still hold `text` (the app's copy may be older
+ * than the file), and the raw object it came from (matched by its text), where the decision is written.
+ */
+function reviewItem(ctx: ServiceContext, root: string, slug: string, id: string, key: "stretch" | "facts", index: number, text: string) {
+  const r = readReviewFile(ctx, root, slug, id);
+  const gone = () => new Error("Claude's review changed since you opened it. Reload to see the latest.");
+  if (!r) throw gone();
+  const item = r.review[key][index];
+  const field = key === "stretch" ? "text" : "fact";
+  const value = item ? ("text" in item ? item.text : item.fact) : "";
+  if (!item || value !== text) throw gone();
+  const rawList = Array.isArray(r.raw[key]) ? (r.raw[key] as unknown[]) : [];
+  const raw = rawList.find((x): x is Record<string, unknown> => typeof x === "object" && x !== null && typeof (x as Record<string, unknown>)[field] === "string"
+    && ((x as Record<string, unknown>)[field] as string).trim().startsWith(text));
+  if (!raw) throw gone();
+  return { r, item, raw };
+}
+
+/** "the Backend Engineer application at Example Labs": where a fact was confirmed, in plain words. */
+function confirmedWhere(root: string, slug: string, id: string, how: string): string {
+  const d = jobDetail(root, slug, id);
+  return `${how}, ${d.job.title} at ${d.company?.name ?? slug}`;
+}
+
+/**
+ * A stretch bullet from Claude's review. Keep: the person says it is true, so it is saved as a confirmed fact in
+ * me/history (later claim checks then find it as evidence). Soften or drop: the draft is changed and versioned.
+ */
+function stretch(ctx: ServiceContext, slug: string, id: string, index: number, text: string, choice: StretchChoice): ApplyState {
+  const root = ctx.requireRoot();
+  const { r, item, raw } = reviewItem(ctx, root, slug, id, "stretch", index, text);
+  const s = item as ReviewStretch;
+  if (choice === "keep") {
+    addConfirmedFact(root, s.text, confirmedWhere(root, slug, id, "kept in a review"), ctx.clock());
+    raw.state = "kept";
+  } else {
+    if (choice === "soften" && !s.soften) throw new Error("Claude didn't suggest a softer wording for this one. Edit it in the Resume Studio, or drop it.");
+    const done = reviseDraft(ctx, slug, id, s.file, (cur) => applyStretch(cur, s, choice));
+    if (!done) throw new Error(`That line isn't in your ${s.file === "resume.md" ? "resume" : "cover letter"} any more. Edit it in the Resume Studio instead.`);
+    raw.state = choice === "soften" ? "softened" : "dropped";
+    addEvent(root, slug, id, choice === "soften" ? "Bullet softened" : "Bullet dropped", "From Claude's review", ctx.clock());
+  }
+  writeFileAtomic(r.abs, `${JSON.stringify(r.raw, null, 2)}\n`);
+  touch(root, jobDirRel(slug, id));
+  return applyState(ctx, slug, id);
+}
+
+/** A new fact from the person's own note, listed in Claude's review: saved to me/history only on this click. */
+function saveFact(ctx: ServiceContext, slug: string, id: string, index: number, fact: string): ApplyState {
+  const root = ctx.requireRoot();
+  const { r, raw } = reviewItem(ctx, root, slug, id, "facts", index, fact);
+  addConfirmedFact(root, fact, confirmedWhere(root, slug, id, "from my note"), ctx.clock());
+  raw.saved = true;
+  writeFileAtomic(r.abs, `${JSON.stringify(r.raw, null, 2)}\n`);
+  touch(root, jobDirRel(slug, id));
+  return applyState(ctx, slug, id);
+}
+
 /** The address to email an application to, when apply_via is a plain address or a mailto: link; otherwise "". */
 export function applyEmailOf(applyVia: string): string {
   const v = applyVia.trim().replace(/^mailto:/i, "").split("?")[0]!;
@@ -92,6 +170,7 @@ export function applyState(ctx: ServiceContext, slug: string, id: string): Apply
     company_slug: slug, id, title: d.job.title, company_name: company,
     url: [d.job.apply_via, d.job.url].find((u) => u.startsWith("https://")) ?? "",
     step: applyStep(d.job.status, files, approval), files, claims: readClaims(ctx, root, slug, id), approval,
+    review: readReviewFile(ctx, root, slug, id)?.review ?? null,
     prompt: buildApplyPrompt(d.job.title, company, slug, id), apply_email: applyEmailOf(d.job.apply_via),
   };
 }
@@ -139,4 +218,6 @@ export const applyHandlers = {
   "apply.prepare": prepare,
   "apply.requestApproval": requestApproval,
   "apply.markApplied": markApplied,
+  "apply.stretch": stretch,
+  "apply.saveFact": saveFact,
 } satisfies Partial<HandlerTable>;

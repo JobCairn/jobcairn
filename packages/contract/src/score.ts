@@ -66,7 +66,7 @@ export const SCORE_ITEM_SCHEMA = {
 /** Workspace files by name: what a person would call them. */
 const BY_NAME: Record<string, string> = {
   "jd.md": "the job ad", "score.md": "the score write-up", "score.json": "the score", "resume.md": "your tailored resume",
-  "cover-letter.md": "your cover letter", "claims.json": "the claim sources", "answers.md": "your application answers",
+  "cover-letter.md": "your cover letter", "claims.json": "the claim sources", "review.json": "the second-pass review", "answers.md": "your application answers",
   "research.md": "the company research", "questions.md": "the interview questions", "guide.md": "the study guide",
   "profile.md": "your profile", "profile.json": "your profile", "job.json": "the job record", "company.json": "the company record",
 };

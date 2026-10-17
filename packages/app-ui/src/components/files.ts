@@ -4,7 +4,7 @@ import { fmtDay, parseDay } from "../reading/dates";
 const isMac = () => typeof navigator !== "undefined" && /Mac/i.test(navigator.platform);
 export const showInFolderLabel = () => (isMac() ? "Show in Finder" : "Show in folder");
 
-const DOC_NAMES: Record<string, string> = { resume: "Resume", "cover-letter": "Cover letter", cover: "Cover letter", answers: "Answers", claims: "Claim check", letter: "Cover letter" };
+const DOC_NAMES: Record<string, string> = { resume: "Resume", "cover-letter": "Cover letter", cover: "Cover letter", answers: "Answers", claims: "Claim check", review: "Second-pass review", letter: "Cover letter" };
 const KIND_TEXT: Record<string, string> = {
   md: "Text", pdf: "PDF", docx: "Word", doc: "Word", json: "Data", txt: "Text", png: "Image", jpg: "Image", jpeg: "Image", gif: "Image", webp: "Image",
   key: "Keynote", pages: "Pages", numbers: "Numbers", xlsx: "Excel", pptx: "PowerPoint", mp4: "Video", mov: "Video",

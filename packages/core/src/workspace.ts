@@ -44,6 +44,9 @@ This folder holds one candidate's job hunt. Rules for Claude:
 - Files dropped in inbox/ get filed with \`careeros inbox file\`. If unsure where a file
   belongs, leave it and ask.
 - No fabrication: every claim in a resume or letter must trace to me/history or me/resumes.
+- When the candidate confirms a fact that isn't in me/history yet, save it in the same turn with
+  \`careeros fact add "..." --from "..."\` (it goes to me/history/confirmed-facts.md). Otherwise a later
+  claim check strips it as made up.
 `;
 }
 

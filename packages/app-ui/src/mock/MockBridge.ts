@@ -41,6 +41,8 @@ import type { ApprovalRecord, Fixture, FixtureJob } from "./fixture-types";
 import { createVideoMock } from "./video-mock";
 import { createSetupMock, type SetupMockOptions } from "./setup-mock";
 import { applyLearnDemo } from "./learn-demo";
+import { DEMO_TOPICS, EXPRESS_ENTRY_MD, EXPRESS_ENTRY_REPORT } from "./research-demo";
+import { readResearchReport, researchMeta, researchStale, topicLabel as cleanTopic, topicSlug as slugOf, type ResearchDepth, type ResearchTopic, type ResearchView } from "@careeros/contract";
 import { createMockMail, type MockMail, type MockMailHooks } from "./mail-mock";
 import { PRODUCT_NAME } from "@careeros/brand/identity";
 
@@ -866,8 +868,10 @@ export class MockBridge implements CareerosBridge {
       };
       this.f.texts[SUGGESTIONS_REL] = JSON.stringify(this.suggested);
     }
+    if (id === "research_topic" && target.kind === "research") this.writeResearchReport(target.topic);
     for (const o of this.actionView(id, target).outputs) {
       this.actionOutputs.set(o.path, this.iso());
+      if (id === "research_topic") continue;
       if (id === "draft_email") { this.writeEmailSuggestion(target, o.path); continue; }
       if (RECRUITER_EMAIL_IDS.includes(id)) { this.writeRecruiterSuggestion(id, target, o.path); continue; }
       // rewrite_resume: the whole resume with a fictional rewrite in place, like the real action.
@@ -2059,6 +2063,85 @@ export class MockBridge implements CareerosBridge {
   };
 
 
+  // ---- Research any topic (research/<slug>/, spec 2026-10-17-research-any-topic) -----------------------------------
+  /** topic.json per topic slug, like the services' research/<slug>/topic.json. */
+  private researchTopics = new Map<string, { title: string; questions: string; depth: ResearchDepth; created_at: string }>();
+  /** Test hook: printing to PDF isn't available (like a build without the printer). */
+  researchPrinter = true;
+  private researchRel = (slug: string, f: string) => `research/${slug}/${f}`;
+  private researchTopic(slug: string): ResearchTopic {
+    const meta = this.researchTopics.get(slug);
+    if (!meta) throw new Error("That research topic isn't there any more.");
+    const at = this.actionOutputs.get(this.researchRel(slug, "report.md")) ?? "";
+    const json = this.f.texts[this.researchRel(slug, "report.json")];
+    const as_of = at && json !== undefined ? readResearchReport(json).report?.as_of ?? "" : "";
+    return { slug, ...researchMeta(meta, slug), at, as_of, stale: researchStale(at, this.now) };
+  }
+  private researchView(slug: string): ResearchView {
+    const topic = this.researchTopic(slug);
+    const json = this.f.texts[this.researchRel(slug, "report.json")];
+    const parsed = json === undefined ? { report: null, problems: [] } : readResearchReport(json);
+    const made = (f: string) => (this.actionOutputs.has(this.researchRel(slug, f)) ? this.researchRel(slug, f) : null);
+    return {
+      topic, report: parsed.report, markdown: topic.at ? this.f.texts[this.researchRel(slug, "report.md")] ?? null : null, problems: parsed.problems,
+      exports: { html: made("report.html"), pdf: made("report.pdf") },
+    };
+  }
+  /** Test and preview hook: the example topics (one full report, one with only report.md). */
+  seedResearchDemo(): void {
+    for (const t of DEMO_TOPICS) {
+      this.researchTopics.set(t.slug, { title: t.title, questions: t.questions, depth: t.depth, created_at: t.created_at });
+      this.f.texts[this.researchRel(t.slug, "report.md")] = t.md;
+      this.actionOutputs.set(this.researchRel(t.slug, "report.md"), t.at);
+      if (t.json) { this.f.texts[this.researchRel(t.slug, "report.json")] = JSON.stringify(t.json); this.actionOutputs.set(this.researchRel(t.slug, "report.json"), t.at); }
+    }
+  }
+  /** Pretend research_topic wrote its report: the example report under this topic's title, as of today. */
+  private writeResearchReport(slug: string): void {
+    const title = this.researchTopics.get(slug)?.title ?? slug;
+    const today = this.iso().slice(0, 10);
+    this.f.texts[this.researchRel(slug, "report.json")] = JSON.stringify({ ...EXPRESS_ENTRY_REPORT, title, as_of: today });
+    this.f.texts[this.researchRel(slug, "report.md")] = EXPRESS_ENTRY_MD.replace(/^# .*$/m, `# ${title}`);
+  }
+  research = {
+    list: () => this.rec("research.list", [], () => [...this.researchTopics.keys()].map((s) => this.researchTopic(s))
+      .sort((a, b) => (b.at || b.created_at).localeCompare(a.at || a.created_at) || a.title.localeCompare(b.title))),
+    create: (title: string, questions: string, depth: ResearchDepth) => this.rec("research.create", [title, questions, depth], () => {
+      if (!/[\p{L}\p{N}]/u.test(title)) throw new Error("Type a topic to research, like Express Entry in Canada.");
+      const clean = cleanTopic(title);
+      const base = slugOf(clean).slice(0, 56).replace(/-+$/, "") || "topic";
+      let slug = base;
+      for (let n = 2; this.researchTopics.has(slug); n++) slug = `${base}-${n}`;
+      this.researchTopics.set(slug, { title: clean, questions: questions.trim(), depth, created_at: this.iso() });
+      this.emit("learn");
+      return this.researchTopic(slug);
+    }),
+    update: (slug: string, questions: string, depth: ResearchDepth) => this.rec("research.update", [slug, questions, depth], () => {
+      const t = this.researchTopic(slug);
+      this.researchTopics.set(slug, { title: t.title, questions: questions.trim(), depth, created_at: t.created_at || this.iso() });
+      this.emit("learn");
+      return this.researchTopic(slug);
+    }),
+    get: (slug: string) => this.rec("research.get", [slug], () => this.researchView(slug)),
+    exportHtml: (slug: string) => this.rec("research.exportHtml", [slug], () => {
+      const v = this.researchView(slug);
+      if (!v.report && v.markdown === null) throw new Error("Claude hasn't written this report yet. Research it first.");
+      const rel = this.researchRel(slug, "report.html");
+      this.actionOutputs.set(rel, this.iso());
+      this.emit("learn");
+      return rel;
+    }),
+    exportPdf: (slug: string) => this.rec("research.exportPdf", [slug], () => {
+      if (!this.researchPrinter) throw new Error("PDF export isn't available here.");
+      const v = this.researchView(slug);
+      if (!v.report && v.markdown === null) throw new Error("Claude hasn't written this report yet. Research it first.");
+      const rel = this.researchRel(slug, "report.pdf");
+      this.actionOutputs.set(rel, this.iso());
+      this.emit("learn");
+      return rel;
+    }),
+  };
+
   // ---- Delete (the workspace trash) ---------------------------------------------------------------------------------
   /** What a delete took, newest first, with how to put it back (like .backup/trash, kept 30 days). */
   private binned: { item: TrashItem; restore: () => void; taken: () => boolean; companyGone?: () => boolean }[] = [];
@@ -2179,6 +2262,31 @@ export class MockBridge implements CareerosBridge {
           };
         } };
       }
+      case "research": {
+        const meta = this.researchTopics.get(t.topic);
+        if (!meta) throw new Error("That research topic isn't there any more.");
+        const prefix = `research/${t.topic}/`;
+        const videos = this.videoMock.items().filter((v) => v.folder.startsWith(prefix)).length;
+        const blocked = runs.some((r) => r.target.kind === "research" && r.target.topic === t.topic) ? "Claude is researching this topic. Wait for it to finish, or cancel it in Activity."
+          : this.videoMock.busyUnder(`research/${t.topic}`) ? "A video for this topic is being made. Wait for it to finish, or cancel it." : null;
+        return { kind: "research", title: meta.title, also: videos ? `its ${plural(videos, "video")}` : "", note: "", blocked, take: () => {
+          const texts = Object.entries(this.f.texts).filter(([k]) => k.startsWith(prefix));
+          const outputs = [...this.actionOutputs].filter(([k]) => k.startsWith(prefix));
+          const vids = this.videoMock.items().filter((v) => v.folder.startsWith(prefix)).map((v) => this.videoMock.take(v.folder));
+          this.researchTopics.delete(t.topic);
+          for (const [k] of texts) delete this.f.texts[k];
+          for (const [k] of outputs) this.actionOutputs.delete(k);
+          return {
+            restore: () => {
+              this.researchTopics.set(t.topic, meta);
+              for (const [k, v] of texts) this.f.texts[k] = v;
+              for (const [k, v] of outputs) this.actionOutputs.set(k, v);
+              for (const v of vids) v.restore();
+            },
+            taken: () => this.researchTopics.has(t.topic),
+          };
+        } };
+      }
       case "video": {
         const v = this.videoMock.items().find((x) => x.folder === t.folder);
         if (!v) throw new Error("There is no video in that folder.");
@@ -2252,5 +2360,7 @@ export function createMockBridge(opts: MockOptions = {}): MockBridge {
   // Preview-only: `?resumes=N` gives the first N jobs a tailored resume and adds general versions with long names (Resumes screen).
   const resumes = typeof location !== "undefined" ? new URLSearchParams(location.search).get("resumes") : null;
   if (resumes && /^\d{1,3}$/.test(resumes)) b.seedResumeDemo(Number(resumes));
+  // The Research screen's example topics (example data, not current figures).
+  b.seedResearchDemo();
   return b;
 }

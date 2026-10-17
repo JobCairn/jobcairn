@@ -88,7 +88,7 @@ function ComposerForm({ action, target, label, before, onStarted, view }: Requir
   const shown = action === "tailor_application" && options.cover_letter === false ? outputs.filter((o) => !o.endsWith("/cover-letter.md")) : outputs;
   const files = fileChips(shown, extras);
   const own = outputNames(action);
-  const topic = target.kind === "topic" || target.kind === "resume_variant" ? target.label : "";
+  const topic = target.kind === "topic" || target.kind === "resume_variant" || target.kind === "research" ? target.label : "";
   const problems = noteProblems(note, own);
   const length = Array.from(note).length;
   // One nonce for the on-screen preview; every real run or copy gets a fresh one.

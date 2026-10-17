@@ -6,7 +6,7 @@ import { EmptyState, Loading } from "../components/States";
 import { fmtDayOf } from "../reading/dates";
 
 const KIND: Record<TrashTargetKind, string> = {
-  job: "Job", company: "Company", job_file: "Job file", resume: "Resume", topic: "Learn topic", video: "Video",
+  job: "Job", company: "Company", job_file: "Job file", resume: "Resume", topic: "Learn topic", video: "Video", research: "Research",
 };
 
 /** Settings › Workspace: what was deleted in the last 30 days, with Restore and Delete forever. */

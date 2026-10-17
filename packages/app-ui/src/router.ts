@@ -5,7 +5,7 @@ import { JOB_STATUSES, RESUME_FILE, VARIANT_SLUG, WR_LABELS, videoFolder, type J
 export const APPLY_STEPS = ["prepare", "review", "handoff", "confirm"] as const;
 export type ApplyStepName = (typeof APPLY_STEPS)[number];
 
-export type ScreenName = "home" | "jobs" | "job" | "apply" | "resume" | "resume-variant" | "resumes" | "applications" | "inbox" | "learn" | "companies" | "company" | "searches" | "settings" | "privacy" | "approvals" | "video" | "videos" | "mail" | "recruiters" | "recruiter";
+export type ScreenName = "home" | "jobs" | "job" | "apply" | "resume" | "resume-variant" | "resumes" | "applications" | "inbox" | "learn" | "research" | "companies" | "company" | "searches" | "settings" | "privacy" | "approvals" | "video" | "videos" | "mail" | "recruiters" | "recruiter";
 type Simple = "home" | "resumes" | "applications" | "inbox" | "settings" | "privacy" | "approvals" | "videos" | "mail";
 /** Long lists whose page is kept in the address (`?p=3`), so Back from a row returns to the same page. */
 type Paged = "companies" | "searches" | "recruiters";
@@ -28,6 +28,8 @@ export type Route =
   | { screen: "resume-variant"; variant: string }
   /** `job` is "<company-slug>/<job-id>": Learn opens on that job's interview prep. */
   | { screen: "learn"; topic?: string; start?: boolean; job?: string }
+  /** Research any topic: the list, one topic's report (`topic` is its folder under research/), or New research (`start`). */
+  | { screen: "research"; topic?: string; start?: boolean }
   /**
    * `status` and `label` are Home's one-filter links. `filters` is the list's whole state as address parameters
    * (jobs/filters.ts), written as you filter so Back from a job returns to the same list.
@@ -96,6 +98,11 @@ export function parseHash(hash: string): Route {
     if (job && job.length === 2 && SLUG.test(job[0]!) && SLUG.test(job[1]!)) return { screen: "learn", job: `${job[0]}/${job[1]}` };
     return topic && SLUG.test(topic) ? { screen: "learn", topic } : { screen: "learn" };
   }
+  if (screen === "research" && parts.length === 1) {
+    if (params.get("new") === "1") return { screen: "research", start: true };
+    const topic = params.get("topic");
+    return topic && SLUG.test(topic) && topic.length <= 64 ? { screen: "research", topic } : { screen: "research" };
+  }
   if (screen === "video" && parts.length === 1) {
     const folder = params.get("folder");
     try { return { screen: "video", folder: videoFolder(folder, "folder") }; } catch { return { screen: "home" }; }
@@ -142,6 +149,7 @@ export function toHash(r: Route): string {
     case "resume": return `#/resume/${r.slug}/${r.id}/${r.file}`;
     case "resume-variant": return `#/resume-variant/${r.variant}`;
     case "learn": return r.start ? "#/learn?new=1" : r.job ? `#/learn?job=${r.job}` : r.topic ? `#/learn?topic=${r.topic}` : "#/learn";
+    case "research": return r.start ? "#/research?new=1" : r.topic ? `#/research?topic=${r.topic}` : "#/research";
     case "jobs": {
       const q = new URLSearchParams(r.filters ?? "");
       if (!r.filters) {

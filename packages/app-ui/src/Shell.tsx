@@ -16,7 +16,7 @@ import { useNewJobsCount } from "./nav/new-jobs";
 const SCREEN_LABELS: [Route, string][] = [
   [{ screen: "home" }, "Home"], [{ screen: "jobs" }, "Jobs"], [{ screen: "searches" }, "Searches"], [{ screen: "companies" }, "Companies"], [{ screen: "recruiters" }, "Recruiters"],
   [{ screen: "applications" }, "Applications"], [{ screen: "resumes" }, "Resumes"], [{ screen: "approvals" }, "Approvals"], [{ screen: "inbox" }, "Drop box"], [{ screen: "mail" }, "Mail"],
-  [{ screen: "learn" }, "Learn"], [{ screen: "videos" }, "Videos"], [{ screen: "privacy" }, "Privacy"], [{ screen: "settings" }, "Settings"],
+  [{ screen: "learn" }, "Learn"], [{ screen: "research" }, "Research"], [{ screen: "videos" }, "Videos"], [{ screen: "privacy" }, "Privacy"], [{ screen: "settings" }, "Settings"],
 ];
 
 /**
@@ -90,6 +90,7 @@ export function Shell({ route, children }: { route: Route; children: ReactNode }
     { id: "inbox", label: "Drop box", icon: Icons.dropBox, count: h?.inboxCount, group: "Apply" },
     { id: "mail", label: "Mail", icon: Icons.mail, count: h?.unreadMail, group: "Apply" },
     { id: "learn", label: "Learn", icon: Icons.learn, group: "Prepare" },
+    { id: "research", label: "Research", icon: Icons.research, group: "Prepare" },
     { id: "videos", label: "Videos", icon: Icons.video, group: "Prepare" },
     { id: "privacy", label: "Privacy", icon: Icons.privacy, trailing: privacyLabel, section: "secondary" },
     { id: "settings", label: "Settings", icon: Icons.settings, section: "secondary" },

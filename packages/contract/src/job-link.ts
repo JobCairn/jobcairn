@@ -6,7 +6,7 @@
  */
 import { BROWSABLE_BOARD_IDS, type BoardId } from "./chrome.js";
 import { WR_LABELS, type WorkRightsLabel } from "./constants.js";
-import { hostOf, jobBoardByHost } from "./job-boards.js";
+import { hostMatches, hostOf, JOB_BOARDS, jobBoardByHost } from "./job-boards.js";
 import { arr, httpsUrl, obj, oneOf, str, type V } from "./validate.js";
 
 /** Applicant systems whose public job API main reads with a plain fetch. */
@@ -86,6 +86,94 @@ export function adAddress(url: string): string {
     return `https://${host}/job/${key.slice(5)}`;
   }
   return url.trim();
+}
+
+// ---- where a pasted link is from ------------------------------------------------------------------------
+
+/**
+ * Where a pasted job link is hosted:
+ * - "board": a known job board or applicant system (exact host or a dot-bounded subdomain);
+ * - "company": the host names the company ("careers.acme.com.au" for Acme Corp), or is its saved website;
+ * - "lookalike": not a known board, but part of the host is a board's name or one letter off it ("seek-jobs.com.au",
+ *   "linkedin.com.example.net", "lnkedin.com"): a common trick in fake job ads;
+ * - "unknown": anything else, or a link that doesn't parse ("" host).
+ */
+export type HostKind = "board" | "company" | "lookalike" | "unknown";
+export interface HostCheck { kind: HostKind; host: string; board?: { name: string; domain: string } }
+
+/** Words that say nothing about who a company is. */
+const COMPANY_FILLER = new Set(["the", "and", "of", "pty", "ltd", "limited", "inc", "llc", "plc", "corp", "corporation", "co", "company", "group", "holdings", "australia", "australian", "services", "solutions", "technologies", "technology", "labs", "global", "international"]);
+/** Host parts that are never a name: www, country and generic endings. */
+const HOST_FILLER = new Set(["www", "com", "net", "org", "gov", "edu", "co", "io", "au", "nz", "uk", "jobs", "careers", "apply", "job", "career", "work", "hire"]);
+
+/** At most one letter added, dropped or changed. */
+function oneOff(a: string, b: string): boolean {
+  if (a === b) return true;
+  if (Math.abs(a.length - b.length) > 1) return false;
+  let i = 0;
+  while (i < a.length && i < b.length && a[i] === b[i]) i++;
+  if (a.length === b.length) return a.slice(i + 1) === b.slice(i + 1);
+  return a.length > b.length ? a.slice(i + 1) === b.slice(i) : a.slice(i) === b.slice(i + 1);
+}
+
+/** Each board's name as it appears in its hosts ("seek", "linkedin", "myworkdayjobs"), with the board. */
+const BOARD_MARKS: { mark: string; name: string; domain: string }[] = JOB_BOARDS.flatMap((b) =>
+  b.hostDomains.map((d) => ({ mark: d.split(".")[0]!, name: b.name, domain: d })))
+  // "angel" (angel.co) is an everyday word, so it never counts as a board's name.
+  .filter((m, i, all) => m.mark.length >= 4 && m.mark !== "angel" && all.findIndex((x) => x.mark === m.mark) === i);
+
+/** A host part that imitates a board: the board's name, the name with a word stuck on, or a long name one letter off. */
+function imitates(part: string, mark: string): boolean {
+  if (part === mark) return true;
+  if (part.startsWith(mark) && /^(jobs?|careers?|au|nz|hire|hiring|work|apply|official|portal|online)$/.test(part.slice(mark.length))) return true;
+  if (part.endsWith(mark) && /^(my|au|nz|jobs?|careers?|get|go|apply)$/.test(part.slice(0, part.length - mark.length))) return true;
+  return mark.length >= 6 && part.length >= 5 && oneOff(part, mark);
+}
+
+/** The words of a company name that identify it ("Acme Corp" → ["acme"]), and the name run together ("examplelabs"). */
+function companyMarks(name: string): string[] {
+  const words = name.toLowerCase().normalize("NFKD").replace(/[^a-z0-9 ]+/g, " ").split(/\s+/).filter(Boolean);
+  const own = words.filter((w) => !COMPANY_FILLER.has(w));
+  const joined = words.filter((w) => !["pty", "ltd", "limited", "inc", "llc", "plc"].includes(w)).join("");
+  return [...new Set([joined, own.join(""), ...own.filter((w) => w.length >= 4)])].filter((w) => w.length >= 3);
+}
+
+/**
+ * Where a pasted job link is hosted (see HostKind). `company` is the ad's company name and `website` its saved
+ * website, either "" when unknown. Never fetches anything.
+ */
+export function classifyJobHost(url: string, company = "", website = ""): HostCheck {
+  let u: URL;
+  try { u = new URL(url.trim()); } catch { return { kind: "unknown", host: "" }; }
+  const host = u.hostname.toLowerCase().replace(/\.$/, "");
+  if (!host) return { kind: "unknown", host: "" };
+  if (u.username || u.password) {
+    // "https://seek.com.au@example.net/" goes to example.net, whatever comes before the @.
+    const fake = BOARD_MARKS.find((m) => decodeURIComponent(u.username).toLowerCase().includes(m.mark));
+    return fake ? { kind: "lookalike", host, board: { name: fake.name, domain: fake.domain } } : { kind: "unknown", host };
+  }
+  if (jobBoardByHost(host)) return { kind: "board", host };
+  const site = website ? hostOf(/^https?:\/\//i.test(website) ? website : `https://${website}`) : null;
+  if (site && hostMatches(host, site.replace(/^www\./, ""))) return { kind: "company", host };
+  const parts = host.split(/[.-]/).filter(Boolean);
+  const fake = BOARD_MARKS.find((m) => parts.some((p) => imitates(p, m.mark)));
+  if (fake) return { kind: "lookalike", host, board: { name: fake.name, domain: fake.domain } };
+  const named = parts.filter((p) => !HOST_FILLER.has(p));
+  const marks = companyMarks(company);
+  if (named.some((p) => marks.some((m) => p === m || (m.length >= 4 && p.startsWith(m))))) return { kind: "company", host };
+  return { kind: "unknown", host };
+}
+
+/** The plain warning Add job shows for a link's host, or "" for a board or the company's own site. Never a refusal. */
+export function jobHostWarning(check: HostCheck, company = ""): string {
+  const who = company.trim();
+  if (check.kind === "lookalike" && check.board) {
+    return `This link is on ${check.host}, which looks like ${check.board.name} but isn't ${check.board.name}'s own address (${check.board.domain}). Fake job ads often use look-alike addresses, so check it before you apply or share any details.`;
+  }
+  if (check.kind === "unknown" && check.host) {
+    return `This link is on ${check.host}, which isn't a job board we know or ${who ? `${who}'s` : "the company's"} own site. Check the ad is real before you apply or share any details.`;
+  }
+  return "";
 }
 
 // ---- work rights in the ad --------------------------------------------------------------------------------

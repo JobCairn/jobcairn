@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Badge, Button, cx, Icons, Pill, Select, Tabs, Text, Textarea, useToast } from "@careeros/brand";
-import { JOB_STATUSES, WR_LABEL_TEXT, topicLabel, topicSlug, type ActionTarget, type JobDetail, type JobFile, type JobStatus, type SponsorshipFocus, type WorkRightsLabel } from "@careeros/contract";
+import { Badge, Button, Card, cx, Icon, Icons, Pill, Select, Tabs, Text, Textarea, useToast } from "@careeros/brand";
+import { JOB_STATUSES, thankYouDue, WR_LABEL_TEXT, topicLabel, topicSlug, type ActionTarget, type JobDetail, type JobFile, type JobStatus, type SponsorshipFocus, type WorkRightsLabel } from "@careeros/contract";
 import { useAction, useBridge, useLoad } from "../bridge-context";
 import { ActionButton } from "../components/ActionButton";
 import { MakeVideoButton } from "../components/MakeVideo";
@@ -127,6 +127,14 @@ function JobView({ slug, id, tab, start }: { slug: string; id: string; tab: Tab;
           </div>
         )}
       </header>
+
+      {!broken && tab !== "outreach" && thankYouDue(j, new Date()) ? (
+        <Card className="thanks-prompt" role="region" aria-label="Thank-you note">
+          <Icon icon={Icons.mail} size="sm" />
+          <Text role="body" className="grow">Interview done? Send a short thank-you within a day. A draft is ready in Outreach.</Text>
+          <Button size="sm" icon={Icons.mail} aria-label="Open the thank-you draft in Outreach" onClick={() => navigate({ screen: "job", slug, id, tab: "outreach" })}>Thank-you</Button>
+        </Card>
+      ) : null}
 
       <Tabs label="Job sections" value={tab} onChange={(t) => navigate({ screen: "job", slug, id, tab: t })}
         tabs={[

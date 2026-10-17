@@ -493,6 +493,8 @@ html[data-modality="pointer"] :is(.rail-stat, .tour-help, .app-version):focus-vi
 /* Applications and Jobs: applications with no reply for 60 days (applications/QuietBanner.tsx). */
 .quiet-banner { border-color: var(--color-warning); background: var(--color-warning-soft); }
 .quiet-banner > .row { align-items: center; }
+/* Job page: the thank-you prompt once an interview is logged. */
+.thanks-prompt { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-3); }
 .video-actions { gap: var(--space-4); }
 .video-actions__group { gap: var(--space-2); }
 .video-qa { gap: var(--space-2); }

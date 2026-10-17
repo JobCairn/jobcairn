@@ -45,6 +45,18 @@ describe("emailRequest (main's mapping of the composer's request)", () => {
     const empty = writeDraft(root, ACME[0], ACME[1], draft({ body: "" }));
     expect(() => emailRequest(root, T, { options: { mode: "grammar", draft_id: empty.draft_id } })).toThrow(/Write something first/);
   });
+
+  it("refuses a third follow-up on one application, and still reworks an existing draft", async () => {
+    const { root } = await setup();
+    const file = layout(root).jobFile(ACME[0], ACME[1]);
+    expect(emailRequest(root, T, { options: { purpose: "follow_up", mode: "new" } }).options?.purpose).toBe("follow_up");
+    const j = readRecord("job", file);
+    j.timeline.push({ at: "2026-10-01T00:00:00.000Z", event: "Email sent", note: "Following up: AI Engineer application" },
+      { at: "2026-10-09T00:00:00.000Z", event: "Email sent", note: "Following up: AI Engineer application" });
+    writeRecord("job", file, j);
+    expect(() => emailRequest(root, T, { options: { purpose: "follow_up", mode: "new" } })).toThrow(/followed up twice/);
+    expect(emailRequest(root, T, { options: { purpose: "thank_you", mode: "new" } }).options?.purpose).toBe("thank_you");
+  });
 });
 
 describe("draftAssist", () => {

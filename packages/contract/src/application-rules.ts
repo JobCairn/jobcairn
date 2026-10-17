@@ -40,7 +40,7 @@ export function quietText(n: number, days = QUIET_DAYS): string {
 
 /** At most this many follow-ups per application. */
 export const MAX_FOLLOW_UPS = 2;
-/** A timeline event you can add by hand for a follow-up made another way (a call, LinkedIn). */
+/** A timeline event for a follow-up made another way (a call, LinkedIn), for example from an import. */
 export const FOLLOWED_UP_EVENT = "Followed up";
 
 /** A sent email whose subject reads as a follow-up ("Following up: …", "Follow-up", "Checking in"). */

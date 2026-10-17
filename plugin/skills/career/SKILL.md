@@ -96,6 +96,11 @@ Only load the one reference file for the workflow in play; don't preload the res
 - **One conversation at a time** (Workflow 4) — don't load entire archives.
 - **Update the index** (Workflow 4) — mark conversations processed after each run.
 - **Traceability** — every bullet maps to evidence.
+- **Follow-ups add nothing new** — a follow-up on an application uses only claims
+  already in the resume and cover letter that were sent for that job (the job's
+  `application/` folder). No new claims, numbers or skills. 60 to 120 words, a
+  subject that starts "Following up:", and never more than two follow-ups per
+  application: after the second, wait for a reply or close it as No response.
 
 ## Reference files
 

@@ -382,7 +382,7 @@ describe("Task 11: recovery, dedupe and caps carried from earlier reviews", () =
     const s = setup();
     s.provider.add("inbox", rawMessage({ id: "old" }), "2025-11-01T09:00:00.000Z");
     await syncMail(s.opts());
-    expect(readMailState(s.root).mailboxes.inbox).toEqual({ uidvalidity: "1", last_uid: 1 });
+    expect(readMailState(s.root).mailboxes.inbox).toMatchObject({ uidvalidity: "1", last_uid: 1 });
   });
 });
 
@@ -506,5 +506,63 @@ describe("fix round 2", () => {
     s.provider.add("inbox", rawMessage({ id: "f1" }), "2027-06-01T00:00:00.000Z");
     await syncMail(s.opts({ firstSyncDays: 30 }));
     expect(readMailState(s.root).mailboxes.inbox?.complete_through).toBe(NOW.toISOString());
+  });
+});
+
+describe("looking back when companies change", () => {
+  const AGENT = addr("george", "agency.example");
+  const addAgency = (s: ReturnType<typeof setup>) => {
+    const j = newJob(s.root, { company: "Example Agency", title: "Tech Lead" }, { now: NOW });
+    updateRecord("company", layout(s.root).companyFile(j.company_slug), (c) => { c.website = "https://agency.example"; });
+    return j;
+  };
+  const filed = (s: ReturnType<typeof setup>, slug: string) => {
+    const dir = layout(s.root).companyDir(slug);
+    const out: string[] = [];
+    const walk = (d: string) => { if (!fs.existsSync(d)) return; for (const e of fs.readdirSync(d, { withFileTypes: true })) { const f = path.join(d, e.name); if (e.isDirectory()) walk(f); else if (f.includes(`${path.sep}emails${path.sep}`) && f.endsWith(".json")) out.push(f); } };
+    walk(dir);
+    return out;
+  };
+
+  it("files mail that was skipped before its agency was added", async () => {
+    const s = setup();
+    s.provider.add("inbox", rawMessage({ id: "g1", from: AGENT, subject: "Quick chat this week?" }));
+    s.provider.add("inbox", rawMessage({ id: "p1", from: MUM, subject: "Dinner on Sunday?" }));
+    expect(await syncMail(s.opts())).toMatchObject({ stored: 0, skipped: 2 });
+    const j = addAgency(s);
+    expect(await syncMail(s.opts())).toMatchObject({ stored: 1, triaged: 0, skipped: 1, error: "" });
+    expect(filed(s, j.company_slug)).toHaveLength(1);
+    expect(s.allText()).not.toContain("Dinner on Sunday");
+    // Nothing changed since: the next run only fetches new mail.
+    s.provider.calls.length = 0;
+    expect(await syncMail(s.opts())).toMatchObject({ stored: 0, skipped: 0, duplicates: 0 });
+  });
+
+  it("sorts mail about opportunities, vacancies and jobs from unknown senders", async () => {
+    const s = setup();
+    s.provider.add("inbox", rawMessage({ id: "o1", from: AGENT, subject: "Senior & Tech Lead AI Engineering Opportunities" }));
+    s.provider.add("inbox", rawMessage({ id: "o2", from: AGENT, subject: "New vacancy" }));
+    expect(await syncMail(s.opts())).toMatchObject({ triaged: 2, skipped: 0 });
+  });
+
+  it("doesn't put mail handled before back into Mail to sort", async () => {
+    const s = setup();
+    s.provider.add("inbox", rawMessage({ id: "b1", from: SEEK, subject: "New AI Engineer jobs for you" }));
+    expect(await syncMail(s.opts())).toMatchObject({ triaged: 1 });
+    for (const t of listTriage(s.root)) fs.rmSync(path.join(s.root, t.ref), { recursive: true, force: true });
+    addAgency(s);
+    s.provider.add("inbox", rawMessage({ id: "b2", from: SEEK, subject: "More AI Engineer jobs for you" }));
+    // The old board mail stays gone; the new one is sorted as usual.
+    expect(await syncMail(s.opts())).toMatchObject({ triaged: 1, skipped: 1 });
+  });
+
+  it("carries on an unfinished look-back before starting another", async () => {
+    const s = setup();
+    for (let i = 0; i < 3; i++) s.provider.add("inbox", rawMessage({ id: `g${i}`, from: AGENT, subject: "Catch up?" }));
+    await syncMail(s.opts());
+    addAgency(s);
+    expect(await syncMail(s.opts({ caps: { maxMessages: 2 } }))).toMatchObject({ stored: 2, capped: true });
+    expect(await syncMail(s.opts({ caps: { maxMessages: 2 } }))).toMatchObject({ stored: 1 });
+    expect(readMailState(s.root).mailboxes.inbox).toMatchObject({ last_uid: 3 });
   });
 });

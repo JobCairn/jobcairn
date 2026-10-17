@@ -21,7 +21,16 @@ type Box = "inbox" | "sent";
  * after Gmail renumbers the mailbox starts two days before it, so a backlog a capped run left
  * behind is never skipped.
  */
-export interface MailboxState { uidvalidity: string; last_uid: number; complete_through?: string }
+export interface MailboxState {
+  uidvalidity: string; last_uid: number; complete_through?: string;
+  /**
+   * What mail could match (matchKey) when this mailbox last looked back. When companies, agencies or linked addresses
+   * change, the next run looks back over the first-sync window once, so mail skipped before you added them is filed.
+   */
+  match_key?: string;
+  /** The high-water mark when that look-back started: mail up to it was handled before, so it is only filed if it matches. */
+  look_back_to?: number;
+}
 export interface MailState {
   schema: 1; account: string; mailboxes: Partial<Record<Box, MailboxState>>;
   last_run: string; last_ok: string; last_error: string; counts: SyncCounts; purged: number; ignore: IgnoreList;
@@ -83,10 +92,12 @@ export function readMailState(root: string): MailState {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) raw = {};
   const strings = (v: unknown) => (Array.isArray(v) ? v.filter((x): x is string => typeof x === "string").slice(0, 2000) : []);
   const box = (v: unknown): MailboxState | undefined => {
-    const o = v as { uidvalidity?: unknown; last_uid?: unknown; complete_through?: unknown } | undefined;
+    const o = v as { uidvalidity?: unknown; last_uid?: unknown; complete_through?: unknown; match_key?: unknown; look_back_to?: unknown } | undefined;
     if (!(o && typeof o === "object" && typeof o.uidvalidity === "string" && Number.isInteger(o.last_uid) && (o.last_uid as number) >= 0)) return undefined;
     const ct = typeof o.complete_through === "string" && !Number.isNaN(Date.parse(o.complete_through)) ? new Date(o.complete_through).toISOString() : "";
-    return { uidvalidity: o.uidvalidity, last_uid: o.last_uid as number, ...(ct ? { complete_through: ct } : {}) };
+    const mk = typeof o.match_key === "string" ? o.match_key.slice(0, 128) : "";
+    return { uidvalidity: o.uidvalidity, last_uid: o.last_uid as number, ...(ct ? { complete_through: ct } : {}), ...(mk ? { match_key: mk } : {}),
+      ...(Number.isInteger(o.look_back_to) && (o.look_back_to as number) > 0 ? { look_back_to: o.look_back_to as number } : {}) };
   };
   const mb = (raw.mailboxes && typeof raw.mailboxes === "object" ? raw.mailboxes : {}) as MailState["mailboxes"];
   const inbox = box(mb.inbox);
@@ -221,6 +232,13 @@ export function withAgencies(companies: CompanyInfo[], agencies: Agency[]): Comp
   return out;
 }
 
+/** A digest of everything matchCompany looks at (jobs aside): names, aliases, websites and addresses. */
+export function matchKey(companies: CompanyInfo[]): string {
+  const lcs = (xs: readonly string[] | undefined) => (xs ?? []).map((x) => x.trim().toLowerCase()).filter(Boolean).sort();
+  const parts = companies.map((c) => JSON.stringify([c.slug, c.name.trim().toLowerCase(), lcs(c.aliases), c.website.trim().toLowerCase(),
+    c.recruiter_email.trim().toLowerCase(), lcs(c.email_match), lcs(c.agency_addresses), !!c.agency_only])).sort();
+  return crypto.createHash("sha256").update(parts.join("\n")).digest("hex").slice(0, 32);
+}
 
 export async function syncMail(o: SyncOptions): Promise<SyncResult> {
   const r: SyncResult = { ...zero(), capped: false, purged: 0, error: "", touched: [], repair_failed: 0 };
@@ -294,7 +312,8 @@ export async function syncMail(o: SyncOptions): Promise<SyncResult> {
     catch { r.repair_failed++; }
   };
 
-  const handle = async (s: MailSession, which: Box, h: HeaderSummary, companies: CompanyInfo[]) => {
+  /** `matchedOnly`: a look-back over mail handled before; only mail that now matches a company or agency is new. */
+  const handle = async (s: MailSession, which: Box, h: HeaderSummary, companies: CompanyInfo[], matchedOnly = false) => {
     const from = h.from[0] ?? { name: "", address: "" };
     // Your own message in INBOX (you copied yourself) is sent mail: it matches on its recipients and dedupes with Sent.
     const direction = which === "sent" || from.address.toLowerCase() === o.account.toLowerCase() ? "out" : "in";
@@ -302,7 +321,7 @@ export async function syncMail(o: SyncOptions): Promise<SyncResult> {
     if (direction === "in" && isIgnored(info.from.address, state.ignore)) { r.skipped++; return; }
     const match = matchMessage(info, companies, o.account);
     // Personal mail: decided on headers alone; nothing is downloaded or written.
-    if (!match && !isJobRelated(info)) { r.skipped++; return; }
+    if (!match && (matchedOnly || !isJobRelated(info))) { r.skipped++; return; }
     const check = (id: string) => {
       const v = seen(id);
       if (v === "pending") throw new HoldBack();
@@ -343,6 +362,7 @@ export async function syncMail(o: SyncOptions): Promise<SyncResult> {
     // .careeros/mail-staging/ (and only there).
     local(() => cleanOrphans(o.root, o.now));
     const companies = local(() => companyIndex(o.root));
+    const key = matchKey(companies);
     known = local(() => knownMessageIds(o.root));
     const stopCheck = () => { if (o.signal?.aborted) throw new Stopped(); };
     stopCheck();
@@ -361,7 +381,15 @@ export async function syncMail(o: SyncOptions): Promise<SyncResult> {
       const floor = o.now.getTime() - o.firstSyncDays * DAY;
       let range: { sinceUid: number } | { since: Date };
       const rescan = !(prev && prev.uidvalidity === info.uidValidity);
-      if (!rescan) range = { sinceUid: prev!.last_uid + 1 };
+      // Companies, agencies or linked addresses changed since this mailbox last looked: look back over the first-sync
+      // window, so mail that was skipped before they were added is filed now. Mail handled before only counts if it matches.
+      // One look-back at a time: an unfinished one carries on first, and the next starts after it if things changed again.
+      const unfinished = !rescan && !!prev!.look_back_to && prev!.last_uid < prev!.look_back_to;
+      const lookBack = !rescan && !unfinished && prev!.match_key !== key;
+      // A look-back a capped run left unfinished carries on from the mark; its old mail still only counts if it matches.
+      const before = rescan ? 0 : Math.max(prev!.look_back_to ?? 0, lookBack ? prev!.last_uid : 0);
+      if (lookBack) range = { since: new Date(floor) };
+      else if (!rescan) range = { sinceUid: prev!.last_uid + 1 };
       else {
         // First run, or Gmail renumbered the mailbox: a re-scan by date. Message-IDs stop duplicates.
         // It starts two days before the last message handled in order (never from the last run's
@@ -370,13 +398,14 @@ export async function syncMail(o: SyncOptions): Promise<SyncResult> {
       }
       // One more than the room left, so a full mailbox shows up as capped.
       const list = await live.headers(range, { limit: caps.maxMessages - handled + 1 });
-      if (rescan) {
+      if (rescan || lookBack) {
         // Everything below the first message found is older than the window, so a capped re-scan
         // resumes by UID from there, never from UID 1. Nothing found: new mail starts at uidNext.
         const top = Number.isInteger(info.uidNext) && info.uidNext > 0 ? info.uidNext - 1 : 0;
         state.mailboxes[which] = {
-          uidvalidity: info.uidValidity, last_uid: list.length ? list[0]!.uid - 1 : top,
+          uidvalidity: info.uidValidity, last_uid: list.length ? Math.min(list[0]!.uid - 1, lookBack ? before : Infinity) : (lookBack ? before : top),
           ...(prev?.complete_through ? { complete_through: prev.complete_through } : {}),
+          match_key: key, ...(before ? { look_back_to: before } : {}),
         };
         save();
       }
@@ -385,7 +414,7 @@ export async function syncMail(o: SyncOptions): Promise<SyncResult> {
         stopCheck();
         if (handled >= caps.maxMessages || elapsed() >= caps.maxNetworkMs) { r.capped = true; break outer; }
         handled++;
-        try { await handle(live, which, h, companies); }
+        try { await handle(live, which, h, companies, h.uid <= before); }
         catch (e) {
           if (o.signal?.aborted) throw new Stopped();
           // Held back: this mailbox stops before the message without moving the high-water mark; the next run tries again.

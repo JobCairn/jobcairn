@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { Button, Checkbox, Icons, Input, Select, Text } from "@careeros/brand";
+import { Button, Checkbox, Icons, Select, Text, Textarea } from "@careeros/brand";
 import {
   fileKind, isActiveRun, NOTE_MAX, noteProblems, outputNames, recruiterEmailDraft, sponsorshipLine, topicLabel,
   type ActionTarget, type AgencyRow, type DraftInput, type JobFile,
@@ -237,9 +237,9 @@ export function RecruiterEmail({ a, onClose }: { a: AgencyRow; onClose: () => vo
       ]} />
       {how === "claude" ? (
         <div className="stack-tight">
-          <Input className="recruiter-email__note" label="Anything to add or ask?" value={note} maxLength={NOTE_MAX} disabled={emailActive}
-            placeholder="For example: I'm available from November; ask about contract roles"
-            help="Optional. Claude uses your profile, your resume and what's saved about this agency."
+          <Textarea className="recruiter-email__note" label="Anything to add or ask?" value={note} maxLength={NOTE_MAX} disabled={emailActive}
+            rows={5} placeholder="For example: I'm available from November; ask about contract roles"
+            help={`Optional. Claude uses your profile, your resume and what's saved about this agency. ${Array.from(note).length.toLocaleString("en-AU")} of ${NOTE_MAX.toLocaleString("en-AU")} characters.`}
             aria-invalid={problems.length ? true : undefined} onChange={(e) => setNote(e.target.value)} />
           {problems.length ? <p role="alert" className="field__error">{problems[0]}</p> : null}
           {notReady ? (

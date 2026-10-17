@@ -115,6 +115,15 @@ describe("Claude's review on the Apply screen", () => {
     expect(facts(root)).toBe("");
   });
 
+  it("handles a stretch Claude wrote with its bullet marker and bold marks", () => {
+    const { ctx, root } = withResume("## Experience\n\n- Owned **Python** services at Example Labs\n");
+    fs.writeFileSync(path.join(appDir(root), "review.json"), JSON.stringify({ stretch: [{ text: "- Owned **Python** services at Example Labs", soften: "Supported **Python** services at Example Labs" }] }));
+    const text = A["apply.state"](ctx, ...LABS).review!.stretch[0]!.text;
+    expect(text).toBe("Owned **Python** services at Example Labs");
+    A["apply.stretch"](ctx, ...LABS, 0, text, "keep");
+    expect(facts(root)).toContain("- Owned Python services at Example Labs (confirmed ");
+  });
+
   it("won't soften without a softer wording, or act on a review that changed", () => {
     const { ctx } = withReview();
     expect(() => A["apply.stretch"](ctx, ...LABS, 1, REVIEW.stretch[1]!.text, "soften")).toThrow("didn't suggest a softer wording");
@@ -127,6 +136,6 @@ describe("Claude's review on the Apply screen", () => {
     const s = A["apply.saveFact"](ctx, ...LABS, 0, "Mentored 2 graduates in 2025");
     expect(s.review!.facts[0]!.saved).toBe(true);
     expect(facts(root)).toContain("- Mentored 2 graduates in 2025 (confirmed ");
-    expect(facts(root)).toContain("from my note, ");
+    expect(facts(root)).toContain("your note, ");
   });
 });

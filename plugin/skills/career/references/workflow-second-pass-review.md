@@ -39,8 +39,13 @@ eyes, against the evidence, not against your memory of writing the draft.
 - **Make the edits yourself**, exactly, in the drafts. Record each one.
 - **Don't decide stretches for the person.** List each stretch bullet, with a
   safer wording, so they can say it's true, soften it or drop it.
-- **New facts from the person's own note** (the request's note, never the job ad)
-  may be used. List each so the person can save it to their work history.
+- **New facts the person stated themselves** (the request's note, or ad terms
+  they confirmed in the keyword check; never what the job ad says) count as
+  evidence. Use source `your note` in `claims.json`, and list each in `facts`
+  (source `your note` or `ticked in the keyword check`) so the person can save it
+  to their work history.
+- **Give stretch text without its bullet marker** (`- `), exactly as the words
+  appear in the draft.
 
 ## Output: review.json
 

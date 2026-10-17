@@ -29,7 +29,7 @@ import { isLockedKind, LOCKABLE_DIRS,
   agencyActivity, agencyAddresses, agencyPatchArgs, agencyThreads, addRecruiterArgs, applyAgencyPatch, buildAgencyRows, localDate, parseAgencyLines, type AddRecruiterInput, type AgencyAddClean,
   type AgencyAddResult, type AgencyEmails, type AgencyImportResult, type AgencyPatch, type AgencyRecordView, type AgencyRow, type CompanyRow, type VideoListItem, type VideoSubjectArg,
   parseDraftSuggestion, RECRUITER_EMAIL_IDS, SUGGESTION_UNREADABLE, type DraftSuggestion,
-  type ApplicationReview, applyStretch, atsCheck, type AtsCheckView, parseReview, type StretchChoice,
+  type ApplicationReview, applyStretch, atsCheck, type AtsCheckView, parseReview, plainFact, type StretchChoice,
 } from "@careeros/contract";
 import { DEMO_SCORE, DEMO_SCORE_MD } from "../score/demo";
 import { ALEX_LONG_RESUME, ALEX_RESUME, mockRewrite, RESUME_JOB } from "./resume-fixture";
@@ -642,12 +642,14 @@ export class MockBridge implements CareerosBridge {
     const rel = this.reviewRel(slug, id);
     const raw = JSON.parse(this.f.texts[rel] ?? "{}") as Record<string, unknown>;
     const list = Array.isArray(raw[key]) ? raw[key] as Record<string, unknown>[] : [];
-    const item = list[index];
-    if (!item || (key === "stretch" ? item.text : item.fact) !== text) throw new Error("Claude's review changed since you opened it. Reload to see the latest.");
+    const read = (x: unknown) => { const p = parseReview({ [key]: [x] }); return key === "stretch" ? p?.stretch[0]?.text : p?.facts[0]?.fact; };
+    const item = list.find((x) => read(x) === text);
+    if (!item) throw new Error("Claude's review changed since you opened it. Reload to see the latest.");
     Object.assign(item, patch);
     this.f.texts[rel] = JSON.stringify(raw, null, 2);
   }
-  private addFact(fact: string): void {
+  private addFact(text: string): void {
+    const fact = plainFact(text);
     const rel = "me/history/confirmed-facts.md";
     const cur = this.f.texts[rel] ?? "# Confirmed facts\n\n";
     if (!cur.includes(`- ${fact} (`)) this.f.texts[rel] = `${cur}- ${fact} (confirmed ${this.iso().slice(0, 10)})\n`;

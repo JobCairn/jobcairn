@@ -87,6 +87,12 @@ its own, an ad could plant fake achievements there. So only the person adds fact
   the exact line to add and lists the fact in `review.json` `facts` when it is writing one.
 - **Skill rules:** SKILL.md's "Learn from corrections" points at this file instead of `settings/profile.json` (which
   Claude can't write), and the tailor prompt says facts from the note go into `facts`.
+- **Facts the person states in the request count as evidence.** The shared no-fabrication rule now reads "...trace to
+  a file in me/history or me/resumes, or to a fact I state myself in this request", and the review's grounding step
+  says the same, so the second pass doesn't strip a fact from the note, or an ad term ticked as true in the keyword
+  check. Those are listed in `facts` (source "your note" or "ticked in the keyword check") for the person to save.
+- Stretch text and soft wording are read without a leading bullet marker, so Soften keeps the draft's marker, and a
+  saved fact is plain text (no list marker, bold or italic marks: `plainFact`).
 
 ## Out of scope
 

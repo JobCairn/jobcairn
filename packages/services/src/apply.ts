@@ -2,8 +2,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { addConfirmedFact, addEvent, insideRoot, isEmailAddress, listApprovals, proposeApproval, setStatus, writeFileAtomic } from "@careeros/core";
 import {
-  applyStep, applyStretch, buildApplyPrompt, fileKind, parseReview, REVIEW_REL,
-  type ApplicationReview, type ApplyState, type ClaimLink, type JobFile, type ReviewStretch, type StretchChoice,
+  applyStep, applyStretch, buildApplyPrompt, fileKind, parseReview, plainFact, REVIEW_REL,
+  type ApplicationReview, type ApplyState, type ClaimLink, type JobFile, type ReviewFact, type ReviewStretch, type StretchChoice,
 } from "@careeros/contract";
 import type { ServiceContext } from "./context.js";
 import { isPlaceholderFile } from "./placeholder.js";
@@ -100,12 +100,11 @@ function reviewItem(ctx: ServiceContext, root: string, slug: string, id: string,
   const gone = () => new Error("Claude's review changed since you opened it. Reload to see the latest.");
   if (!r) throw gone();
   const item = r.review[key][index];
-  const field = key === "stretch" ? "text" : "fact";
-  const value = item ? ("text" in item ? item.text : item.fact) : "";
-  if (!item || value !== text) throw gone();
+  const valueOf = (x: ReviewStretch | ReviewFact | undefined) => (x ? ("text" in x ? x.text : x.fact) : "");
+  if (!item || valueOf(item) !== text) throw gone();
+  // The raw item is the one that reads (parseReview's way: trimmed, without a bullet marker) as the same text.
   const rawList = Array.isArray(r.raw[key]) ? (r.raw[key] as unknown[]) : [];
-  const raw = rawList.find((x): x is Record<string, unknown> => typeof x === "object" && x !== null && typeof (x as Record<string, unknown>)[field] === "string"
-    && ((x as Record<string, unknown>)[field] as string).trim().startsWith(text));
+  const raw = rawList.find((x): x is Record<string, unknown> => valueOf(parseReview({ [key]: [x] })?.[key][0]) === text);
   if (!raw) throw gone();
   return { r, item, raw };
 }
@@ -125,7 +124,7 @@ function stretch(ctx: ServiceContext, slug: string, id: string, index: number, t
   const { r, item, raw } = reviewItem(ctx, root, slug, id, "stretch", index, text);
   const s = item as ReviewStretch;
   if (choice === "keep") {
-    addConfirmedFact(root, s.text, confirmedWhere(root, slug, id, "kept in a review"), ctx.clock());
+    addConfirmedFact(root, plainFact(s.text), confirmedWhere(root, slug, id, "kept in a review"), ctx.clock());
     raw.state = "kept";
   } else {
     if (choice === "soften" && !s.soften) throw new Error("Claude didn't suggest a softer wording for this one. Edit it in the Resume Studio, or drop it.");
@@ -139,11 +138,14 @@ function stretch(ctx: ServiceContext, slug: string, id: string, index: number, t
   return applyState(ctx, slug, id);
 }
 
-/** A new fact from the person's own note, listed in Claude's review: saved to me/history only on this click. */
+/**
+ * A new fact the person stated themselves (their note, or an ad term they ticked as true), listed in Claude's review:
+ * saved to me/history only on this click. Nothing Claude lists is saved without it.
+ */
 function saveFact(ctx: ServiceContext, slug: string, id: string, index: number, fact: string): ApplyState {
   const root = ctx.requireRoot();
-  const { r, raw } = reviewItem(ctx, root, slug, id, "facts", index, fact);
-  addConfirmedFact(root, fact, confirmedWhere(root, slug, id, "from my note"), ctx.clock());
+  const { r, item, raw } = reviewItem(ctx, root, slug, id, "facts", index, fact);
+  addConfirmedFact(root, plainFact(fact), confirmedWhere(root, slug, id, (item as ReviewFact).source || "your note"), ctx.clock());
   raw.saved = true;
   writeFileAtomic(r.abs, `${JSON.stringify(r.raw, null, 2)}\n`);
   touch(root, jobDirRel(slug, id));

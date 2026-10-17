@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ACTIONS, applyStretch, ASCII_DATES_STEP, parseReview, REVIEW_STEPS } from "../src/index.js";
+import { ACTION_RULES, ACTIONS, applyStretch, ASCII_DATES_STEP, buildActionPrompt, parseReview, plainFact, REVIEW_STEPS } from "../src/index.js";
 
 // Fictional data only (Alex Example, Acme Corp).
 describe("parseReview", () => {
@@ -49,12 +49,36 @@ describe("applyStretch", () => {
     expect(applyStretch(letter, item, "drop")).toBe("I like Acme Corp.  And more.\n");
   });
 
+  it("keeps the bullet marker when Claude's text and soft wording came with or without one", () => {
+    const r = parseReview({ stretch: [{ text: "- Owned the data platform for Acme Corp", soften: "Supported the data platform for Acme Corp" }] })!;
+    expect(r.stretch[0]!.text).toBe(item.text);
+    expect(applyStretch(md, r.stretch[0]!, "soften")).toContain("\n- Supported the data platform for Acme Corp\n");
+    const s = parseReview({ stretch: [{ text: item.text, soften: "* Supported it" }] })!;
+    expect(applyStretch(md, s.stretch[0]!, "soften")).toContain("\n- Supported it\n");
+  });
+
   it("changes nothing when the text isn't there any more", () => {
     expect(applyStretch("- Something else\n", item, "drop")).toBeNull();
   });
 });
 
+describe("plainFact", () => {
+  it("drops the list marker and bold or italic marks", () => {
+    expect(plainFact("- Built pipelines with **Python** and *TypeScript*")).toBe("Built pipelines with Python and TypeScript");
+    expect(plainFact("  1. Cut costs  by __20%__ ")).toBe("Cut costs by 20%");
+    expect(plainFact("Rated 4*5 by users")).toBe("Rated 4*5 by users");
+  });
+});
+
 describe("tailor_application prompt", () => {
+  it("lets a fact I state myself count as evidence, listed for me to save", () => {
+    const p = buildActionPrompt("tailor_application", { kind: "job", company_slug: "acme-corp", id: "2026-01-12-ai-engineer" }, { title: "AI Engineer", company: "Acme Corp" });
+    expect(ACTION_RULES[3]).toContain("or to a fact I state myself in this request");
+    expect(p).toContain(ACTION_RULES[3]);
+    expect(p).toContain("or a fact I state myself in this request (my note, or ad terms I confirmed)");
+    expect(p).toContain("ticked in the keyword check");
+  });
+
   it("asks for the second pass, review.json and ASCII date ranges", () => {
     const t = ACTIONS.tailor_application;
     expect(t.extras).toContain("{folder}/review.json");

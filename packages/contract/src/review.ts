@@ -29,6 +29,8 @@ export const REVIEW_REL = "review.json";
 const str = (v: unknown, max: number): string => (typeof v === "string" ? v.trim().slice(0, max) : "");
 const obj = (v: unknown): Record<string, unknown> | null => (typeof v === "object" && v !== null && !Array.isArray(v) ? v as Record<string, unknown> : null);
 const list = (v: unknown): Record<string, unknown>[] => (Array.isArray(v) ? v.slice(0, REVIEW_LIMITS.items).map(obj).filter((x): x is Record<string, unknown> => !!x) : []);
+/** A bullet's text without its list marker ("- ", "* ", "1. "): the marker stays in the draft when the text is softened. */
+const unbullet = (s: string) => s.replace(/^(?:[-*+]|\d+[.)])\s+/, "");
 const fileOf = (v: unknown): ReviewFileName => (REVIEW_FILES as readonly unknown[]).includes(v) ? v as ReviewFileName : "resume.md";
 
 /** review.json as the app shows it, or null when it isn't a review at all. */
@@ -43,10 +45,10 @@ export function parseReview(v: unknown): ApplicationReview | null {
     return reason && old && neu !== null ? [{ file: fileOf(e.file), old, new: neu, reason, why: str(e.why, T) }] : [];
   });
   const stretch = list(o.stretch).flatMap((s): ReviewStretch[] => {
-    const text = str(s.text, T);
+    const text = unbullet(str(s.text, T));
     if (!text) return [];
     const state = (STRETCH_STATES as readonly unknown[]).includes(s.state) ? s.state as StretchState : "open";
-    return [{ file: fileOf(s.file), text, why: str(s.why, T), soften: str(s.soften, T), state }];
+    return [{ file: fileOf(s.file), text, why: str(s.why, T), soften: unbullet(str(s.soften, T)), state }];
   });
   const facts = list(o.facts).flatMap((f): ReviewFact[] => {
     const fact = str(f.fact, REVIEW_LIMITS.fact);
@@ -71,5 +73,13 @@ export function applyStretch(draft: string, item: Pick<ReviewStretch, "text" | "
   const rest = (draft.slice(start, at) + draft.slice(at + item.text.length, endNl === -1 ? draft.length : endNl)).replace(/^\s*(?:[-*+]|\d+[.)])?\s*/, "").trim();
   if (rest) return draft.slice(0, at) + draft.slice(at + item.text.length);
   return draft.slice(0, start) + draft.slice(end);
+}
+
+/** A claim as a plain fact for me/history: no list marker, no bold or italic marks, one line. */
+export function plainFact(text: string): string {
+  return unbullet(text.trim())
+    .replace(/(\*\*|__)(.+?)\1/g, "$2")
+    .replace(/(^|[^\w*])\*(?=\S)(.+?)\*(?!\w)/g, "$1$2")
+    .replace(/\s+/g, " ").trim();
 }
 

@@ -11,7 +11,17 @@ describe("mail methods", () => {
       "mail.drafts.save", "mail.get", "mail.list", "mail.loadImages", "mail.move", "mail.prune", "mail.recheck.apply", "mail.recheck.dismiss", "mail.recheck.preview", "mail.saveAccount", "mail.saveAttachment",
       "mail.send.again", "mail.send.markSent",
       "mail.setSignature", "mail.status", "mail.syncNow", "mail.testConnection", "mail.triage.assign", "mail.triage.createCompany", "mail.triage.ignore", "mail.triage.linkAgency", "mail.triage.list",
+      "mail.updates.accept", "mail.updates.dismiss", "mail.updates.list",
     ]);
+  });
+  it("names an update from your mail by job, a status mail can suggest, and the email", () => {
+    const args = ["acme-corp", "2026-01-12-ai-engineer", "Interview", REF];
+    expect(validateArgs("mail.updates.accept", args)).toEqual(args);
+    expect(validateArgs("mail.updates.dismiss", args)).toEqual(args);
+    expect(validateArgs("mail.updates.list", [])).toEqual([]);
+    expect(() => validateArgs("mail.updates.accept", ["acme-corp", "2026-01-12-ai-engineer", "Withdrawn", REF])).toThrow();
+    expect(() => validateArgs("mail.updates.accept", ["acme-corp", "2026-01-12-ai-engineer", "Offer", "settings/profile.json"])).toThrow(/invalid format/);
+    expect(() => validateArgs("mail.updates.dismiss", ["../x", "2026-01-12-ai-engineer", "Offer", REF])).toThrow();
   });
   it("takes only a 64-character token to apply a re-check", () => {
     expect(validateArgs("mail.recheck.apply", ["a".repeat(64)])).toEqual(["a".repeat(64)]);

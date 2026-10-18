@@ -26,6 +26,7 @@ export * from "./runtime.js";
 export * from "./mail-account.js";
 export * from "./mail-read.js";
 export * from "./mail-sync.js";
+export * from "./mail-suggestions.js";
 export * from "./mail-send.js";
 export * from "./video.js";
 export * from "./video-claude.js";

@@ -16,7 +16,7 @@ import type { ScheduleView, SearchSchedule } from "./schedule.js";
 import type { JobAddStatus, JobAdded, JobDraft, JobPreviewResult } from "./job-link.js";
 import type { GuideState, LearnHub, LearnProgress, SetupStepId } from "./learn.js";
 import type {
-  BackgroundStatus, DraftAssist, DraftDetail, DraftSuggestion, DraftInput, DraftView, MailList, MailMessageView, MailQuery, MailStatus, MailTarget, MailTestResult, PruneResult, RecheckPreview, RecheckResult, TriageItem,
+  BackgroundStatus, DraftAssist, DraftDetail, DraftSuggestion, DraftInput, DraftView, MailList, MailMessageView, MailQuery, MailStatus, MailTarget, MailTestResult, MailUpdate, MailUpdateStatus, PruneResult, RecheckPreview, RecheckResult, TriageItem,
 } from "./mail.js";
 import type { MethodName } from "./methods.js";
 import type { CalendarKind } from "./ics.js";
@@ -279,6 +279,16 @@ export interface CareerosBridge {
     prune(months: number): Promise<PruneResult>;
     /** "Re-check filed mail" with today's matching rules: preview, apply exactly that preview, or mark the automatic offer as seen. */
     recheck: { preview(): Promise<RecheckPreview>; apply(token: string): Promise<RecheckResult>; dismiss(): Promise<void> };
+    /**
+     * "Updates from your mail": status changes emails suggested, still waiting for the person. Accept sets the job's
+     * status the usual way (its timeline note says it came from an email); dismiss forgets it for good. Both return
+     * what's left.
+     */
+    updates: {
+      list(): Promise<MailUpdate[]>;
+      accept(slug: string, id: string, to: MailUpdateStatus, ref: string): Promise<MailUpdate[]>;
+      dismiss(slug: string, id: string, to: MailUpdateStatus, ref: string): Promise<MailUpdate[]>;
+    };
     triage: {
       list(): Promise<TriageItem[]>;
       assign(id: string, target: MailTarget, addMatch: boolean): Promise<TriageItem[]>;
@@ -576,6 +586,10 @@ export function createRemoteBridge(t: Transport): CareerosBridge {
       list: (q) => c("mail.list", q), get: (r) => c("mail.get", r), loadImages: (r) => c("mail.loadImages", r),
       saveAttachment: (r, p) => c("mail.saveAttachment", r, p), move: (r, tg) => c("mail.move", r, tg), prune: (m) => c("mail.prune", m),
       recheck: { preview: () => c("mail.recheck.preview"), apply: (t) => c("mail.recheck.apply", t), dismiss: () => c("mail.recheck.dismiss") },
+      updates: {
+        list: () => c("mail.updates.list"), accept: (s, i, to, r) => c("mail.updates.accept", s, i, to, r),
+        dismiss: (s, i, to, r) => c("mail.updates.dismiss", s, i, to, r),
+      },
       triage: {
         list: () => c("mail.triage.list"), assign: (id, tg, add) => c("mail.triage.assign", id, tg, add),
         createCompany: (id, n, t) => c("mail.triage.createCompany", id, n, t), ignore: (id, s) => c("mail.triage.ignore", id, s),

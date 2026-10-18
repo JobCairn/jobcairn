@@ -1,4 +1,6 @@
-export const MAIL_REF_PATTERN = /^(?:companies\/[a-z0-9]+(?:-[a-z0-9]+)*\/(?:jobs\/[a-z0-9]+(?:-[a-z0-9]+)*\/)?emails|\.careeros\/mail-triage)\/[a-z0-9][a-z0-9-]{0,99}\.json$/;
+import { isFinalStatus } from "./constants.js";
+
+export const MAIL_REF_PATTERN =/^(?:companies\/[a-z0-9]+(?:-[a-z0-9]+)*\/(?:jobs\/[a-z0-9]+(?:-[a-z0-9]+)*\/)?emails|\.careeros\/mail-triage)\/[a-z0-9][a-z0-9-]{0,99}\.json$/;
 export type MailAssetKind = "msg" | "cid" | "img" | "link";
 
 export function mailRefToken(ref: string): string {
@@ -129,6 +131,41 @@ export interface RecheckPreview {
   token: string;
 }
 export interface RecheckResult { sorted: number; unfiled: number }
+
+// ---- Updates from your mail -------------------------------------------------------------------------
+/** The statuses an email may suggest for a job (mail signals.ts). Sync never sets them; the person decides. */
+export const MAIL_UPDATE_STATUSES = ["Applied", "Interview", "Rejected", "Offer"] as const;
+export type MailUpdateStatus = (typeof MAIL_UPDATE_STATUSES)[number];
+/**
+ * One status change an email suggested, waiting for the person: "Update to <to>" or "Dismiss". Named by job, `to`
+ * and the email's ref (the same email never suggests the same change twice).
+ */
+export interface MailUpdate {
+  company_slug: string; job_id: string; job_title: string; company_name: string;
+  /** The job's status now. */
+  status: string;
+  to: MailUpdateStatus;
+  /** Why, in a short sentence ("The employer asked to talk or interview (email of 14 January 2026)."). */
+  note: string;
+  /** The email that suggested it, for "Open email". */
+  ref: string;
+  /** When sync noticed it. */
+  at: string;
+}
+const UPDATE_STAGE: Record<string, number> = { Found: 0, Saved: 1, Applying: 2, Applied: 3, Interview: 4, Offer: 5 };
+/**
+ * Whether a suggested change still makes sense for a job at `status` (the rules sync used to suggest it): never one
+ * the job has reached or passed, nothing on a closed job except a no that replaces No response, and no "Rejected"
+ * once there's an offer.
+ */
+export function mailUpdateApplies(status: string, to: string): boolean {
+  if (status === to || !(MAIL_UPDATE_STATUSES as readonly string[]).includes(to)) return false;
+  if (to === "Rejected") return status === "No response" || (!isFinalStatus(status) && status !== "Offer");
+  if (isFinalStatus(status)) return false;
+  return (UPDATE_STAGE[status] ?? 0) < UPDATE_STAGE[to]!;
+}
+/** The timeline note when the person accepts an update: says it came from an email. */
+export const mailUpdateNote = (note: string): string => `From an email: ${note}`.slice(0, 500);
 
 /** Claude's suggested email for the composer (the draft_email action's draft.json), cleaned. `at`: when Claude wrote it. */
 export interface DraftSuggestion { subject: string; body: string; at: string }

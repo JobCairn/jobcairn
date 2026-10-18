@@ -10,7 +10,7 @@ import { BOARD_IDS } from "./chrome.js";
 import { MAX_SPEAK_CHARS, TTS_LANG_CODE, TTS_REQUEST_ID, TTS_VOICES } from "./tts.js";
 import { BASE_RESUME_REL, RESUME_COPY, RESUME_DOWNLOADS, resumeFile, resumeItemRef, resumeMarkdown, resumeRef, resumeStyleArg, suggestionDecision, VARIANT_NAME, variantSlug, versionId } from "./resume.js";
 import { LEARN_PROGRESS, SKIPPABLE_SETUP } from "./learn.js";
-import { MAIL_REF_PATTERN } from "./mail.js";
+import { MAIL_REF_PATTERN, MAIL_UPDATE_STATUSES } from "./mail.js";
 import { TOUR_IDS, TOUR_MARKS } from "./tour.js";
 import { CALENDAR_KINDS, INTERVIEW_AT } from "./ics.js";
 import { OFFER_TEXT_MAX } from "./offers.js";
@@ -276,6 +276,9 @@ export const METHODS = {
   "mail.recheck.preview": [],
   "mail.recheck.apply": [str({ min: 64, max: 64 })],
   "mail.recheck.dismiss": [],
+  "mail.updates.list": [],
+  "mail.updates.accept": [slug, slug, oneOf(MAIL_UPDATE_STATUSES), mailRef],
+  "mail.updates.dismiss": [slug, slug, oneOf(MAIL_UPDATE_STATUSES), mailRef],
   "mail.triage.list": [],
   "mail.triage.assign": [triageId, mailTarget, bool],
   "mail.triage.createCompany": [triageId, required(120), required(200)],

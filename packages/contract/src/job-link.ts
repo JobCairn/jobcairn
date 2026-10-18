@@ -70,6 +70,16 @@ export function jobAdKey(url: string): string {
     case "workable": if ((m = /^\/([a-z0-9_-]+)\/j\/([a-z0-9]+)/i.exec(path))) return `workable:${lower(m[1]!)}:${lower(m[2]!)}`; break;
     case "smartrecruiters": if ((m = /^\/([^/]+)\/(\d+)/i.exec(path))) return `smartrecruiters:${lower(m[1]!)}:${m[2]}`; break;
     case "workday": if ((m = /_([A-Za-z0-9-]+)\/?$/.exec(path))) return `workday:${host}:${lower(m[1]!)}`; break;
+    // careers.pageuppeople.com/<instance>/<site>/<lang>/job/<id>/<title>
+    case "pageup": if ((m = /^\/(\d+)\/[a-z0-9_-]+\/[a-z-]+\/job\/(\d+)/i.exec(path))) return `pageup:${m[1]}:${m[2]}`; break;
+    // jobs.jobvite.com/<company>/job/<id> (the id is case-sensitive)
+    case "jobvite": if ((m = /^\/([a-z0-9_-]+)\/job\/([A-Za-z0-9]+)/i.exec(path))) return `jobvite:${lower(m[1]!)}:${m[2]}`; break;
+    // <company>.teamtailor.com/jobs/<id>-<title>, with or without a language prefix (/en/jobs/...)
+    case "teamtailor": {
+      const sub = /^([a-z0-9-]+)\.teamtailor\.com$/.exec(host)?.[1];
+      if (sub && sub !== "www" && (m = /^\/(?:[a-z]{2}(?:-[a-z]{2})?\/)?jobs\/(\d+)(?:[-/]|$)/i.exec(path))) return `teamtailor:${sub}:${m[1]}`;
+      break;
+    }
   }
   u.hash = "";
   for (const k of [...u.searchParams.keys()]) if (/^(utm_|ref$|refid$|trk|trackingid$|source$|gh_src$|lever-source)/i.test(k)) u.searchParams.delete(k);

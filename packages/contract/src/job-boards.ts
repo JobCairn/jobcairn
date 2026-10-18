@@ -42,6 +42,11 @@ export const JOB_BOARDS: readonly JobBoard[] = [
   { id: "workable", name: "Workable", siteNames: ["workable"], hostDomains: ["workable.com"] },
   { id: "smartrecruiters", name: "SmartRecruiters", siteNames: ["smartrecruiters", "smart recruiters"], hostDomains: ["smartrecruiters.com"] },
   { id: "workday", name: "Workday", siteNames: ["workday"], hostDomains: ["myworkdayjobs.com", "workday.com"] },
+  // Named and keyed only (no public job API is read for these): their ads are pasted like any other site's.
+  { id: "pageup", name: "PageUp", siteNames: ["pageup", "pageup people"], hostDomains: ["pageuppeople.com"] },
+  { id: "jobvite", name: "Jobvite", siteNames: ["jobvite"], hostDomains: ["jobvite.com"] },
+  // Only teamtailor.com hosts: a Teamtailor career site on the company's own domain can't be told from its address.
+  { id: "teamtailor", name: "Teamtailor", siteNames: ["teamtailor"], hostDomains: ["teamtailor.com"] },
   // Generic fallbacks: never reached through siteNames/hostDomains (both empty).
   { id: "company-website", name: "Company website", siteNames: [], hostDomains: [] },
   { id: "pasted", name: "Pasted by you", siteNames: [], hostDomains: [] },

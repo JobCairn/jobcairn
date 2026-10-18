@@ -30,13 +30,24 @@ describe("shared job boards", () => {
     expect(jobBoardBySite(" Workforce Australia ")?.id).toBe("workforce");
     expect(jobBoardBySite("CareerOne")?.id).toBe("careerone");
   });
+
+  it("knows PageUp, Jobvite and Teamtailor by host and by site name", () => {
+    expect(jobBoardByUrl("https://careers.pageuppeople.com/513/cw/en/job/496843/ai-engineer")?.id).toBe("pageup");
+    expect(jobBoardByUrl("https://jobs.jobvite.com/acme/job/oAbC123x")?.id).toBe("jobvite");
+    expect(jobBoardByUrl("https://acme.teamtailor.com/jobs/1234567-ai-engineer")?.id).toBe("teamtailor");
+    expect(jobBoardByUrl("https://pageuppeople.com.evil.example/513/cw/en/job/1")).toBeUndefined();
+    expect(jobBoardBySite("PageUp")?.id).toBe("pageup");
+    expect(jobBoardBySite("Jobvite")?.id).toBe("jobvite");
+    expect(jobBoardBySite(" teamtailor ")?.id).toBe("teamtailor");
+  });
 });
 
 describe("canonical board order (owner, 2026-10-11)", () => {
   it("is LinkedIn, SEEK, Indeed, Glassdoor, Jora, other boards, ATS sources, then company site and pasted", () => {
     expect(JOB_BOARDS.map((b) => b.id)).toEqual([
       "linkedin", "seek", "indeed", "glassdoor", "jora", "careerone", "workforce", "adzuna", "wellfound",
-      "greenhouse", "lever", "ashby", "workable", "smartrecruiters", "workday", "company-website", "pasted",
+      "greenhouse", "lever", "ashby", "workable", "smartrecruiters", "workday", "pageup", "jobvite", "teamtailor",
+      "company-website", "pasted",
     ]);
   });
   it("sorts site names and ids the same way, unknown sites after ATS and before company site and pasted", () => {

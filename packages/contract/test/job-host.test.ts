@@ -9,6 +9,15 @@ describe("classifyJobHost: where a pasted job link is hosted", () => {
     expect(kind("https://au.linkedin.com/jobs/view/4012345678")).toBe("board");
     expect(kind("https://boards.greenhouse.io/examplelabs/jobs/4012345")).toBe("board");
     expect(kind("https://acme.wd3.myworkdayjobs.com/en-US/Careers/job/R-1234")).toBe("board");
+    expect(kind("https://careers.pageuppeople.com/513/cw/en/job/496843/ai-engineer")).toBe("board");
+    expect(kind("https://jobs.jobvite.com/acme/job/oAbC123x")).toBe("board");
+    expect(kind("https://acme.teamtailor.com/jobs/1234567-ai-engineer")).toBe("board");
+  });
+
+  it("calls a host that imitates PageUp, Jobvite or Teamtailor a look-alike", () => {
+    expect(classifyJobHost("https://pageuppeople.com.example.net/513/cw/en/job/1")).toMatchObject({ kind: "lookalike", board: { name: "PageUp", domain: "pageuppeople.com" } });
+    expect(classifyJobHost("https://jobvite-careers.example.net/acme/job/x")).toMatchObject({ kind: "lookalike", board: { name: "Jobvite", domain: "jobvite.com" } });
+    expect(classifyJobHost("https://teamtai1or.com/jobs/1")).toMatchObject({ kind: "lookalike", board: { name: "Teamtailor", domain: "teamtailor.com" } });
   });
 
   it("knows the company's own site from its name or its saved website", () => {

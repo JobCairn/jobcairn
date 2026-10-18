@@ -34,6 +34,9 @@ const monogram = (letters: string, tone: MonogramTone): BoardGlyph => ({ kind: "
 const MONOGRAMS: Record<string, { letters: string; tone: MonogramTone }> = {
   careerone: { letters: "C1", tone: "danger" },
   workday: { letters: "Wd", tone: "accent" },
+  pageup: { letters: "PU", tone: "neutral" },
+  jobvite: { letters: "Jv", tone: "neutral" },
+  teamtailor: { letters: "Tt", tone: "neutral" },
   "company-website": { letters: "Co", tone: "neutral" },
   pasted: { letters: "Pd", tone: "neutral" },
 };

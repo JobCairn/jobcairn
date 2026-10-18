@@ -69,6 +69,9 @@ export const BOARD_FALLBACK_REASONS: Readonly<Record<string, string>> = {
   careerone: "careeronecdn.com.au's only published favicon is 16x16 (confirmed via a real browser too), below the 48px floor; no apple-touch-icon or manifest icon was found (checked 2026-10-10).",
   workday: "workday.com declares no icon link at all in its head, even rendered in a real browser; its default /favicon.ico is 32x32, below the 48px floor (checked 2026-10-10).",
   wellfound: "wellfound.com's only declared icon is a 32x32 favicon.ico (confirmed via a real browser too); no apple-touch-icon exists at the usual path (checked 2026-10-10).",
+  pageup: "not yet checked for an official mark (board added 2026-10-18); a monogram until one is sourced from pageuppeople.com and recorded in docs/third-party-marks.md.",
+  jobvite: "not yet checked for an official mark (board added 2026-10-18); a monogram until one is sourced from jobvite.com and recorded in docs/third-party-marks.md.",
+  teamtailor: "not yet checked for an official mark (board added 2026-10-18); a monogram until one is sourced from teamtailor.com and recorded in docs/third-party-marks.md.",
   "company-website": "a generic fallback source, not a real company - a monogram is the correct permanent choice.",
   pasted: "a generic fallback source, not a real company - a monogram is the correct permanent choice.",
 };

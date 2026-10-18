@@ -17,6 +17,12 @@ describe("routeJobLink: where a pasted link is read from", () => {
     expect(routeJobLink("https://careers.example.com/jobs/42")).toEqual({ kind: "paste", site: "" });
   });
 
+  it("names PageUp, Jobvite and Teamtailor links but reads them from a paste (no public job API is fetched)", () => {
+    expect(routeJobLink("https://careers.pageuppeople.com/513/cw/en/job/496843/ai-engineer")).toEqual({ kind: "paste", site: "PageUp" });
+    expect(routeJobLink("https://jobs.jobvite.com/acme/job/oAbC123x")).toEqual({ kind: "paste", site: "Jobvite" });
+    expect(routeJobLink("https://acme.teamtailor.com/jobs/1234567-ai-engineer")).toEqual({ kind: "paste", site: "Teamtailor" });
+  });
+
   it("never matches a look-alike host and refuses anything that isn't https", () => {
     expect(routeJobLink("https://boards.greenhouse.io.evil.example/x/jobs/1")).toEqual({ kind: "paste", site: "" });
     expect(routeJobLink("https://evilseek.com.au/job/1")).toEqual({ kind: "paste", site: "" });
@@ -37,6 +43,16 @@ describe("jobAdKey: one key per ad", () => {
     expect(jobAdKey("https://au.indeed.com/viewjob?jk=0123456789ABCDEF&from=serp")).toBe("indeed:0123456789abcdef");
     expect(jobAdKey("https://boards.greenhouse.io/ExampleLabs/jobs/4012345?gh_src=abc")).toBe("greenhouse:examplelabs:4012345");
     expect(jobAdKey("https://jobs.lever.co/acme/0F1E2D3C-4B5A-6978-8A9B-0C1D2E3F4A5B/apply")).toBe("lever:acme:0f1e2d3c-4b5a-6978-8a9b-0c1d2e3f4a5b");
+  });
+
+  it("keys PageUp, Jobvite and Teamtailor ads on their ids", () => {
+    expect(jobAdKey("https://careers.pageuppeople.com/513/cw/en/job/496843/ai-engineer?utm_source=x")).toBe("pageup:513:496843");
+    expect(jobAdKey("https://careers.pageuppeople.com/513/cw/en-us/job/496843")).toBe("pageup:513:496843");
+    expect(jobAdKey("https://jobs.jobvite.com/Acme/job/oAbC123x/apply")).toBe("jobvite:acme:oAbC123x");
+    expect(jobAdKey("https://acme.teamtailor.com/jobs/1234567-ai-engineer")).toBe("teamtailor:acme:1234567");
+    expect(jobAdKey("https://acme.teamtailor.com/en/jobs/1234567-ai-engineer/applications/new")).toBe("teamtailor:acme:1234567");
+    // Not one ad: the address without tracking.
+    expect(jobAdKey("https://acme.teamtailor.com/jobs?utm_source=x")).toBe("https://acme.teamtailor.com/jobs");
   });
 
   it("falls back to the address without tracking, fragment or trailing slash", () => {

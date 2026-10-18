@@ -84,8 +84,19 @@ describe("BOARDS", () => {
     for (const want of [
       "linkedin", "seek", "indeed", "glassdoor", "jora", "adzuna", "greenhouse", "lever",
       "workable", "ashby", "smartrecruiters", "workday", "wellfound", "company-website", "pasted",
+      "pageup", "jobvite", "teamtailor",
     ]) expect(ids).toContain(want);
     for (const b of BOARDS) expect(b.name.length).toBeGreaterThan(0);
+  });
+  it("labels PageUp, Jobvite and Teamtailor ads by host and site name, each with a monogram", () => {
+    expect(boardByUrl("https://careers.pageuppeople.com/513/cw/en/job/496843/ai-engineer")?.id).toBe("pageup");
+    expect(boardByUrl("https://jobs.jobvite.com/acme/job/oAbC123x")?.id).toBe("jobvite");
+    expect(boardByUrl("https://acme.teamtailor.com/jobs/1234567-ai-engineer")?.id).toBe("teamtailor");
+    expect(boardBySite("Teamtailor")?.id).toBe("teamtailor");
+    const icon = (id: string) => BOARDS.find((b) => b.id === id)!.icon;
+    expect(icon("pageup")).toMatchObject({ kind: "monogram", letters: "PU" });
+    expect(icon("jobvite")).toMatchObject({ kind: "monogram", letters: "Jv" });
+    expect(icon("teamtailor")).toMatchObject({ kind: "monogram", letters: "Tt" });
   });
   it("gives a real, bundled official mark only to the boards one was obtained for", () => {
     const markIds = BOARDS.filter((b) => b.icon.kind === "image").map((b) => b.id).sort();

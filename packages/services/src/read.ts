@@ -20,6 +20,7 @@ import type { ServiceContext } from "./context.js";
 import type { HandlerTable } from "./handlers.js";
 import { isExampleMail, mailConnected } from "./mail-account.js";
 import { mailNextUp } from "./mail-read.js";
+import { mailUpdateCount } from "./mail-suggestions.js";
 
 export const jobDirRel = (slug: string, id: string) => `companies/${slug}/jobs/${id}`;
 
@@ -147,10 +148,13 @@ function writeViews(root: string, fn: (v: SavedView[]) => SavedView[]): SavedVie
 function home(ctx: ServiceContext): HomeSummary {
   const root = ctx.requireRoot();
   const profile = readRecord("profile", layout(root).profile);
+  // Mail's numbers only when the Mail screen can show them (Gmail connected, or the example's own mail).
+  const mailShown = mailConnected(ctx, root) || isExampleMail(root);
   return homeSummary({
     name: profile.contact.name, rows: jobRows(root), ...analyticsInputs(root),
     visaExpiry: profile.work_rights.visa_expiry, status: profile.work_rights.status, approvals: listApprovals(root).map((a) => approvalView(a, appApprovals(ctx, root))),
-    requests: listAccessRequests(root).map(requestView), inbox: inboxItems(root), now: ctx.now(), mail: mailNextUp(root, mailConnected(ctx, root) || isExampleMail(root)),
+    requests: listAccessRequests(root).map(requestView), inbox: inboxItems(root), now: ctx.now(), mail: mailNextUp(root, mailShown),
+    mailUpdates: mailShown ? mailUpdateCount(root) : 0,
   });
 }
 

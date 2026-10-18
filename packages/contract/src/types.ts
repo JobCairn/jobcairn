@@ -104,6 +104,8 @@ export interface HomeSummary {
   analytics: HomeAnalytics;
   /** Pay percentiles by role family and city from the saved ads (salary-benchmark.ts). Optional: older bridges leave it out. */
   salaryBenchmarks?: import("./salary-benchmark.js").SalaryBenchmarkRow[];
+  /** "Updates from your mail" waiting for the person (Mail screen). Optional: older bridges leave it out. */
+  mailUpdates?: number;
 }
 /** `isSample`: this is the made-up example folder ("Explore with an example"), not the person's own. */
 export interface WorkspaceSummary { root: string; name: string; dataVersion: number; migrated: number[]; indexSkipped: number; isSample: boolean }

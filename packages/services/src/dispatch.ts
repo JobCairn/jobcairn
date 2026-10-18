@@ -22,6 +22,7 @@ import { mailAccountHandlers } from "./mail-account.js";
 import { mailReadHandlers } from "./mail-read.js";
 import { mailAiHandlers } from "./mail-ai.js";
 import { mailRecheckHandlers } from "./mail-recheck.js";
+import { mailSuggestionHandlers } from "./mail-suggestions.js";
 import { mailSyncHandlers } from "./mail-sync.js";
 import { privacyHandlers } from "./privacy.js";
 import { readHandlers } from "./read.js";
@@ -51,7 +52,7 @@ export const HANDLERS: HandlerTable = {
   ...applyHandlers, ...privacyHandlers, ...approvalHandlers, ...secretHandlers, ...linkHandlers, ...actionHandlers,
   ...docsHandlers, ...claudeEngineHandlers, ...composerHandlers, ...ttsHandlers, ...resumeHandlers, ...tourHandlers, ...videoHandlers, ...videoLearnHandlers, ...chromeHandlers, ...scheduleHandlers,
   ...resumeFillHandlers, ...jobLinkHandlers, ...resumesHandlers, ...researchHandlers, ...trashHandlers,
-  ...mailAccountHandlers, ...mailReadHandlers, ...mailAiHandlers, ...mailRecheckHandlers, ...mailSyncHandlers, ...mailSendHandlers,
+  ...mailAccountHandlers, ...mailReadHandlers, ...mailAiHandlers, ...mailRecheckHandlers, ...mailSuggestionHandlers, ...mailSyncHandlers, ...mailSendHandlers,
   ...setupHandlers, ...updateHandlers, ...networkHandlers, ...jobExtraHandlers,
 };
 
@@ -88,6 +89,7 @@ export const MUTATION_AREAS: Partial<Record<MethodName, ChangeArea[]>> = {
   "mail.get": ["home"], "mail.saveAccount": ["mail", "settings", "home"], "mail.disconnect": ["mail", "settings", "home"],
   "mail.setSignature": ["mail", "settings"], "mail.syncNow": ["mail", "jobs", "home"], "mail.loadImages": ["mail"],
   "mail.saveAttachment": ["mail", "jobs"], "mail.move": ["mail", "jobs", "home"], "mail.prune": ["mail"], "mail.recheck.apply": ["mail", "jobs", "home"], "mail.recheck.dismiss": ["mail"],
+  "mail.updates.accept": ["mail", "jobs", "home"], "mail.updates.dismiss": ["mail", "home"],
   "mail.triage.assign": ["mail", "jobs", "home"], "mail.triage.createCompany": ["mail", "jobs", "home", "sponsors"], "mail.triage.ignore": ["mail"], "mail.triage.linkAgency": ["mail", "recruiters", "jobs"],
   "mail.drafts.save": ["mail"], "mail.drafts.propose": ["mail", "approvals", "home"], "mail.background.set": ["mail"],
   "mail.send.markSent": ["mail", "approvals", "jobs", "home"], "mail.send.again": ["mail", "approvals", "jobs", "home"],

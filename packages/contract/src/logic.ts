@@ -211,6 +211,8 @@ export function homeSummary(input: {
   name: string; rows: JobRow[]; events: (JobEvent | { at: string; event: string })[]; visaExpiry: string;
   approvals: ApprovalView[]; requests: AccessRequestView[]; inbox: InboxItem[]; now: Date; mail?: MailNextUp;
   searches?: SearchLogEntry[]; goals?: Partial<HomeGoals>; status?: WorkRightsStatus;
+  /** Status changes emails suggested, waiting for the person ("Updates from your mail"). */
+  mailUpdates?: number;
 }): HomeSummary {
   const counts = Object.fromEntries(JOB_STATUSES.map((s) => [s, 0])) as Record<JobStatus, number>;
   const mix = Object.fromEntries(WR_LABELS.map((l) => [l, 0])) as Record<WorkRightsLabel, number>;
@@ -220,7 +222,7 @@ export function homeSummary(input: {
     sponsorshipMix: mix, visaDaysLeft: visaDaysLeft(input.visaExpiry, input.now),
     nextUp: buildNextUp(input), pendingApprovals: input.approvals.filter((a) => a.status === "pending").length,
     pendingRequests: input.requests.filter((r) => r.status === "pending").length, inboxCount: input.inbox.length,
-    unreadMail: input.mail?.unreadCount ?? 0,
+    unreadMail: input.mail?.unreadCount ?? 0, mailUpdates: input.mailUpdates ?? 0,
     analytics: homeAnalytics({
       rows: input.rows, events: input.events.filter((e): e is JobEvent => "company_slug" in e && "job_id" in e),
       searches: input.searches ?? [], goals: input.goals ?? {}, now: input.now, status: input.status,

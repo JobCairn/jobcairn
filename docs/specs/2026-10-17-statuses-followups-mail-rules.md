@@ -78,13 +78,21 @@ Pure functions in `packages/mail/src/signals.ts`:
   `followUpOn` skips it, so the follow-up still comes due (whether sync or you set Applied).
 - **Suggestions:** `syncMail` returns them as `suggestions` (company, job, status, note, email ref). Sync never
   applies them.
+- **Updates from your mail** (added 2026-10-18): every sync (app or background) keeps its suggestions in
+  `.careeros/mail-suggestions.json` (services `mail-suggestions.ts`): one per job, status and email; never one the
+  person dismissed; dropped once the job reaches that status or closes (`mailUpdateApplies`, the same rules as
+  `statusAdvice`), or the email is moved away. A missing or broken file reads as empty. The Mail screen shows them in
+  a card at the top: job, company, suggested status, the note, Open email, **Update to <status>** and **Dismiss**.
+  Update goes through core `setStatus` (timeline "Status: <status>", note "From an email: …"); Dismiss remembers the
+  key so the same email never suggests it again. Home's Today card adds "N updates from your mail" while Gmail is
+  connected. Bridge: `mail.updates.list / accept / dismiss`.
 
 The look-back on match-key changes in `sync.ts` is unchanged.
 
 ## Out of scope
 
-- Turning mail suggestions into approval cards (status_change approvals). The suggestion is computed, tested and
-  returned by sync; showing it is a later step.
+- Turning mail suggestions into approval cards (status_change approvals). They show as "Updates from your mail" on
+  the Mail screen instead (above).
 - A conflict when the subject names a different known company than the one matched: an agency's mail often names its
   client, so this needs its own design.
 - Offer declined as its own status.

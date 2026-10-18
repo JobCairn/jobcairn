@@ -4,6 +4,7 @@ import { redact, syncMail, type MailAccount, type SyncResult } from "@careeros/m
 import type { BackgroundStatus, MailStatus } from "@careeros/contract";
 import { ServiceContext } from "./context.js";
 import { reconcileSends } from "./mail-send.js";
+import { recordSuggestions } from "./mail-suggestions.js";
 import { plainError } from "./errors.js";
 import type { HandlerTable } from "./handlers.js";
 import type { Host } from "./host.js";
@@ -61,6 +62,8 @@ async function syncOnce(root: string, host: Host, account: MailAccount, now: Dat
     throw err;
   }
   if (r.touched.length) { try { refreshIndex(root, changedPaths(r.touched)); } catch { /* the next read rebuilds the index */ } }
+  // Status changes the mail suggests wait in "Updates from your mail" until the person accepts or dismisses them.
+  if (r.suggestions.length) { try { recordSuggestions(root, r.suggestions, now); } catch { /* best effort: the email is filed either way */ } }
   // Sends whose outcome wasn't known: one now found in Sent is marked sent (Task 17 fix round 0).
   try { reconcileSends(root, now, { now }); } catch { /* tried again after the next sync */ }
   const line = redact(summary(now, r), secretsOf(account));

@@ -44,6 +44,8 @@ export function TodayCard({ h }: { h: HomeSummary }) {
   if (h.pendingApprovals) chips.push({ text: `${plural(h.pendingApprovals, "approval")} waiting`, route: { screen: "approvals" }, tone: "accent" });
   if (h.pendingRequests) chips.push({ text: `${plural(h.pendingRequests, "access request")} waiting`, route: { screen: "privacy" }, tone: "accent" });
   if (h.unreadMail) chips.push({ text: plural(h.unreadMail, "unread email"), route: unreadRoute(h), tone: "accent" });
+  // Status changes an email suggested (an interview invite, an offer): they wait on the Mail screen for a click.
+  if (h.mailUpdates) chips.push({ text: plural(h.mailUpdates, "update from your mail", "updates from your mail"), route: { screen: "mail" }, tone: "accent" });
   if (a.today.followUpsDue) chips.push({ text: `${plural(a.today.followUpsDue, "follow-up")} due`, route: { screen: "jobs", status: "Applied" } });
   if (h.inboxCount) chips.push({ text: `${plural(h.inboxCount, "file")} in your drop box`, route: { screen: "inbox" } });
   if (a.today.searchDeadline === null) chips.push({ text: "Set a search deadline", route: { screen: "settings", tab: "search" } });

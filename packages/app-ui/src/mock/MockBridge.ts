@@ -418,6 +418,8 @@ export class MockBridge implements CareerosBridge {
         return { company: j?.company.name ?? (this.f.agencies ?? []).find((a) => a.slug === slug)?.name ?? slug, title: id && j ? j.job.title : "", apply_via: id && j ? j.job.apply_via : "" };
       },
       event: (slug, id, event, note) => this.event(this.find(slug, id), event, note),
+      jobStatus: (slug, id) => this.f.jobs.find((x) => x.job.company_slug === slug && x.job.id === id)?.job.status ?? null,
+      setStatus: (slug, id, status, note) => this.setJobStatus(this.find(slug, id), status, note),
       view: (a) => this.view(a),
       remember: (a) => { this.mine.set(a.id, mockDigest(a)); },
       secureStorage: () => this.secretsAvailable,
@@ -1086,7 +1088,7 @@ export class MockBridge implements CareerosBridge {
       visaExpiry: String(getPath(this.f.profile, "work_rights.visa_expiry") ?? ""),
       status: this.status(),
       approvals: this.allApprovals().map((a) => this.view(a)), requests: this.f.requests, inbox: this.inboxItems(), now: this.now,
-      mail: this.mailMock.nextUp(),
+      mail: this.mailMock.nextUp(), mailUpdates: this.mailMock.updateCount(),
       searches: this.f.searches,
       goals: { search_deadline: String(getPath(this.f.search, "search_deadline") ?? ""), weekly_goal: (getPath(this.f.search, "weekly_goal") as number | null | undefined) ?? null },
     })),

@@ -11,6 +11,7 @@ import { navigate } from "../router";
 import { ChipSelect, ToggleChip } from "../mail/FilterChips";
 import { MailList } from "../mail/MailList";
 import { MoreMenu, type MoreItem } from "../mail/MoreMenu";
+import { MailUpdates } from "../mail/MailUpdates";
 import { RecheckDialog } from "../mail/Recheck";
 import { useFillHeight } from "../mail/useFillHeight";
 
@@ -28,7 +29,7 @@ function readPane(): boolean {
  * Job mail works like a mail client: the list fills the page, and opening an email gives it the whole page with a
  * Back button (Esc). "Reading pane" keeps the list on the left and the email on the right instead.
  */
-function AllMail({ menu, onReading }: { menu: MoreItem[]; onReading: (reading: boolean) => void }) {
+function AllMail({ menu, onReading, show }: { menu: MoreItem[]; onReading: (reading: boolean) => void; show?: { ref: string; n: number } }) {
   const [text, setText] = useState("");
   const [company, setCompany] = useState("");
   const [job, setJob] = useState("");
@@ -46,6 +47,8 @@ function AllMail({ menu, onReading }: { menu: MoreItem[]; onReading: (reading: b
     try { localStorage.setItem(PANE_KEY, on ? "right" : "off"); } catch { /* private mode: the choice lasts this visit */ }
   };
   const back = () => { if (pane) setFull(false); else setOpen(""); };
+  // "Open email" from Updates from your mail: open that email here.
+  useEffect(() => { if (show) setOpen(show.ref); }, [show]);
   useEffect(() => { onReading(reading); }, [reading, onReading]);
   useEffect(() => () => onReading(false), [onReading]);
   useEffect(() => {
@@ -264,6 +267,8 @@ export function MailScreen() {
   const [rechecking, setRechecking] = useState(false);
   // While an email is open full page, the page title, tabs and filters step aside so the email gets the room.
   const [reading, setReading] = useState(false);
+  const [show, setShow] = useState<{ ref: string; n: number }>();
+  const openEmail = (ref: string) => { setTab("all"); setShow((s) => ({ ref, n: (s?.n ?? 0) + 1 })); };
   const status = useLoad((b) => b.mail.status(), [], ["mail"]);
   const s = status.data;
   const raw = s?.raw_bytes ?? 0;
@@ -300,9 +305,10 @@ export function MailScreen() {
           <MoreMenu label="More mail actions" size="md" items={[recheck, ...free, { id: "settings", label: "Email settings", onSelect: () => navigate({ screen: "settings", tab: "connections", c: "email" }) }]} />
         </div>} />
       {s.last_error ? <p role="alert" className="mail-warning">{s.last_error}</p> : null}
-      <Tabs label="Mail sections" value={tab} onChange={setTab}
+      {reading && tab === "all" ? null : <MailUpdates onOpen={openEmail} />}
+      <Tabs label="Mail sections" value={tab} onChange={(t) => { setTab(t); setShow(undefined); }}
         tabs={[{ id: "all", label: "All job mail" }, { id: "sort", label: "Mail to sort", count: s.triage_count }, { id: "drafts", label: "Drafts" }]}>
-        {tab === "all" ? <AllMail menu={[...free, recheck]} onReading={setReading} /> : null}
+        {tab === "all" ? <AllMail menu={[...free, recheck]} onReading={setReading} show={show} /> : null}
         {tab === "sort" ? <ToSort /> : null}
         {tab === "drafts" ? <Drafts /> : null}
       </Tabs>

@@ -70,6 +70,9 @@ describe("job-related rule and helpers", () => {
   it("knows job boards, ATS senders and job words, and leaves personal mail alone", () => {
     expect(isJobRelated(h(addr("noreply", "s.seek.com.au"), "New jobs for you"))).toBe(true);
     expect(isJobRelated(h(addr("no-reply", "greenhouse.io"), "Thanks"))).toBe(true);
+    expect(isJobRelated(h(addr("no-reply", "pageuppeople.com"), "Thanks"))).toBe(true);
+    expect(isJobRelated(h(addr("notifications", "jobvite.com"), "Thanks"))).toBe(true);
+    expect(isJobRelated(h(addr("no-reply", "acme.teamtailor.com"), "Thanks"))).toBe(true);
     expect(isJobRelated(h(addr("x", "elsewhere.example.org"), "Your application to Contoso"))).toBe(true);
     expect(isJobRelated(h(addr("x", "elsewhere.example.org"), "Interviews this week"))).toBe(true);
     expect(isJobRelated(h(addr("mum", "example.net"), "Dinner on Sunday?"))).toBe(false);
@@ -434,6 +437,11 @@ describe("applicant tracking system mail (rule 6)", () => {
   it("files an ATS email under the one company with an active job of that title, even from a no-reply address", () => {
     expect(matchMessage(h(ats, "Your application for Data Engineer"), ALL, ALEX)).toEqual({ company_slug: "example-labs", job_id: "2026-01-10-data-engineer", matched_by: "subject" });
     expect(matchMessage(h(addr("notifications", "myworkday.com"), "ML Engineer: next steps"), ALL, ALEX)).toMatchObject({ company_slug: "example-labs", job_id: "2026-01-13-ml-engineer" });
+  });
+  it("treats PageUp, Jobvite and Teamtailor senders as applicant systems too", () => {
+    for (const domain of ["pageuppeople.com", "jobvite.com", "acme.teamtailor.com"]) {
+      expect(matchMessage(h(addr("no-reply", domain), "Your application for Data Engineer"), ALL, ALEX)).toMatchObject({ company_slug: "example-labs", job_id: "2026-01-10-data-engineer" });
+    }
   });
   it("still prefers the company named in the subject", () => {
     expect(matchMessage(h(ats, "Thank you for applying to Acme Corp"), ALL, ALEX)).toMatchObject({ company_slug: "acme-corp", matched_by: "subject" });

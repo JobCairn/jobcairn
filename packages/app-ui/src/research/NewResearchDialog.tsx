@@ -6,12 +6,12 @@ import {
 import { errorText, useAction, useBridge } from "../bridge-context";
 import { ClaudeRunPanel, useClaudeEngine } from "../claude";
 
-/** Ideas for the topic box (plain examples, nothing about the person). */
+/** Ideas for the topic box: general starting points that suit anyone, never one person's role, country or visa. */
 export const RESEARCH_IDEAS = [
-  "Express Entry in Canada for software engineers",
-  "Skilled visa 482 vs 186",
-  "Salary bands for ML engineers in Sydney",
-  "Graduate programs in data science in Melbourne",
+  "Work visa options for my target country",
+  "Typical pay for my role in my city",
+  "Hiring outlook in my field this year",
+  "Getting overseas qualifications recognised",
 ];
 
 const DEPTHS: { value: ResearchDepth; label: string; help: string }[] = [
@@ -91,7 +91,7 @@ export function NewResearchDialog({ open, onClose, initial = "", onStarted }: Ne
         </>
       )}>
       <form className="stack" onSubmit={(e) => void submit(e)}>
-        <Input label="What do you want to know about?" placeholder="For example: Express Entry in Canada" value={text} maxLength={80} error={error}
+        <Input label="What do you want to know about?" placeholder="For example: a work visa, pay for a role, or a job market" value={text} maxLength={80} error={error}
           onChange={(e) => { setText(e.target.value); setError(undefined); }}
           help="Claude reads official sources first, cites every fact and dates the report. You get a report you can read, export and turn into a video." />
         <div className="stack">
@@ -103,7 +103,7 @@ export function NewResearchDialog({ open, onClose, initial = "", onStarted }: Ne
           </div>
         </div>
         <Textarea label="Questions to answer (optional)" rows={3} maxLength={RESEARCH_QUESTIONS_MAX} value={questions} error={noteError}
-          placeholder="For example: Which program suits a software engineer? How long does it usually take?"
+          placeholder="For example: Am I eligible? How long does it take? What does it cost?"
           onChange={(e) => { setQuestions(e.target.value); setNoteError(undefined); }} />
         <DepthPicker value={depth} onChange={setDepth} />
         <Text role="body-sm" muted>General information only, not legal, migration or financial advice.</Text>

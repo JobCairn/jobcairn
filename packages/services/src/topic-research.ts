@@ -91,9 +91,9 @@ function writeTopic(abs: string, t: { title: string; questions: string; depth: R
 
 export function researchCreate(ctx: ServiceContext, title: string, questions: string, depth: ResearchDepth): ResearchTopic {
   const root = ctx.requireRoot();
-  if (!/[\p{L}\p{N}]/u.test(title)) throw new Error("Type a topic to research, like Express Entry in Canada.");
+  if (!/[\p{L}\p{N}]/u.test(title)) throw new Error("Type a topic to research, like a work visa or pay for a role.");
   const clean = topicLabel(title);
-  if (!clean.trim()) throw new Error("Type a topic to research, like Express Entry in Canada.");
+  if (!clean.trim()) throw new Error("Type a topic to research, like a work visa or pay for a role.");
   const top = realDirInRoot(root, path.join(root, RESEARCH_DIR), "The research folder");
   if (writableProblem(ctx, root, RESEARCH_DIR) !== null) throw new Error("The research folder isn't a plain folder in the workspace.");
   const base = topicSlug(clean).slice(0, 56).replace(/-+$/, "") || "topic";

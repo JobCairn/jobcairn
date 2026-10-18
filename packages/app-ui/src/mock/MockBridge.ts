@@ -2178,7 +2178,7 @@ export class MockBridge implements CareerosBridge {
     list: () => this.rec("research.list", [], () => [...this.researchTopics.keys()].map((s) => this.researchTopic(s))
       .sort((a, b) => (b.at || b.created_at).localeCompare(a.at || a.created_at) || a.title.localeCompare(b.title))),
     create: (title: string, questions: string, depth: ResearchDepth) => this.rec("research.create", [title, questions, depth], () => {
-      if (!/[\p{L}\p{N}]/u.test(title)) throw new Error("Type a topic to research, like Express Entry in Canada.");
+      if (!/[\p{L}\p{N}]/u.test(title)) throw new Error("Type a topic to research, like a work visa or pay for a role.");
       const clean = cleanTopic(title);
       const base = slugOf(clean).slice(0, 56).replace(/-+$/, "") || "topic";
       let slug = base;

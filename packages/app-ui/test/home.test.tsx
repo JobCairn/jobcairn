@@ -38,11 +38,11 @@ describe("Home (sample workspace)", () => {
     await userEvent.click(within(chips).getByRole("button", { name: "Set a search deadline" }));
     expect(window.location.hash).toBe("#/settings?tab=search");
   });
-  it("puts unread mail ahead of less urgent shortcuts, so it is never pushed out", async () => {
+  it("puts unread mail and updates from your mail ahead of less urgent shortcuts, so they are never pushed out", async () => {
     renderApp(<HomeScreen />);
     const today = await screen.findByRole("region", { name: "Today" });
     const chips = within(today).getByRole("list", { name: "Shortcuts" });
-    expect(within(chips).getAllByRole("button").map((b) => b.textContent)).toEqual(["1 approval waiting", "1 access request waiting", "2 unread emails", "2 files in your drop box"]);
+    expect(within(chips).getAllByRole("button").map((b) => b.textContent)).toEqual(["1 approval waiting", "1 access request waiting", "2 unread emails", "1 update from your mail"]);
   });
   it("adds an unread-mail shortcut to Mail when the unread mail is on more than one job", async () => {
     renderApp(<HomeScreen />, { bridge: new MockBridge({ inbox: [] }) });
@@ -135,7 +135,8 @@ describe("Home (sample workspace)", () => {
     expect(card.textContent).not.toMatch(/eligible|qualif|you can get/i);
   });
   it("refreshes when something changes", async () => {
-    const { bridge } = renderApp(<HomeScreen />);
+    // Without Gmail, so the drop box shortcut has a slot.
+    const { bridge } = renderApp(<HomeScreen />, { bridge: new MockBridge({ mailConnected: false }) });
     expect(await screen.findByRole("button", { name: "2 files in your drop box" })).toBeInTheDocument();
     await bridge.inbox.file("acme-corp-cover-letter.pdf", { kind: "me", dir: "resumes" }, "");
     expect(await screen.findByRole("button", { name: "1 file in your drop box" })).toBeInTheDocument();

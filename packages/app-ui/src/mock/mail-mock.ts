@@ -1,7 +1,7 @@
 import {
-  mailUrlFor, parseDraftSuggestion, SUGGESTION_UNREADABLE, type ApprovalView, type DraftAssist, type BackgroundStatus, type CareerosBridge, type ChangeArea, type DraftDetail, type DraftInput, type DraftView,
+  mailUpdateApplies, mailUpdateNote, mailUrlFor, parseDraftSuggestion, SUGGESTION_UNREADABLE, type ApprovalView, type DraftAssist, type BackgroundStatus, type CareerosBridge, type ChangeArea, type DraftDetail, type DraftInput, type DraftView,
   type EmailPreview, type MailAddressView, type MailList, type MailMessageView, type MailNextUp, type MailQuery, type MailRow, type MailStatus,
-  type MailTarget, type MailTestResult, type RecheckItem, type RecheckPreview, type RecheckResult, type TriageItem,
+  type MailTarget, type MailTestResult, type MailUpdate, type MailUpdateStatus, type RecheckItem, type RecheckPreview, type RecheckResult, type TriageItem,
 } from "@careeros/contract";
 import { PRODUCT_NAME } from "@careeros/brand/identity";
 import type { OutreachDraft, OutreachReply } from "@careeros/contract";
@@ -51,12 +51,18 @@ export interface MockMailHooks {
   example?: () => boolean;
   /** Link recruiter: records the address or domain on the agency, or throws when there is no such agency. */
   linkAgency?: (slug: string, value: string) => { name: string };
+  /** The job's status, or null when there is no such job (for "Updates from your mail"). */
+  jobStatus?(slug: string, id: string): string | null;
+  /** Sets a job's status the way jobs.setStatus does (status, and a timeline event with the note). */
+  setStatus?(slug: string, id: string, status: MailUpdateStatus, note: string): void;
 }
 export interface MockMail {
   api: CareerosBridge["mail"];
   /** The approvals this mock created; MockBridge lists them with its own. */
   readonly approvals: ApprovalRecord[];
   nextUp(): MailNextUp;
+  /** How many "Updates from your mail" are waiting (Home's shortcut). */
+  updateCount(): number;
   /** Emails filed under each company: how many, and the newest date. */
   companyStats(): { company_slug: string; count: number; last: string }[];
   withEmail(a: ApprovalView): ApprovalView;
@@ -116,7 +122,12 @@ function demoMessages(): Msg[] {
   ];
 }
 
-function seed(demo = false): { messages: Msg[]; triage: TriageItem[]; drafts: Draft[] } {
+/** A status change an email suggested, waiting for the person (the services keep these in .careeros/mail-suggestions.json). */
+interface PendingUpdate { company_slug: string; job_id: string; to: MailUpdateStatus; note: string; ref: string; at: string }
+interface Seed { messages: Msg[]; triage: TriageItem[]; drafts: Draft[]; updates: PendingUpdate[] }
+const updateKey = (u: { company_slug: string; job_id: string; to: string; ref: string }) => `${u.company_slug}/${u.job_id}|${u.to}|${u.ref}`;
+
+function seed(demo = false): Seed {
   const spoofFrom = at("x", "evil.example.net");
   return {
     messages: [
@@ -150,6 +161,13 @@ function seed(demo = false): { messages: Msg[]; triage: TriageItem[]; drafts: Dr
       draft_id: "20260114t120000-aaaaaa", slug: LABS.slug, id: LABS.id, status: "draft", updated: "2026-01-14T12:00:00.000Z", approval_id: "", note: "",
       input: { to: at("hiring", "examplelabs.example.net"), cc: "", subject: "Following up", body: "Hi,\n\nI wanted to follow up on my application.\n\nRegards,\nAlex", attach: [], in_reply_to: "", references: [], purpose: "" },
     }],
+    // "Updates from your mail": what sync suggested from these emails, oldest first (the list shows newest first).
+    updates: [
+      ...(demo ? [{ company_slug: LABS.slug, job_id: LABS.id, to: "Applied" as const, ref: refFor(LABS.slug, LABS.id, "2026-01-15-your-application-at-example-labs-b1b2b3"),
+        note: "The employer acknowledged your application (email of 15 January 2026).", at: "2026-01-15T08:45:00.000Z" }] : []),
+      { company_slug: ACME.slug, job_id: ACME.id, to: "Interview", ref: refFor(ACME.slug, ACME.id, "2026-01-14-interview-for-ai-engineer-a1b2c3"),
+        note: "The employer asked to talk or interview (email of 14 January 2026).", at: "2026-01-15T08:45:00.000Z" },
+    ],
   };
 }
 
@@ -165,7 +183,21 @@ function parseList(s: string): MailAddressView[] {
 
 /** A fictional Gmail account for the dev preview and tests: messages, sorting, drafts and sends, all in memory. No network. */
 export function createMockMail(h: MockMailHooks): MockMail {
-  const s = h.empty ? { messages: [], triage: [], drafts: [] } : seed(h.demo);
+  const s: Seed = h.empty ? { messages: [], triage: [], drafts: [], updates: [] } : seed(h.demo);
+  /** Like the services: only updates whose email is still filed and whose job hasn't reached that status yet. */
+  const liveUpdates = (): MailUpdate[] => s.updates.flatMap((u): MailUpdate[] => {
+    const status = h.jobStatus?.(u.company_slug, u.job_id) ?? null;
+    if (status === null || !mailUpdateApplies(status, u.to) || !s.messages.some((m) => m.view.ref === u.ref)) return [];
+    const j = h.jobName(u.company_slug, u.job_id);
+    return [{ ...u, job_title: j.title, company_name: j.company, status }];
+  }).reverse();
+  const takeUpdate = (slug: string, id: string, to: string, ref: string): PendingUpdate => {
+    const key = updateKey({ company_slug: slug, job_id: id, to, ref });
+    const u = s.updates.find((x) => updateKey(x) === key);
+    if (!u) throw new Error("This update is no longer waiting. The list has been refreshed.");
+    s.updates = s.updates.filter((x) => x !== u);
+    return u;
+  };
   // Only the demo has mail the old rules misfiled, so only it offers "Re-check filed mail" on its own.
   let recheckOffered = !h.demo;
   const recheckToken = () => s.messages.filter((m) => m.recheck).length.toString(16).padStart(64, "0");
@@ -348,6 +380,22 @@ export function createMockMail(h: MockMailHooks): MockMail {
       }),
       dismiss: () => h.rec("mail.recheck.dismiss", [], () => { recheckOffered = true; }),
     },
+    updates: {
+      list: () => h.rec("mail.updates.list", [], () => liveUpdates()),
+      accept: (slug: string, id: string, to: MailUpdateStatus, ref: string) => h.rec("mail.updates.accept", [slug, id, to, ref], () => {
+        const u = takeUpdate(slug, id, to, ref);
+        if (!mailUpdateApplies(h.jobStatus?.(slug, id) ?? "", to)) throw new Error("This job has already moved on, so its status wasn't changed.");
+        h.setStatus?.(slug, id, to, mailUpdateNote(u.note));
+        h.emit("mail", "jobs", "home");
+        return liveUpdates();
+      }),
+      dismiss: (slug: string, id: string, to: MailUpdateStatus, ref: string) => h.rec("mail.updates.dismiss", [slug, id, to, ref], () => {
+        const key = updateKey({ company_slug: slug, job_id: id, to, ref });
+        s.updates = s.updates.filter((u) => updateKey(u) !== key);
+        h.emit("mail", "home");
+        return liveUpdates();
+      }),
+    },
     prune: (months: number) => h.rec("mail.prune", [months], () => {
       const cutoff = new Date(new Date(h.now()).getTime() - months * 30 * 86_400_000).toISOString();
       const old = s.messages.filter((m) => m.view.has_raw && m.view.date < cutoff);
@@ -503,6 +551,8 @@ export function createMockMail(h: MockMailHooks): MockMail {
       const unread = connected ? rows().filter((r) => r.direction === "in" && !r.opened) : [];
       return { unread: unread.slice(0, 10), unreadCount: unread.length, drafts: s.drafts.map(draftView) };
     },
+    // Like the services: only when Mail can show them (Gmail connected, or the example's own mail).
+    updateCount: () => (connected || h.example?.() ? liveUpdates().length : 0),
     withEmail: (v) => {
       const a = approvals.find((x) => x.id === v.id);
       const out = a?.unsure && a.status === "approved" ? { ...v, unsure: true } : v;

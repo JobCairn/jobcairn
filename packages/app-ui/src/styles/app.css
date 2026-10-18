@@ -493,6 +493,17 @@ html[data-modality="pointer"] :is(.rail-stat, .tour-help, .app-version):focus-vi
 /* Applications and Jobs: applications with no reply for 60 days (applications/QuietBanner.tsx). */
 .quiet-banner { border-color: var(--color-warning); background: var(--color-warning-soft); }
 .quiet-banner > .row { align-items: center; }
+/* Mail: status changes emails suggest, waiting for a click (mail/MailUpdates.tsx). */
+.mail-updates { border-color: color-mix(in srgb, var(--color-accent) 35%, transparent); background: var(--color-accent-soft); margin-bottom: var(--space-3); }
+.mail-updates > .row { align-items: center; }
+.mail-updates > .row h2 { margin: 0; }
+.mail-updates__list { display: flex; flex-direction: column; }
+.mail-updates__row { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-2) 0; flex-wrap: wrap; }
+.mail-updates__row + .mail-updates__row { border-top: var(--size-border) solid var(--color-border); }
+.mail-updates__text { flex: 1 1 16rem; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.mail-updates__job { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mail-updates__row .pill { flex: none; }
+.mail-updates__actions { display: flex; align-items: center; gap: var(--space-2); flex: none; }
 /* Job page: the thank-you prompt once an interview is logged. */
 .thanks-prompt { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-3); }
 .video-actions { gap: var(--space-4); }

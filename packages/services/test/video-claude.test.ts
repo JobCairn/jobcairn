@@ -444,7 +444,7 @@ describe("videoFlow", () => {
   it("lists the registry's types and hands a request to the renderer", async () => {
     const { ctx } = setup({ claude: false });
     const flow = videoFlow({ registry: () => registryFor(ctx), open: (type, subject) => setVideoIntent(ctx, { type, subject }) });
-    expect(flow.types()).toHaveLength(7);
+    expect(flow.types()).toHaveLength(8);
     expect(flow.types().find((t) => t.id === "pitch")).toEqual({ id: "pitch", label: "Tell me about yourself", description: expect.any(String) });
     flow.open("pitch", "Why I fit Acme Corp");
     expect(await dispatch(ctx, "video.takeIntent", [])).toEqual({ type: "pitch", subject: "Why I fit Acme Corp" });

@@ -251,6 +251,18 @@ export const TOURS: Record<TourId, TourDef> = {
         body: "The gear at the top of a page opens the settings that change it. Here, that's your search settings." },
     ],
   },
+  research: {
+    id: "research", name: "Research",
+    intro: { title: "Research anything for your search", body: "Visas, pay, a job market: Claude reads official sources and writes you a dated report. Want a quick look around?" },
+    steps: [
+      { id: "head", target: "#main .screen-head", title: "Sources you can check",
+        body: "Claude reads official sources first, and every fact in a report links to where it came from, with a date." },
+      { id: "new", target: t("research-new"), title: "Start a report",
+        body: "Type a topic, like a visa or pay for a role in a city, and choose how deep Claude should go." },
+      { id: "list", target: t("research-list"), title: "Your reports", optional: "only once there's a report",
+        body: "Open one to read it, refresh it, export it as a web page or PDF, or make a video of it." },
+    ],
+  },
   videos: {
     id: "videos", name: "Videos",
     intro: { title: "All your videos", body: "Every video you've made, in one place. Want a quick look around?" },
@@ -357,7 +369,7 @@ export function tourForRoute(r: Route): TourId | null {
   switch (r.screen) {
     case "home": case "jobs": case "job": case "apply": case "resume": case "learn": case "inbox": case "settings":
     case "applications": case "searches": case "companies": case "company": case "approvals": case "privacy": case "videos": case "mail": case "resumes":
-    case "recruiters": case "recruiter": return r.screen;
+    case "recruiters": case "recruiter": case "research": return r.screen;
     // A general version opens in the same resume editor, so it shares that tour (steps it doesn't have are skipped).
     case "resume-variant": return "resume";
     default: return null;

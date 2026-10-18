@@ -15,7 +15,7 @@ const ROUTE: Record<TourId, string> = {
   home: "#/home", jobs: "#/jobs", job: "#/job/acme-corp/2026-01-12-ai-engineer", apply: "#/apply/example-labs/2026-01-12-backend-engineer-llm",
   resume: "#/resume/acme-corp/2026-01-12-ai-engineer/resume.md", learn: "#/learn", inbox: "#/inbox", settings: "#/settings",
   applications: "#/applications", searches: "#/searches", companies: "#/companies", company: "#/company/acme-corp", approvals: "#/approvals", privacy: "#/privacy", videos: "#/videos", mail: "#/mail",
-  resumes: "#/resumes", recruiters: "#/recruiters", recruiter: "#/recruiter/acme-recruiting",
+  resumes: "#/resumes", recruiters: "#/recruiters", recruiter: "#/recruiter/acme-recruiting", research: "#/research",
 };
 /** Screens with no tour of their own, and why. */
 const NO_TOUR: Record<string, string> = {

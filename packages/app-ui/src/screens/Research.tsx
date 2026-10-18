@@ -62,7 +62,7 @@ function TopicList({ topics, onNew }: { topics: ResearchTopic[]; onNew: (idea?: 
     );
   }
   return (
-    <section className="learn-section" aria-label="Your research">
+    <section className="learn-section" aria-label="Your research" data-tour="research-list">
       <div className="research-grid">{topics.map((t) => <TopicCard key={t.slug} topic={t} run={runFor(t)} />)}</div>
     </section>
   );
@@ -187,7 +187,7 @@ export function ResearchScreen({ route }: { route: Route }) {
   return (
     <>
       <ScreenHead title="Research" sub="Ask Claude about anything for your search, like visas, pay or a job market. Each report cites its sources."
-        right={<Button variant="primary" icon={Icons.add} onClick={() => openNew()}>New research</Button>} />
+        right={<Button variant="primary" icon={Icons.add} data-tour="research-new" onClick={() => openNew()}>New research</Button>} />
       {list.data ? <TopicList topics={list.data} onNew={openNew} /> : <Loading />}
       {dialogEl}
     </>

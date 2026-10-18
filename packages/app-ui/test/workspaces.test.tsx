@@ -24,8 +24,8 @@ describe("Workspace switcher", () => {
 
   it("shows the open workspace by the person's name at the top of the sidebar", async () => {
     setup();
-    const t = await trigger();
-    expect(t).toHaveAccessibleName("Workspace: Alex Example. Switch workspace");
+    // The name arrives after the profile loads; on a slow machine the trigger first shows "Your workspace".
+    const t = await screen.findByRole("button", { name: "Workspace: Alex Example. Switch workspace" });
     expect(t).toHaveAttribute("aria-haspopup", "menu");
     expect(within(screen.getByRole("navigation", { name: "Main" })).getByText("Alex Example")).toBeInTheDocument();
   });

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { findBrew, findNpm, findTool, NODE, probeEnv, PYTHON, readVersion, STORE_PROBE_MS, supportedMinors, toolPath, whichTool } from "../src/toolchain.js";
-import { winExtraDirs } from "../src/win-paths.js";
+import { WIN_PYTHON_FOLDERS, winExtraDirs } from "../src/win-paths.js";
 import { toolEnv } from "../src/tts-runner.js";
 
 const BREW = (p: string) => p === "/opt/homebrew/bin" || p === "/opt/homebrew/sbin";
@@ -105,6 +105,8 @@ describe("Windows (simulated)", () => {
     expect(r.tool).toEqual({ path: p312, version: "3.12.7", ok: true });
     expect(asked).toEqual([`${py} -3.14`, `${py} -3.13`, `${py} -3.12`]);
     expect(supportedMinors(PYTHON)).toEqual(["3.14", "3.13", "3.12", "3.11"]);
+    // python.org's folders searched on Windows follow the same range.
+    expect([...WIN_PYTHON_FOLDERS]).toEqual(supportedMinors(PYTHON).map((v) => `Python${v.replace(".", "")}`));
   });
 
   describe("a tool installed after the app started (its PATH is older)", () => {

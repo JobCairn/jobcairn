@@ -3,6 +3,6 @@
   "win32": {
     "check": "if (-not ((Test-Path \"$env:ProgramFiles/Git/bin/bash.exe\") -or (Get-Command git -ErrorAction SilentlyContinue))) { exit 1 }; if (-not (Get-Command claude -ErrorAction SilentlyContinue)) { exit 1 }; claude --version; if ($LASTEXITCODE -ne 0) { exit 1 }",
     "install": [
-      "if (-not ((Test-Path \"$env:ProgramFiles/Git/bin/bash.exe\") -or (Get-Command git -ErrorAction SilentlyContinue))) { winget install --id Git.Git --exact --source winget --accept-source-agreements --accept-package-agreements --silent; if ($LASTEXITCODE -ne 0) { exit 1 } }",
+      "if (-not ((Test-Path \"$env:ProgramFiles/Git/bin/bash.exe\") -or (Get-Command git -ErrorAction SilentlyContinue))) { winget install --id Git.Git --exact --source winget --accept-source-agreements --accept-package-agreements --silent; if ($LASTEXITCODE -ne 0) { throw 'Git for Windows did not install' } }",
       "powershell -NoProfile -ExecutionPolicy Bypass -Command \"irm https://claude.ai/install.ps1 | iex\""
     ] } } }

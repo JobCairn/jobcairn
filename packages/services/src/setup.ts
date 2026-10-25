@@ -72,7 +72,7 @@ export const SETUP_TOOL_INFO_WIN32: Record<SetupToolId, ToolInfo> = {
   "claude-code": {
     ...SETUP_TOOL_INFO["claude-code"],
     command: [
-      `if (-not ${GIT_BASH_TEST}) { ${WINGET("Git.Git")}; if ($LASTEXITCODE -ne 0) { exit 1 } }`,
+      `if (-not ${GIT_BASH_TEST}) { ${WINGET("Git.Git")}; if ($LASTEXITCODE -ne 0) { throw 'Git for Windows did not install' } }`,
       'powershell -NoProfile -ExecutionPolicy Bypass -Command "irm https://claude.ai/install.ps1 | iex"',
     ].join("\n"),
     detail: "First winget installs Git for Windows, if it's missing: Claude Code needs it. Then Anthropic's official installer puts Claude Code in your home folder (.local\\bin). It needs no administrator and takes a minute or two. You sign in to Claude afterwards.",

@@ -7,6 +7,12 @@ name: Release
 on:
   push:
     tags: ["v*"]
+  # Run again by hand for a tag that's already pushed (e.g. after fixing this file), without moving the tag.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Version tag, e.g. v0.3.4"
+        required: true
 
 permissions:
   contents: write
@@ -19,7 +25,7 @@ jobs:
       - name: Create draft release
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ github.ref_name }}
+          TAG: ${{ inputs.tag || github.ref_name }}
         # A tag moved onto a newer commit must not make a second, empty release.
         run: |
           if gh release view "$TAG" >/dev/null 2>&1; then echo "$TAG already has a release"; exit 0; fi
@@ -55,13 +61,14 @@ jobs:
         run: npm run package:win:all
       - name: The installers carry the app icon
         # The build only warns when it can't render the icon (it needs Chrome or Playwright's Chromium); a release must not ship Electron's.
-        run: test -f packages/app-electron/.package/build-resources/icon.ico || { echo "::error::no icon.ico: the app icon wasn't rendered"; exit 1; }
+        run: |
+          test -f packages/app-electron/.package/build-resources/icon.ico || { echo "::error::no icon.ico, the app icon wasn't rendered"; exit 1; }
       - name: Verify the installers and the update feed
         run: npm run release:verify
       - name: Attach to the draft release
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ github.ref_name }}
+          TAG: ${{ inputs.tag || github.ref_name }}
         working-directory: packages/app-electron/dist-release
         # SHA256SUMS.txt is one file for every system: fold in what the release already has (e.g. the mac lines)
         # instead of replacing it.

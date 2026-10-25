@@ -156,8 +156,17 @@ const READ_ONLY_FILE = /^\.careeros\/tmp\/ask-[0-9a-f]{8,32}\/document\.[a-z0-9]
 /** The plugin's name, which namespaces its skills in Claude Code (`careeros:career`). */
 export const PLUGIN_NAME = "careeros";
 
-/** A permission rule path for an absolute folder: Claude Code writes an absolute path as `//abs/path`. */
-export const absRule = (dir: string): string => `//${dir.replace(/\\/g, "/").replace(/^\/+/, "").replace(/\/+$/, "")}`;
+/**
+ * A permission rule path for an absolute folder: Claude Code writes an absolute path as `//abs/path`. A Windows path
+ * is matched in POSIX form, the drive as a lower-case folder (Claude Code's permissions docs: `C:\Users\alice` is
+ * `/c/Users/alice`), so `C:\Users\alex\plugin` is `//c/Users/alex/plugin`. Only a drive-letter path changes, so a
+ * macOS or Linux path is as before.
+ */
+export const absRule = (dir: string): string => {
+  const drive = /^([A-Za-z]):[\\/]/.exec(dir);
+  const rest = drive ? `${drive[1]!.toLowerCase()}/${dir.slice(3)}` : dir;
+  return `//${rest.replace(/\\/g, "/").replace(/^\/+/, "").replace(/\/+$/, "")}`;
+};
 
 /**
  * The permission set for one run (spec 2026-10-10, fix rounds 1 and 2). Two kinds of run:

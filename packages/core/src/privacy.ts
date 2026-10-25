@@ -18,10 +18,11 @@ export const BASH_READERS = ["cat", "head", "tail", "less", "more", "cp", "mv", 
  */
 export const CONTROL_FILE_RULES = [
   "Edit(./workspace.json)", "Edit(./.claude/**)", "Edit(./.careeros/**)",
-  "Bash(*.claude/settings*)",
+  "Bash(*.claude/settings*)", "Bash(*.claude\\settings*)",
   "Bash(*>*workspace.json*)", "Bash(*tee *workspace.json*)", "Bash(*sed -i*workspace.json*)",
   "Bash(*mv *workspace.json*)", "Bash(*cp *workspace.json*)", "Bash(*rm *workspace.json*)",
-  "Bash(*>*.careeros/*)",
+  // Windows paths use backslashes too; Claude Code there runs Bash through Git Bash, which accepts both.
+  "Bash(*>*.careeros/*)", "Bash(*>*.careeros\\*)",
 ] as const;
 
 /**
@@ -88,7 +89,7 @@ export function claudeSettings(locked: readonly string[] = LOCKED_DIRS, mode?: C
     deny.push(`Bash(*--jd-file*${d}*)`, `Bash(*${d}*)`, `Bash(*${d.replace(/\//g, "\\")}*)`);
   }
   if (locked.length) deny.push(...ME_MOVER_RULES);
-  deny.push("Read(./settings/.env)", "Edit(./settings/.env)", "Bash(*settings/.env*)");
+  deny.push("Read(./settings/.env)", "Edit(./settings/.env)", "Bash(*settings/.env*)", "Bash(*settings\\.env*)");
   deny.push(...CONTROL_FILE_RULES);
   if (mode) {
     // Deny rules win over every allow rule, in both modes: app folders and Claude's own settings stay out of reach.

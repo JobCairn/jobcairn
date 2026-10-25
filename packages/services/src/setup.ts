@@ -1,9 +1,11 @@
 // setup.*: the tools the app installs for the person (Claude Code, Node.js, Python, ffmpeg). Never at launch: only
 // from a click, after a native confirm that names the exact command, one install at a time across the app.
 // Status comes from the same finders the features use (toolchain.ts, findClaude), so "ready" here means ready there.
+import fs from "node:fs";
+import path from "node:path";
 import identity from "@careeros/brand/identity.json" with { type: "json" };
 import {
-  HOMEBREW_INSTALL_COMMAND, HOMEBREW_URL, INSTALL_PAGE_URL, SETUP_TOOLS,
+  HOMEBREW_INSTALL_COMMAND, HOMEBREW_URL, INSTALL_PAGE_URL, SETUP_TOOLS, WINGET_INSTALL_COMMAND, WINGET_URL,
   type InstallProblem, type SetupToolId, type SetupToolView, type SetupView, type TerminalFix,
 } from "@careeros/contract";
 import { scrubMessage } from "@careeros/video";
@@ -34,7 +36,7 @@ export interface SetupHost {
   probe?: VersionProbe;
 }
 
-interface ToolInfo { name: string; needs: string; why: string; via: "homebrew" | "anthropic"; command: string; detail: string }
+interface ToolInfo { name: string; needs: string; why: string; via: "homebrew" | "winget" | "anthropic"; command: string; detail: string }
 
 /** The commands match setup/components/<id>.json (a test checks), so the app and setup.sh install the same thing. */
 export const SETUP_TOOL_INFO: Record<SetupToolId, ToolInfo> = {
@@ -57,8 +59,54 @@ export const SETUP_TOOL_INFO: Record<SetupToolId, ToolInfo> = {
   },
 };
 
+const WINGET = (id: string, extra = "") => `winget install --id ${id} --exact --source winget --accept-source-agreements --accept-package-agreements --silent${extra}`;
+const GIT_BASH_TEST = '((Test-Path "$env:ProgramFiles/Git/bin/bash.exe") -or (Get-Command git -ErrorAction SilentlyContinue))';
+const WINGET_DETAIL = "winget downloads and installs it. Windows may ask you to allow the installer: choose Yes.";
+
+/**
+ * Windows: winget, and Anthropic's PowerShell installer. Each matches setup/components/<id>.json's win32 install
+ * (a test checks), with several steps on separate lines. Claude Code on Windows runs its tools through Git Bash, so
+ * its first step installs Git for Windows when it's missing.
+ */
+export const SETUP_TOOL_INFO_WIN32: Record<SetupToolId, ToolInfo> = {
+  "claude-code": {
+    ...SETUP_TOOL_INFO["claude-code"],
+    command: [
+      `if (-not ${GIT_BASH_TEST}) { ${WINGET("Git.Git")}; if ($LASTEXITCODE -ne 0) { throw 'Git for Windows did not install' } }`,
+      'powershell -NoProfile -ExecutionPolicy Bypass -Command "irm https://claude.ai/install.ps1 | iex"',
+    ].join("\n"),
+    detail: "First winget installs Git for Windows, if it's missing: Claude Code needs it. Then Anthropic's official installer puts Claude Code in your home folder (.local\\bin). It needs no administrator and takes a minute or two. You sign in to Claude afterwards.",
+  },
+  node: { ...SETUP_TOOL_INFO.node, via: "winget", command: WINGET("OpenJS.NodeJS.LTS"), detail: `${WINGET_DETAIL} It can take a few minutes.` },
+  python: { ...SETUP_TOOL_INFO.python, via: "winget", command: WINGET("Python.Python.3.12", " --custom PrependPath=1"), detail: `${WINGET_DETAIL} It installs Python 3.12 and can take a few minutes.` },
+  ffmpeg: { ...SETUP_TOOL_INFO.ffmpeg, via: "winget", command: WINGET("Gyan.FFmpeg"), detail: `${WINGET_DETAIL} It can take several minutes.` },
+};
+
+/** The tool table for this computer: winget on Windows, Homebrew elsewhere. */
+export function setupToolInfo(platform: NodeJS.Platform): Record<SetupToolId, ToolInfo> {
+  return platform === "win32" ? SETUP_TOOL_INFO_WIN32 : SETUP_TOOL_INFO;
+}
+
 const NO_INSTALLER = `Installing tools isn't available in this copy of ${identity.name}. The install guide lists the commands: ${INSTALL_PAGE_URL}`;
 const NEEDS_BREW = "Homebrew is needed first. Install it in Terminal (it asks for your Mac password, which only your Mac sees), then choose Check again.";
+const NEEDS_WINGET = `winget (App Installer from the Microsoft Store) is needed first. Get App Installer from the Microsoft Store (${WINGET_URL}), then choose Check again.`;
+
+/** Windows: is winget there? It is an app alias in WindowsApps, usually on PATH. Checked by file, never run. */
+export function findWinget(h: Pick<SetupHost, "env" | "home" | "exists">): string | null {
+  const exists = h.exists ?? fs.existsSync;
+  const local = h.env.LOCALAPPDATA ?? path.win32.join(h.home, "AppData", "Local");
+  const dirs = [...(h.env.PATH ?? h.env.Path ?? "").split(";").filter((d) => d && path.win32.isAbsolute(d)), path.win32.join(local, "Microsoft", "WindowsApps")];
+  for (const d of dirs) { const p = path.win32.join(d, "winget.exe"); if (exists(p)) return p; }
+  return null;
+}
+
+/** Windows: Git for Windows' bash, which Claude Code needs. Its usual folder, or git on PATH (Git puts its cmd folder there). */
+export function findGitBash(h: Pick<SetupHost, "env" | "exists">): boolean {
+  const exists = h.exists ?? fs.existsSync;
+  const pf = h.env.ProgramFiles ?? "C:\\Program Files";
+  if (exists(path.win32.join(pf, "Git", "bin", "bash.exe"))) return true;
+  return (h.env.PATH ?? h.env.Path ?? "").split(";").some((d) => d && path.win32.isAbsolute(d) && exists(path.win32.join(d, "git.exe")));
+}
 
 interface Last { id: string; ok: boolean; message: string; fix?: TerminalFix }
 const lasts = new WeakMap<object, Last>();
@@ -70,7 +118,8 @@ export function toolState(h: SetupHost, id: SetupToolId): Pick<SetupToolView, "s
   const o = { platform: h.platform, exists: h.exists, isExec: h.isExec, probe: h.probe };
   if (id === "claude-code") {
     const found = claudeCandidates({ platform: h.platform, env: h.env, home: h.home }).some((c) => (h.isExec ?? isExecutable)(c));
-    return { state: found ? "ok" : "missing", version: "" };
+    // Windows: Claude Code doesn't run without Git Bash, so it isn't ready until Git is there too.
+    return { state: found && (h.platform !== "win32" || findGitBash(h)) ? "ok" : "missing", version: "" };
   }
   if (id === "ffmpeg") return { state: whichTool("ffmpeg", h.env, o) ? "ok" : "missing", version: "" };
   const r = findTool(id === "node" ? NODE : PYTHON, h.env, o);
@@ -81,14 +130,17 @@ export function toolState(h: SetupHost, id: SetupToolId): Pick<SetupToolView, "s
 function view(ctx: ServiceContext): SetupView {
   const h = hostOf(ctx);
   const inst = currentInstall(ctx);
+  const platform = h?.platform ?? process.platform;
+  const info = setupToolInfo(platform);
   const tools = SETUP_TOOLS.map((id): SetupToolView => {
-    const t = SETUP_TOOL_INFO[id];
+    const t = info[id];
     const s = h ? toolState(h, id) : { state: "missing" as const, version: "" };
     return { id, name: t.name, needs: t.needs, why: t.why, via: t.via, command: t.command, ...s };
   });
   return {
     can_install: !!h?.canInstall,
-    homebrew: { found: !!findBrew(h?.exists), command: HOMEBREW_INSTALL_COMMAND, url: HOMEBREW_URL },
+    ...(platform === "darwin" ? { homebrew: { found: !!findBrew(h?.exists), command: HOMEBREW_INSTALL_COMMAND, url: HOMEBREW_URL } } : {}),
+    ...(platform === "win32" ? { winget: { found: !!(h && findWinget(h)), command: WINGET_INSTALL_COMMAND, url: WINGET_URL } } : {}),
     tools,
     installing: inst ? { id: inst.id, name: inst.name, started_at: inst.started_at, line: inst.line } : null,
     last: lasts.get(ctx.host) ?? null,
@@ -110,9 +162,12 @@ export function setVideoRunningCheck(fn: (ctx: ServiceContext) => boolean): void
 async function install(ctx: ServiceContext, id: SetupToolId): Promise<SetupView> {
   const h = hostOf(ctx);
   if (!h || !h.canInstall) throw new Error(NO_INSTALLER);
-  const t = SETUP_TOOL_INFO[id];
+  const t = setupToolInfo(h.platform)[id];
   if (toolState(h, id).state === "ok") { lasts.set(ctx.host, { id, ok: true, message: `${t.name} is already installed.` }); return view(ctx); }
   if (t.via === "homebrew" && !findBrew(h.exists)) throw new Error(NEEDS_BREW);
+  // Windows: Claude Code's Git step uses winget too, when Git isn't there yet.
+  const wingetNeeded = t.via === "winget" || (h.platform === "win32" && id === "claude-code" && !findGitBash(h));
+  if (wingetNeeded && !findWinget(h)) throw new Error(NEEDS_WINGET);
   if (videoRunning(ctx)) throw new Error(`A video is being made. Install ${t.name} when it has finished, or stop it first.`);
   await withInstallLock(ctx, id, t.name, async (info) => {
     const ok = await h.confirm(`Install ${t.name}?`, `${identity.name} will run this command:\n\n${t.command}\n\n${t.detail}`);
@@ -133,7 +188,7 @@ async function install(ctx: ServiceContext, id: SetupToolId): Promise<SetupView>
     const after = toolState(h, id);
     const last: Last = r.cancelled ? { id, ok: false, message: `Stopped. ${t.name} may be partly installed; choose Install again to finish it.` }
       : after.state === "ok" ? { id, ok: true, message: `${t.name} is installed${after.version ? ` (version ${after.version})` : ""}.` }
-      : !r.ok ? { id, ok: false, message: scrubMessage(r.message, "", 400) || `${t.name} didn't install. Try again.`, fix: terminalFix({ problem: r.problem ?? "other", via: t.via, command: t.command }) }
+      : !r.ok ? { id, ok: false, message: scrubMessage(r.message, "", 400) || `${t.name} didn't install. Try again.`, fix: terminalFix({ problem: r.problem ?? "other", via: t.via, command: t.command, platform: h.platform }) }
       : { id, ok: false, message: `${t.name} installed, but ${identity.name} still can't find ${t.needs}${after.version ? ` (it found version ${after.version})` : ""}.` };
     lasts.set(ctx.host, last);
   }, { cancellable: true });

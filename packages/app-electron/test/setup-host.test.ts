@@ -38,6 +38,20 @@ describe("installCommand", () => {
     const c = installCommand(FILES, "node", { platform: "darwin", exists: () => false, env: { PATH: "/usr/bin" }, home: "/h" });
     expect(c.env).toMatchObject({ HOMEBREW_NO_AUTO_UPDATE: "1", HOMEBREW_NO_ENV_HINTS: "1", HOMEBREW_NO_INSTALL_CLEANUP: "1", HOMEBREW_NO_ANALYTICS: "1" });
   });
+
+  it("Windows: keeps the folders PowerShell, winget and installers need, and one PATH", () => {
+    const env = {
+      Path: "C:\\Windows\\System32;C:\\Windows", SystemRoot: "C:\\Windows", ProgramFiles: "C:\\Program Files", "ProgramFiles(x86)": "C:\\Program Files (x86)",
+      USERPROFILE: "C:\\Users\\fictional", LOCALAPPDATA: "C:\\Users\\fictional\\AppData\\Local", TEMP: "C:\\Temp", PATHEXT: ".COM;.EXE;.BAT;.CMD", ANTHROPIC_API_KEY: "fictional-key",
+    };
+    const c = installCommand(FILES, "ffmpeg", { platform: "win32", exists: () => false, env, home: "C:\\Users\\fictional" });
+    expect(c.env).toMatchObject({ SystemRoot: "C:\\Windows", ProgramFiles: "C:\\Program Files", "ProgramFiles(x86)": "C:\\Program Files (x86)", USERPROFILE: "C:\\Users\\fictional", TEMP: "C:\\Temp", PATHEXT: ".COM;.EXE;.BAT;.CMD" });
+    expect(c.env.PATH).toBe("C:\\Windows\\System32;C:\\Windows");
+    expect(Object.keys(c.env).filter((k) => k.toUpperCase() === "PATH")).toEqual(["PATH"]);
+    expect(c.env.ANTHROPIC_API_KEY).toBeUndefined();
+    // macOS gets none of the Windows folders.
+    expect(installCommand(FILES, "ffmpeg", { platform: "darwin", exists: () => false, env: { PATH: "/usr/bin", ProgramFiles: "x" }, home: "/h" }).env.ProgramFiles).toBeUndefined();
+  });
 });
 
 describe("parseInstallOutput", () => {

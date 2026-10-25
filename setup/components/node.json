@@ -1,2 +1,7 @@
 { "id": "node", "name": "Node.js 22+", "order": 10, "required": true, "why": "Runs the JobCairn app and command-line tools.", "docs": "https://nodejs.org",
-  "platforms": { "darwin": { "check": "node -e \"process.exit(+process.versions.node.split('.')[0]>=22?0:1)\"", "install": ["brew install node"] } } }
+  "platforms": { "darwin": { "check": "node -e \"process.exit(+process.versions.node.split('.')[0]>=22?0:1)\"", "install": ["brew install node"] },
+  "win32": {
+    "check": "node -e \"process.exit(+process.versions.node.split('.')[0]>=22?0:1)\"",
+    "install": [
+      "winget install --id OpenJS.NodeJS.LTS --exact --source winget --accept-source-agreements --accept-package-agreements --silent"
+    ] } } }

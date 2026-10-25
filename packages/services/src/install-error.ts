@@ -35,8 +35,20 @@ function saidLine(text: string): string {
   return scrubMessage(t.replace(/^(error|fatal)\s*:\s*/i, ""), "", 200);
 }
 
-/** One or two sentences for the card: what happened, and what to do next. `name` starts the sentence. */
-export function installFailedText(name: string, f: InstallFailure): string {
+/**
+ * One or two sentences for the card: what happened, and what to do next. `name` starts the sentence. `platform`
+ * defaults to this computer's (tests pass it).
+ */
+export function installFailedText(name: string, f: InstallFailure, platform: NodeJS.Platform = process.platform): string {
+  if (platform === "win32") {
+    switch (f.problem) {
+      case "permission": return `${name} didn't install: your PC said access is denied for a folder it needs. Run it in PowerShell instead (below).`;
+      case "network": return `${name} didn't install: it couldn't download. Check your internet connection. On a work or school network, a proxy or security certificate may be blocking it; your IT team can help.`;
+      case "timeout": return `${name} took too long, so it was stopped. A slow connection is the usual cause. Try again, or run it in PowerShell, where you can watch it.`;
+      case "disk": return `${name} didn't install: your PC is out of disk space. Free up some space, then try again.`;
+      default: return `${name} didn't install.${f.said ? ` The installer said: "${f.said}".` : ""} Try again, or run it in PowerShell instead (below).`;
+    }
+  }
   switch (f.problem) {
     case "permission": return `${name} didn't install: your Mac said permission denied for a folder it needs. Run it in Terminal instead (below).`;
     case "network": return `${name} didn't install: it couldn't download. Check your internet connection. On a work or school network, a proxy or security certificate may be blocking it; your IT team can help.`;
@@ -60,7 +72,12 @@ const NOTE: Partial<Record<InstallProblem, string>> = {
  * npm's cache with sudo (never `sudo npm install`, which leaves files only an administrator can change); Homebrew
  * refuses sudo, and `brew doctor` names the folders to fix; Anthropic's installer writes to ~/.local.
  */
-export function terminalFix(o: { problem: InstallProblem; via: "homebrew" | "anthropic" | "npm"; command: string; /** npm: the --prefix folder, already quoted (shellPath). */ folder?: string; /** npm: the package spec. */ pkg?: string }): TerminalFix {
+export function terminalFix(o: {
+  problem: InstallProblem; via: "homebrew" | "winget" | "anthropic" | "npm"; command: string;
+  /** npm: the --prefix folder, already quoted (shellPath). */ folder?: string; /** npm: the package spec. */ pkg?: string;
+  /** Defaults to this computer's. Windows gets PowerShell lines: no sudo. */ platform?: NodeJS.Platform;
+}): TerminalFix {
+  if ((o.platform ?? process.platform) === "win32") return powershellFix(o);
   const options: TerminalOption[] = [{ title: "Run it in Terminal", command: o.command, note: [NOTE[o.problem], AFTER].filter(Boolean).join(" ") }];
   if (o.problem === "permission") {
     if (o.via === "npm" && o.pkg) {
@@ -76,6 +93,37 @@ export function terminalFix(o: { problem: InstallProblem; via: "homebrew" | "ant
       options.push({ title: "If it says permission denied: fix your ~/.local folder's owner, then install", command: `sudo chown -R "$(whoami)" "$HOME/.local"\n${o.command}`, note: SUDO_NOTE });
     }
   }
+  return { problem: o.problem, options };
+}
+
+const NOTE_WIN: Partial<Record<InstallProblem, string>> = {
+  network: NOTE.network,
+  timeout: "PowerShell shows the download as it goes. Leave it open until it finishes.",
+  disk: "Free up some space first (Settings › System › Storage).",
+};
+const SCRIPTS_DISABLED: TerminalOption = {
+  title: "If PowerShell says running scripts is disabled",
+  command: "Set-ExecutionPolicy -Scope CurrentUser RemoteSigned",
+  note: "This lets PowerShell run npm for your account only. Then run the line above again.",
+};
+
+/** Windows: the same command in PowerShell. No sudo: an administrator window or a second try instead. */
+function powershellFix(o: { problem: InstallProblem; via: "homebrew" | "winget" | "anthropic" | "npm"; command: string; pkg?: string }): TerminalFix {
+  const options: TerminalOption[] = [{ title: "Run it in PowerShell", command: o.command, note: [NOTE_WIN[o.problem], AFTER].filter(Boolean).join(" ") }];
+  if (o.problem === "permission") {
+    if (o.via === "npm" && o.pkg) {
+      options.push({
+        title: "If it says access is denied: install it in your home folder (no administrator needed)",
+        command: `New-Item -ItemType Directory -Force "$HOME\\.npm-global" | Out-Null\nnpm install -g --prefix "$HOME\\.npm-global" --cache "$HOME\\.npm-global\\_cache" ${o.pkg}`,
+        note: AFTER,
+      });
+    } else if (o.via === "winget") {
+      options.push({ title: "If it says access is denied: run it as administrator", command: o.command, note: `Right-click the Start button, choose Terminal (Admin), paste the line and press Enter. Choose Yes when Windows asks. ${AFTER}` });
+    } else if (o.via === "anthropic") {
+      options.push({ title: "If it says access is denied: run the installer again", command: o.command, note: `Close other PowerShell windows first. If it still says so, restart your PC and run it again. ${AFTER}` });
+    }
+  }
+  if (o.via === "npm") options.push(SCRIPTS_DISABLED);
   return { problem: o.problem, options };
 }
 

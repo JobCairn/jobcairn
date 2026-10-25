@@ -38,11 +38,11 @@ describe("classifyInstall", () => {
 
 describe("installFailedText", () => {
   it("says what happened and what to do, in plain words", () => {
-    expect(installFailedText("The browser helper", { problem: "permission", said: "" })).toMatch(/permission denied.*Terminal/);
-    expect(installFailedText("Node.js", { problem: "network", said: "" })).toMatch(/couldn't download.*proxy/);
-    expect(installFailedText("Node.js", { problem: "timeout", said: "" })).toMatch(/took too long/);
-    expect(installFailedText("Node.js", { problem: "disk", said: "" })).toMatch(/out of disk space/);
-    expect(installFailedText("Node.js", { problem: "other", said: "No such keg" })).toBe('Node.js didn\'t install. The installer said: "No such keg". Try again, or run it in Terminal instead (below).');
+    expect(installFailedText("The browser helper", { problem: "permission", said: "" }, "darwin")).toMatch(/permission denied.*Terminal/);
+    expect(installFailedText("Node.js", { problem: "network", said: "" }, "darwin")).toMatch(/couldn't download.*proxy/);
+    expect(installFailedText("Node.js", { problem: "timeout", said: "" }, "darwin")).toMatch(/took too long/);
+    expect(installFailedText("Node.js", { problem: "disk", said: "" }, "darwin")).toMatch(/out of disk space/);
+    expect(installFailedText("Node.js", { problem: "other", said: "No such keg" }, "darwin")).toBe('Node.js didn\'t install. The installer said: "No such keg". Try again, or run it in Terminal instead (below).');
   });
 });
 
@@ -50,13 +50,13 @@ describe("terminalFix", () => {
   const helperCmd = 'npm install --prefix "$HOME/Library/Application Support/JobCairn/browser-helper" agent-browser@0.38.2';
 
   it("always offers the normal command first", () => {
-    const f = terminalFix({ problem: "other", via: "homebrew", command: "brew install node" });
+    const f = terminalFix({ problem: "other", via: "homebrew", command: "brew install node", platform: "darwin" });
     expect(f.options[0]!.command).toBe("brew install node");
     expect(f.options).toHaveLength(1);
   });
 
   it("npm permission: a no-password fix in the home folder, then the sudo fix with what sudo asks", () => {
-    const f = terminalFix({ problem: "permission", via: "npm", command: helperCmd, folder: '"$HOME/x"', pkg: "agent-browser@0.38.2" });
+    const f = terminalFix({ problem: "permission", via: "npm", command: helperCmd, folder: '"$HOME/x"', pkg: "agent-browser@0.38.2", platform: "darwin" });
     expect(f.options.map((o) => o.command)).toEqual([
       helperCmd,
       'mkdir -p "$HOME/.npm-global"\nnpm install -g --prefix "$HOME/.npm-global" --cache "$HOME/.npm-global/_cache" agent-browser@0.38.2',
@@ -68,14 +68,52 @@ describe("terminalFix", () => {
   });
 
   it("Homebrew permission: brew doctor names the folders, never sudo brew", () => {
-    const f = terminalFix({ problem: "permission", via: "homebrew", command: "brew install ffmpeg" });
+    const f = terminalFix({ problem: "permission", via: "homebrew", command: "brew install ffmpeg", platform: "darwin" });
     expect(f.options.map((o) => o.command)).toEqual(["brew install ffmpeg", "brew doctor"]);
     expect(f.options.some((o) => /sudo brew/.test(o.command))).toBe(false);
   });
 
   it("Claude Code permission: fixes ~/.local's owner, then runs the installer", () => {
-    const f = terminalFix({ problem: "permission", via: "anthropic", command: "curl -fsSL https://claude.ai/install.sh | bash" });
+    const f = terminalFix({ problem: "permission", via: "anthropic", command: "curl -fsSL https://claude.ai/install.sh | bash", platform: "darwin" });
     expect(f.options[1]!.command).toBe('sudo chown -R "$(whoami)" "$HOME/.local"\ncurl -fsSL https://claude.ai/install.sh | bash');
+  });
+
+  describe("on Windows", () => {
+    const winget = "winget install --id Gyan.FFmpeg --exact --source winget --accept-source-agreements --accept-package-agreements --silent";
+    const noSudo = (f: { options: { command: string; note?: string }[] }) => f.options.every((o) => !/sudo|chown|brew/.test(`${o.command} ${o.note ?? ""}`));
+
+    it("says PowerShell and your PC, never Terminal or your Mac", () => {
+      for (const problem of ["permission", "network", "timeout", "disk", "other"] as const) {
+        const t = installFailedText("ffmpeg", { problem, said: "" }, "win32");
+        expect(t).not.toMatch(/Mac|Terminal/);
+      }
+      expect(installFailedText("ffmpeg", { problem: "permission", said: "" }, "win32")).toMatch(/your PC said access is denied.*PowerShell/);
+      expect(installFailedText("ffmpeg", { problem: "disk", said: "" }, "win32")).toMatch(/your PC is out of disk space/);
+      const f = terminalFix({ problem: "disk", via: "winget", command: winget, platform: "win32" });
+      expect(f.options[0]).toMatchObject({ title: "Run it in PowerShell", command: winget });
+      expect(f.options[0]!.note).toMatch(/Settings › System › Storage/);
+    });
+
+    it("winget permission: run it again as administrator, no sudo", () => {
+      const f = terminalFix({ problem: "permission", via: "winget", command: winget, platform: "win32" });
+      expect(f.options.map((o) => o.command)).toEqual([winget, winget]);
+      expect(f.options[1]!.note).toMatch(/Terminal \(Admin\)/);
+      expect(noSudo(f)).toBe(true);
+    });
+
+    it("Claude Code permission: run the installer again", () => {
+      const cmd = 'powershell -NoProfile -ExecutionPolicy Bypass -Command "irm https://claude.ai/install.ps1 | iex"';
+      const f = terminalFix({ problem: "permission", via: "anthropic", command: cmd, platform: "win32" });
+      expect(f.options.map((o) => o.title)).toEqual(["Run it in PowerShell", "If it says access is denied: run the installer again"]);
+      expect(noSudo(f)).toBe(true);
+    });
+
+    it("npm: the home-folder fix in PowerShell, and the execution policy note", () => {
+      const f = terminalFix({ problem: "permission", via: "npm", command: "npm install -g agent-browser@0.38.2", pkg: "agent-browser@0.38.2", platform: "win32" });
+      expect(f.options[1]!.command).toBe('New-Item -ItemType Directory -Force "$HOME\\.npm-global" | Out-Null\nnpm install -g --prefix "$HOME\\.npm-global" --cache "$HOME\\.npm-global\\_cache" agent-browser@0.38.2');
+      expect(f.options[2]!.command).toBe("Set-ExecutionPolicy -Scope CurrentUser RemoteSigned");
+      expect(noSudo(f)).toBe(true);
+    });
   });
 });
 

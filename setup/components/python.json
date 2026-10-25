@@ -1,2 +1,7 @@
 { "id": "python", "name": "Python 3.11 to 3.14", "order": 50, "required": true, "why": "Runs the on-device voice and email helpers.", "docs": "https://www.python.org",
-  "platforms": { "darwin": { "check": "for p in python3 python3.14 python3.13 python3.12 python3.11; do b=\"$(command -v $p)\" || continue; [ \"$b\" = /usr/bin/python3 ] && continue; \"$b\" -c 'import sys; sys.exit(0 if (3, 11) <= sys.version_info[:2] <= (3, 14) else 1)' && exit 0; done; exit 1", "install": ["brew install python@3.12"] } } }
+  "platforms": { "darwin": { "check": "for p in python3 python3.14 python3.13 python3.12 python3.11; do b=\"$(command -v $p)\" || continue; [ \"$b\" = /usr/bin/python3 ] && continue; \"$b\" -c 'import sys; sys.exit(0 if (3, 11) <= sys.version_info[:2] <= (3, 14) else 1)' && exit 0; done; exit 1", "install": ["brew install python@3.12"] },
+  "win32": {
+    "check": "if ((Get-Command py -ErrorAction SilentlyContinue)) { foreach ($v in '3.14', '3.13', '3.12', '3.11') { py \"-$v\" -c 'import sys' 2>$null; if ($LASTEXITCODE -eq 0) { exit 0 } } }; foreach ($p in 'python', 'python3') { if ((Get-Command $p -ErrorAction SilentlyContinue)) { & $p -c 'import sys; sys.exit(0 if (3, 11) <= sys.version_info[:2] <= (3, 14) else 1)' 2>$null; if ($LASTEXITCODE -eq 0) { exit 0 } } }; exit 1",
+    "install": [
+      "winget install --id Python.Python.3.12 --exact --source winget --accept-source-agreements --accept-package-agreements --silent --custom PrependPath=1"
+    ] } } }

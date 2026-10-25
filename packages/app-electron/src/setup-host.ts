@@ -31,6 +31,14 @@ export const HOMEBREW_ENV = { HOMEBREW_NO_AUTO_UPDATE: "1", HOMEBREW_NO_ENV_HINT
 
 /** Installs reach the network: the person's proxy and certificate settings come along. Nothing else does. */
 const NETWORK_KEYS = ["HTTPS_PROXY", "https_proxy", "HTTP_PROXY", "http_proxy", "NO_PROXY", "no_proxy", "SSL_CERT_FILE", "NODE_EXTRA_CA_CERTS"] as const;
+/**
+ * Windows: the folders the win32 setup commands and their installers use (Chrome and Git under Program Files,
+ * winget's and Windows' own), so PowerShell, winget and the MSI installers run as they would from Start.
+ */
+const WINDOWS_KEYS = [
+  "windir", "HOMEDRIVE", "HOMEPATH", "ProgramData", "ProgramFiles", "ProgramFiles(x86)", "ProgramW6432",
+  "CommonProgramFiles", "CommonProgramFiles(x86)", "CommonProgramW6432", "OS", "PROCESSOR_ARCHITECTURE", "NUMBER_OF_PROCESSORS", "PSModulePath",
+] as const;
 
 /**
  * The setup runner for one component, run by Electron's own binary as plain Node (no shell, clean environment, no
@@ -42,9 +50,14 @@ export function installCommand(
   o: { platform?: NodeJS.Platform; exists?: (p: string) => boolean; env?: NodeJS.ProcessEnv; home?: string } = {},
 ): { cmd: string; args: string[]; env: Record<string, string> } {
   const platform = o.platform ?? process.platform;
-  const env = cleanEnv({ ELECTRON_RUN_AS_NODE: "1", ...HOMEBREW_ENV }, o.env ?? process.env, NETWORK_KEYS);
+  const env = cleanEnv({ ELECTRON_RUN_AS_NODE: "1", ...HOMEBREW_ENV }, o.env ?? process.env, platform === "win32" ? [...NETWORK_KEYS, ...WINDOWS_KEYS] : NETWORK_KEYS);
   const home = o.home ?? env.HOME ?? os.homedir();
   const sep = platform === "win32" ? ";" : ":";
+  if (platform === "win32") {
+    // Windows keeps one Path, whatever its case: fold it into PATH so the child doesn't get two.
+    env.PATH ??= env.Path;
+    delete env.Path;
+  }
   env.PATH = [toolPath(env.PATH, platform, { exists: o.exists }), ...(platform === "win32" ? [] : [path.join(home, ".local", "bin")])].filter(Boolean).join(sep);
   return { cmd: process.execPath, args: [files.runner, "install", "--only", id, "--json", "--components", files.components], env };
 }

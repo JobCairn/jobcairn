@@ -8,7 +8,7 @@ say() { printf '\n==> %s\n' "$1"; }
 # Homebrew, quicker: no self-update before each install (the slow, silent part), no hints, no cleanup pass, no analytics.
 export HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_ENV_HINTS=1 HOMEBREW_NO_INSTALL_CLEANUP=1 HOMEBREW_NO_ANALYTICS=1
 
-[ "$(uname)" = "Darwin" ] || { echo "JobCairn setup supports macOS for now."; exit 1; }
+[ "$(uname)" = "Darwin" ] || { echo "JobCairn setup supports macOS here. On Windows, run setup.ps1 in PowerShell."; exit 1; }
 
 if ! command -v brew >/dev/null 2>&1; then
   say "Installing Homebrew (your Mac asks for your password once)"

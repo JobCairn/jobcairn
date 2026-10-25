@@ -20,6 +20,12 @@ adopted, add it here in the same change.
    fixes for permission problems. Homebrew runs with `HOMEBREW_NO_AUTO_UPDATE`, `HOMEBREW_NO_ENV_HINTS`,
    `HOMEBREW_NO_INSTALL_CLEANUP` and `HOMEBREW_NO_ANALYTICS` set (setup.sh, run.mjs and the app). Component ids: `node`, `claude-code`, `chrome`, `ffmpeg`,
    `python`, `supertonic`, `hyperframes`, `whisper`, `agent-browser`, `workspace`.
+   **Windows:** each component also has `platforms.win32` (PowerShell commands; winget ids `OpenJS.NodeJS.LTS`,
+   `Python.Python.3.12`, `Gyan.FFmpeg`, `Google.Chrome`, `Git.Git`; Anthropic's `install.ps1`). The runner runs them
+   in Windows PowerShell with `-ExecutionPolicy Bypass` for that run only, after adding the saved machine and user
+   PATH so a tool winget just installed is found. `claude-code` installs Git for Windows first when it's missing
+   (Claude Code needs Git Bash). `setup.ps1` mirrors `setup.sh`; the app needs winget (App Installer from the
+   Microsoft Store) instead of Homebrew, and its Terminal fallbacks are PowerShell lines with no sudo.
 1. **Local and key-free.** Phase 1 runs on the candidate's laptop. The only account needed is the
    candidate's own Claude plan. Anything needing a third-party key or cloud account is
    **Optional** and off by default.

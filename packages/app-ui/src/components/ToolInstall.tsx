@@ -28,18 +28,18 @@ function Elapsed({ since }: { since: string }) {
 /** Homebrew isn't on this Mac: the person installs it themselves (it needs their Mac password, which the app never asks for). */
 function HomebrewNeeded({ view, names, plural, onCheck, checking, onOpen }: { view: SetupView; names: string; plural: boolean; onCheck: () => void; checking: boolean; onOpen: (url: string) => void }) {
   const [copied, setCopied] = useState<"" | "yes" | "no">("");
-  const copy = async () => setCopied((await copyText(view.homebrew.command)) ? "yes" : "no");
+  const copy = async () => setCopied((await copyText(view.homebrew?.command ?? "")) ? "yes" : "no");
   return (
     <div className="tinstall__brew">
       <Text role="body-sm">
         {names} {plural ? "install" : "installs"} with Homebrew, which isn&apos;t on this Mac yet. Homebrew asks for your Mac password, so install it yourself:
         open Terminal, paste this line, press Return and follow what it says. Then come back and choose Check again.
       </Text>
-      <code className="csetup__code tinstall__cmd">{view.homebrew.command}</code>
+      <code className="csetup__code tinstall__cmd">{view.homebrew?.command}</code>
       <div className="csetup__row">
         <Button size="sm" variant="secondary" onClick={() => void copy()}>{copied === "yes" ? "Copied" : "Copy"}</Button>
         <Button size="sm" variant="ghost" loading={checking} onClick={onCheck}>Check again</Button>
-        <Button size="sm" variant="ghost" title="Opens brew.sh in your browser" onClick={() => onOpen(view.homebrew.url)}>About Homebrew</Button>
+        <Button size="sm" variant="ghost" title="Opens brew.sh in your browser" onClick={() => onOpen(view.homebrew?.url ?? "https://brew.sh")}>About Homebrew</Button>
       </div>
       <Text role="body-sm" muted aria-live="polite">{copied === "no" ? "Copying didn't work here. Select the line and copy it yourself." : ""}</Text>
     </div>
@@ -90,7 +90,7 @@ export function ToolInstall({ ids, onInstalled, intro, why, bare = false }: {
     } finally { setBusy(""); }
   };
   const stop = async () => { try { await bridge.setup.cancel(); } finally { status.reload(); } };
-  const brewMissing = mine.filter((t) => t.state !== "ok" && t.via === "homebrew" && !v.homebrew.found);
+  const brewMissing = mine.filter((t) => t.state !== "ok" && t.via === "homebrew" && !v.homebrew?.found);
 
   return (
     <div className="tinstall" aria-label="Tools to install">
@@ -100,7 +100,7 @@ export function ToolInstall({ ids, onInstalled, intro, why, bare = false }: {
           const running = v.installing?.id === t.id;
           const result = lastHere?.id === t.id && !running ? lastHere : null;
           const err = error?.id === t.id ? error.text : null;
-          const blockedByBrew = t.via === "homebrew" && !v.homebrew.found && t.state !== "ok";
+          const blockedByBrew = t.via === "homebrew" && !v.homebrew?.found && t.state !== "ok";
           const other = v.installing && !running ? v.installing.name : "";
           return (
             <li key={t.id} className="tinstall__item">

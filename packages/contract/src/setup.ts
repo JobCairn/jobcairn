@@ -5,6 +5,17 @@ export const INSTALL_PAGE_URL = "https://jobcairn.github.io/install.html";
 /** Homebrew's own one-line installer, from brew.sh. The person runs it in Terminal: it asks for their Mac password. */
 export const HOMEBREW_INSTALL_COMMAND = '/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"';
 export const HOMEBREW_URL = "https://brew.sh";
+/**
+ * Windows: winget comes with App Installer, from the Microsoft Store (built in to current Windows 10 and 11). This
+ * PowerShell line registers it again when Windows has it but can't find it; otherwise the Store page installs it.
+ */
+export const WINGET_INSTALL_COMMAND = "Add-AppxPackage -RegisterByFamilyName -MainPackage Microsoft.DesktopAppInstaller_8wekyb3d8bbwe";
+export const WINGET_URL = "https://apps.microsoft.com/detail/9NBLGGH4NNS1";
+/** What the Setup cards install with, per OS: Homebrew on a Mac, winget on Windows. */
+export const PACKAGE_MANAGERS = {
+  darwin: { name: "Homebrew", command: HOMEBREW_INSTALL_COMMAND, url: HOMEBREW_URL },
+  win32: { name: "winget (App Installer from the Microsoft Store)", command: WINGET_INSTALL_COMMAND, url: WINGET_URL },
+} as const;
 
 /** Tools the Setup cards offer (each matches a setup/components/<id>.json). Videos' own tools stay video.installTool. */
 export const SETUP_TOOLS = ["claude-code", "node", "python", "ffmpeg"] as const;
@@ -21,8 +32,8 @@ export interface SetupToolView {
   state: "ok" | "missing" | "too_old";
   /** The version that will be used, or the newest too-old one found. "" when none. */
   version: string;
-  /** How the app installs it: Homebrew (needs Homebrew first) or Anthropic's installer. */
-  via: "homebrew" | "anthropic";
+  /** How the app installs it: Homebrew (needs Homebrew first), winget on Windows (needs winget first) or Anthropic's installer. */
+  via: "homebrew" | "winget" | "anthropic";
   /** The exact command the app runs, shown before the person agrees. */
   command: string;
 }
@@ -41,7 +52,10 @@ export interface SetupInstalling { id: SetupToolId | string; name: string; start
 export interface SetupView {
   /** False when this copy of the app has no installer (it shows the install page instead). */
   can_install: boolean;
-  homebrew: { found: boolean; command: string; url: string };
+  /** macOS only: is Homebrew installed, and its own installer line. */
+  homebrew?: { found: boolean; command: string; url: string };
+  /** Windows only: is winget installed, and how to get it. */
+  winget?: { found: boolean; command: string; url: string };
   tools: SetupToolView[];
   /** The install running now (any tool, from any card), else null. */
   installing: SetupInstalling | null;

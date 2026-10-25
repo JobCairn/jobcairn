@@ -70,7 +70,7 @@ describe("ToolInstall", () => {
     expect(await screen.findByText(/installs with winget, which isn't on this PC yet\. winget comes with App Installer from Microsoft/)).toBeInTheDocument();
     expect(document.body.textContent).not.toMatch(/Homebrew|Mac|Terminal|Return/);
     expect(screen.queryByRole("button", { name: "Install Node.js" })).toBeNull();
-    await user.click(screen.getByRole("button", { name: "Get App Installer" }));
+    await user.click(screen.getByRole("button", { name: "App Installer" }));
     expect(bridge.calls.filter((c) => c.method === "links.open").map((c) => c.args)).toEqual([[WINGET_URL]]);
     act(() => bridge.setSetupBrew(true));
     await user.click(screen.getByRole("button", { name: "Check again" }));

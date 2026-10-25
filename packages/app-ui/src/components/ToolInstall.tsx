@@ -41,7 +41,7 @@ function HomebrewNeeded({ view, names, plural, onCheck, checking, onOpen }: { vi
       </Text>
       <div className="csetup__row">
         <Button size="sm" variant="ghost" loading={checking} onClick={onCheck}>Check again</Button>
-        <Button size="sm" variant="ghost" title="Opens App Installer in the Microsoft Store" onClick={() => onOpen(WINGET_URL)}>Get App Installer</Button>
+        <Button size="sm" variant="ghost" title="Opens App Installer in the Microsoft Store" onClick={() => onOpen(WINGET_URL)}>App Installer</Button>
       </div>
     </div>
   );

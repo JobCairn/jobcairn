@@ -1,5 +1,6 @@
 export * from "./version.js";
 export * from "./paths.js";
+export * from "./safe-name.js";
 export * from "./types.js";
 export * from "./schema.js";
 export * from "./fields.js";

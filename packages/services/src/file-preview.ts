@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { insideRoot, lockedFolderFor } from "@careeros/core";
-import { canOpenExternally, LOCKABLE_DIRS, PREVIEW_LIMITS, previewKind, type FilePreview, type LockableDir } from "@careeros/contract";
+import { canOpenExternally, LOCKABLE_DIRS, osWords, PREVIEW_LIMITS, previewKind, type FilePreview, type LockableDir } from "@careeros/contract";
 import type { ServiceContext } from "./context.js";
 import type { HandlerTable } from "./handlers.js";
 import { resolveWorkspaceFile } from "./files.js";
@@ -55,16 +55,19 @@ export async function previewFile(ctx: ServiceContext, rel: string): Promise<Fil
   return { state: "ready", kind, ...base, text: null };
 }
 
+/** "Use Show in Finder instead." (Show in File Explorer on Windows), the way out when a file can't be opened. */
+export const useShowInstead = (platform: string = process.platform) => `Use ${osWords(platform).showInFolder} instead.`;
+
 /** "Open in default app": documents and media only, never a locked folder, never an app or a script. */
 export async function openFile(ctx: ServiceContext, rel: string): Promise<void> {
-  if (!canOpenExternally(rel)) throw new Error("This kind of file can't be opened from the app. Use Show in Finder instead.");
+  if (!canOpenExternally(rel)) throw new Error(`This kind of file can't be opened from the app. ${useShowInstead()}`);
   const root = ctx.requireRoot();
   const real = resolveWorkspaceFile(ctx, rel, "reveal");
   const locked = lockedFor(ctx, root, real);
   if (locked) throw new Error("This file is in a locked folder. Allow it once in Privacy first.");
   const st = fs.statSync(real);
-  if (!st.isFile() || st.nlink > 1 || !canOpenExternally(real)) throw new Error("This file can't be opened from the app. Use Show in Finder instead.");
-  if (!ctx.host.shell.openPath) throw new Error("Opening files in another app isn't available here. Use Show in Finder instead.");
+  if (!st.isFile() || st.nlink > 1 || !canOpenExternally(real)) throw new Error(`This file can't be opened from the app. ${useShowInstead()}`);
+  if (!ctx.host.shell.openPath) throw new Error(`Opening files in another app isn't available here. ${useShowInstead()}`);
   await ctx.host.shell.openPath(real);
 }
 

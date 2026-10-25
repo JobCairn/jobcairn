@@ -151,6 +151,12 @@ describe("Search in my Chrome: setup state machine", () => {
     x.host.openRemotePage = async () => false;
     await expect(x.call("chrome.openRemote")).rejects.toThrow("Chrome didn't open the page. Paste chrome://inspect/#remote-debugging into Chrome's address bar and press Return.");
   });
+  it("on Windows, the by-hand remote-control step says press Enter", async () => {
+    const x = setup({ helper: "ok", port: false });
+    x.host.platform = "win32";
+    x.host.openRemotePage = async () => false;
+    await expect(x.call("chrome.openRemote")).rejects.toThrow("Chrome didn't open the page. Paste chrome://inspect/#remote-debugging into Chrome's address bar and press Enter.");
+  });
 
   it("an old helper counts as missing; a cancelled or failed install says so; one install at a time", async () => {
     const old = setup({ helper: "old" });
@@ -225,6 +231,12 @@ describe("Search in my Chrome: setup state machine", () => {
     expect(asked[0]!.detail).toMatch(new RegExp(String.raw`about 118 MB and goes in ${brand.name}'s own folder; nothing else on your Mac changes`));
     expect(asked[0]!.detail).toMatch(/remove it any time/);
     expect(x.installs).toHaveLength(0);
+    // On Windows the same confirm says "your PC", never "your Mac".
+    x.host.platform = "win32";
+    await x.call("chrome.install");
+    expect(asked[1]!.detail).toMatch(new RegExp(String.raw`goes in ${brand.name}'s own folder; nothing else on your PC changes`));
+    expect(asked[1]!.detail).not.toMatch(/Mac/);
+    x.host.platform = "darwin";
     expect((await x.call<ChromeSearchState>("chrome.state", false)).helper.size_mb).toBe(118);
   });
 

@@ -8,6 +8,7 @@ import { listenParts } from "../src/listen/blocks";
 import { blockAt } from "../src/listen/PlayerProvider";
 import { Markdown } from "../src/components/Markdown";
 import { MockBridge, silentWavUrl } from "../src/mock/MockBridge";
+import { onPlatform } from "./os";
 import { renderApp } from "./render";
 
 /** Every play() across all audio elements, in order, with when it happened. */
@@ -208,7 +209,39 @@ describe("ListenButton and the player", () => {
     await waitFor(() => expect(bridge.calls.some((c) => c.method === "tts.cancel")).toBe(true));
   });
 
+  it("on Windows, a failure never offers the Mac voice, and the fallback note doesn't mention macOS", async () => {
+    onPlatform("Win32");
+    const bridge = new MockBridge({ ttsEngine: "macos_say" });
+    let fail = true;
+    const real = bridge.tts.speak;
+    bridge.tts.speak = (...a: Parameters<typeof real>): Promise<TtsSpeakResult> => (fail ? Promise.reject(new Error("The voice couldn't read this paragraph.")) : real(...a));
+    setup({ bridge });
+    await userEvent.click(screen.getByRole("button", { name: "Listen: Job description" }));
+    expect(await screen.findByText("The voice couldn't read this paragraph.")).toBeInTheDocument();
+    fail = false;
+    const bar = screen.getByRole("region", { name: "Read aloud" });
+    expect(within(bar).queryByRole("button", { name: "Mac voice" })).not.toBeInTheDocument();
+    await userEvent.click(within(bar).getByRole("button", { name: "Try again" }));
+    expect(await screen.findByText(/Using a simpler voice\. Supertonic isn't set up on this PC\./)).toBeInTheDocument();
+    expect(screen.queryByText(/macOS/)).not.toBeInTheDocument();
+  });
+
+  it("offers the Mac built-in voice for videos only on a Mac", async () => {
+    const engines = async () => {
+      const videos = await screen.findByLabelText("Videos");
+      return [...(within(videos).getByLabelText("Voice engine") as HTMLSelectElement).options].map((o) => o.textContent);
+    };
+    onPlatform("Win32");
+    const { unmount } = setup({ bridge: new MockBridge(), ui: <VoiceSettings /> });
+    expect(await engines()).toEqual(["Supertonic (on your PC, free)", "ElevenLabs (needs your API key)"]);
+    unmount();
+    onPlatform("MacIntel");
+    setup({ bridge: new MockBridge(), ui: <VoiceSettings /> });
+    expect(await engines()).toEqual(["Supertonic (on your Mac, free)", "Mac built-in voice", "ElevenLabs (needs your API key)"]);
+  });
+
   it("shows an error with a retry, and the fallback voice note", async () => {
+    onPlatform("MacIntel");
     const bridge = new MockBridge({ ttsEngine: "macos_say" });
     let fail = true;
     const real = bridge.tts.speak;
@@ -225,6 +258,7 @@ describe("ListenButton and the player", () => {
   });
 
   it("explains a wait over two seconds and offers the Mac voice, which reads the rest", async () => {
+    onPlatform("MacIntel");
     const bridge = new MockBridge({ ttsDelayMs: 60_000 });
     const real = bridge.tts.speak;
     const macCalls: TtsOptions[] = [];

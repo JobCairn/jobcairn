@@ -1,5 +1,6 @@
 import { PRODUCT_NAME } from "@careeros/brand";
 import { BOARD_NAMES, sortBoardIds, type BoardId, type BoardRunProgress, type ChromeSearchState, type WebReason } from "@careeros/contract";
+import { uiWords } from "../platform";
 
 /**
  * "Search in my Chrome" setup, as plain steps (lane S). Pure, so the card's state machine is tested without a
@@ -119,7 +120,7 @@ export const COPY = {
   /** Step 3 by hand, always shown: Chrome doesn't always open its own pages when another app asks. */
   remotePage: "chrome://inspect/#remote-debugging",
   remoteManualTitle: "Page didn't open? Do it yourself:",
-  remoteManual: ["Paste this into Chrome's address bar and press Return.", "Tick 'Allow remote debugging for this browser instance'."],
+  get remoteManual() { return [`Paste this into Chrome's address bar and press ${uiWords().enterKey}.`, "Tick 'Allow remote debugging for this browser instance'."] as const; },
   copyFailed: "Copying didn't work here. Select the address and copy it yourself.",
   connectHow: "Chrome will ask once. Click Allow.",
   /** Shown while a search starts in Chrome: the app brings Chrome to the front, and Chrome may ask to allow it. */
@@ -127,7 +128,7 @@ export const COPY = {
   signInHow: `Sign in yourself in the tabs ${PRODUCT_NAME} opens. ${PRODUCT_NAME} never types your passwords.`,
   helperWhat: "The browser helper is agent-browser, a small open-source tool from Vercel that lets an app control Chrome tabs.",
   helperDoes: `${PRODUCT_NAME} uses it to open job boards in new tabs it owns, read the listings, and close them. It never types passwords, applies, messages or saves anything.`,
-  helperWhere: (mb: number) => `About ${mb} MB, in ${PRODUCT_NAME}'s own folder; nothing else on your Mac changes. You can remove it here any time.`,
+  helperWhere: (mb: number) => `About ${mb} MB, in ${PRODUCT_NAME}'s own folder; nothing else on ${uiWords().yourComputer} changes. You can remove it here any time.`,
   signInWhy: "Searching works without signing in, but results are better when you are.",
   connectProfiles: "Use more than one Chrome profile? Click a window of the one you job-search in before you connect.",
   profileTitle: "Signed in, but it says you're not?",

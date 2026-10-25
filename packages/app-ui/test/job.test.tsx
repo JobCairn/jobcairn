@@ -5,6 +5,7 @@ import { MockBridge, loadFixture } from "../src/mock/MockBridge";
 import { JobScreen } from "../src/screens/Job";
 import { parseHash, toHash } from "../src/router";
 import { resetTrail, trailSnapshot, visit } from "../src/nav";
+import { onPlatform } from "./os";
 import { renderApp } from "./render";
 
 const ACME = { screen: "job", slug: "acme-corp", id: "2026-01-12-ai-engineer" } as const;
@@ -92,6 +93,15 @@ describe("Job", () => {
     expect(within(row).queryByRole("button", { name: /Show/ })).toBeNull();
     await userEvent.click(screen.getByRole("button", { name: "Show in folder: Job description" }));
     expect(b.revealed).toEqual(["companies/acme-corp/jobs/2026-01-12-ai-engineer/jd.md"]);
+  });
+  it("names the file manager this computer has: Finder on a Mac, File Explorer on Windows", async () => {
+    onPlatform("MacIntel");
+    const { unmount } = renderApp(<JobScreen route={{ ...ACME, tab: "files" }} />);
+    expect(await screen.findByRole("button", { name: "Show in Finder: Job description" })).toBeInTheDocument();
+    unmount();
+    onPlatform("Win32");
+    renderApp(<JobScreen route={{ ...ACME, tab: "files" }} />);
+    expect(await screen.findByRole("button", { name: "Show in File Explorer: Job description" })).toBeInTheDocument();
   });
   it("toasts only after a real attach, not when the file picker is cancelled", async () => {
     const b = new MockBridge();

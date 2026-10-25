@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import os from "node:os";
-import { ArgError } from "@careeros/contract";
+import { ArgError, SECURE_STORAGE_DENIED } from "@careeros/contract";
 import identity from "@careeros/brand/identity.json" with { type: "json" };
 
 // ---- error sanitising -------------------------------------------------------
@@ -83,6 +83,8 @@ export function plainError(err: unknown, roots: string | null | (string | null)[
   }
   message = scrub(message.split("\n")[0]!.trim(), rootList).slice(0, 500) || "Something went wrong.";
   const out = err instanceof ArgError ? new ArgError(message) : new Error(message);
+  // An OS refusal of secure storage keeps its name: the window tells it apart by the name, not the wording.
+  if (err instanceof Error && err.name === SECURE_STORAGE_DENIED) out.name = SECURE_STORAGE_DENIED;
   out.stack = `${out.name}: ${message}`;
   return out;
 }

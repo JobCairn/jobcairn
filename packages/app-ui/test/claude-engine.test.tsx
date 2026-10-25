@@ -5,6 +5,7 @@ import { CLAUDE_INSTALL_URL, type ActionTarget } from "@careeros/contract";
 import { ClaudeRunPanel, ClaudeSetup, ClaudeWorkingIndicator, formatCost, formatElapsed } from "../src/claude";
 import { strayName, workingTitle } from "../src/claude/ClaudeRunPanel";
 import { MockBridge } from "../src/mock/MockBridge";
+import { onPlatform } from "./os";
 import { renderApp } from "./render";
 
 const LABS: ActionTarget = { kind: "job", company_slug: "example-labs", id: "2026-01-12-backend-engineer-llm" };
@@ -57,6 +58,31 @@ describe("ClaudeSetup", () => {
     renderApp(<ClaudeSetup />, { bridge: new MockBridge({ claudeEngine: { cli: "too_old" } }) });
     expect(await screen.findByText(/This Claude Code is version 1.0.40/)).toBeInTheDocument();
     expect(screen.getByText("claude update")).toBeInTheDocument();
+  });
+
+  it("names Terminal and Return on a Mac, PowerShell and Enter on Windows", async () => {
+    onPlatform("MacIntel");
+    const mac = new MockBridge({ claudeEngine: { cli: "too_old" } });
+    const { unmount } = renderApp(<ClaudeSetup />, { bridge: mac });
+    expect(await screen.findByText(/To update, open Terminal and run:/)).toBeInTheDocument();
+    unmount();
+
+    onPlatform("Win32");
+    renderApp(<ClaudeSetup />, { bridge: new MockBridge({ claudeEngine: { cli: "too_old" } }) });
+    expect(await screen.findByText(/To update, open PowerShell and run:/)).toBeInTheDocument();
+  });
+
+  it("on Windows, signing in happens in PowerShell, and a failed open says press Enter", async () => {
+    onPlatform("Win32");
+    const b = new MockBridge({ claudeEngine: { login: "signed_out" } });
+    b.claude.openSignIn = async () => false;
+    renderApp(<ClaudeSetup />, { bridge: b });
+    expect(await screen.findByText(/Sign in inside PowerShell with your own Claude account/)).toBeInTheDocument();
+    const signIn = screen.getByRole("button", { name: "Sign in" });
+    expect(signIn).toHaveAttribute("title", "Opens PowerShell to sign in");
+    await userEvent.click(signIn);
+    expect(await screen.findByText("PowerShell didn't open. Open it yourself, type claude and press Enter to sign in.")).toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(/Terminal|Return/);
   });
 
   it("opens Terminal to sign in; the app never handles the login", async () => {

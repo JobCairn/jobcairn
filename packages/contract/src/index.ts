@@ -22,6 +22,7 @@ export * from "./job-boards.js";
 export * from "./job-filters.js";
 export * from "./chrome.js";
 export * from "./tour.js";
+export * from "./platform-copy.js";
 export * from "./resume-fields.js";
 export * from "./score.js";
 export * from "./inbox-classify.js";

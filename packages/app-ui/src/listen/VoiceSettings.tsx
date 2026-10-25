@@ -11,6 +11,7 @@ import { Pause, Play } from "./icons";
 import { speedLabel } from "./PlayerBar";
 import { readAloudFrom } from "./PlayerProvider";
 import { ToolInstall } from "../components/ToolInstall";
+import { isMacUi, uiWords } from "../platform";
 
 const VOICE_TOOLS = ["python", "ffmpeg"] as const;
 
@@ -21,7 +22,17 @@ export function hereHint(hint: string): string {
 
 const ENGINE_TONE: Record<TtsStatus["engine"], "success" | "warning" | "danger"> = { supertonic: "success", macos_say: "warning", none: "danger" };
 const ENGINE_PILL: Record<TtsStatus["engine"], string> = { supertonic: "Supertonic ready", macos_say: "Using the macOS voice", none: "Not installed" };
-const VIDEO_ENGINES: [string, string][] = [["supertonic", "Supertonic (on your Mac, free)"], ["macos_say", "Mac built-in voice"], ["elevenlabs", "ElevenLabs (needs your API key)"]];
+/**
+ * The video voice engines this computer can use. The Mac's built-in voice (`macos_say`) is offered only on a Mac;
+ * elsewhere it shows only while it's still the saved choice, so the setting reads true until it's changed.
+ */
+export function videoEngines(saved: string | undefined): { value: string; label: string }[] {
+  const mac = isMacUi();
+  const all: [string, string][] = [
+    ["supertonic", `Supertonic (on ${uiWords().yourComputer}, free)`], ["macos_say", "Mac built-in voice"], ["elevenlabs", "ElevenLabs (needs your API key)"],
+  ];
+  return all.filter(([v]) => mac || v !== "macos_say" || saved === v).map(([value, label]) => ({ value, label }));
+}
 const VOICE_OPTIONS = TTS_VOICES.map((v) => { const tag = voiceTag(v); return { value: v, label: tag ? `${voiceLabel(v)} (${tag})` : voiceLabel(v) }; });
 // Supertonic 3 has a single expressions switch, and it only acts on <laugh>/<breath>/<sigh> marks in a video
 // script. Documents don't carry them, so reading aloud doesn't show it (owner decision, 2026-10-10). No emotion presets:
@@ -65,6 +76,7 @@ export function VoiceSettings() {
   const [confirmInstall, setConfirmInstall] = useState(false);
   /** The voice whose sample is being made right now (made on demand, one at a time). */
   const [making, setMaking] = useState<string | null>(null);
+  const os = uiWords();
 
   if (settings.error && !settings.data) return <ErrorState title="Voice settings can't be shown" text={errorSentence(settings.error)} />;
   if (!settings.data) return <Loading />;
@@ -107,7 +119,7 @@ export function VoiceSettings() {
     <div className="stack">
       <Card className="stack">
         <SectionTitle icon={Icons.listen} title="Voice engine" />
-        {status.loading && !st ? <Text role="body" muted>Checking the voice on this Mac…</Text> : st ? (
+        {status.loading && !st ? <Text role="body" muted>Checking the voice on {os.thisComputer}…</Text> : st ? (
           <div className="voice-status">
             <Pill tone={ENGINE_TONE[st.engine]}>{ENGINE_PILL[st.engine]}</Pill>
             <div className="stack">
@@ -116,7 +128,7 @@ export function VoiceSettings() {
             </div>
           </div>
         ) : <Text role="body" muted>The voice couldn&apos;t be checked. {status.error}</Text>}
-        <ToolInstall ids={VOICE_TOOLS} onInstalled={status.reload} intro="The voice needs these on this Mac:" />
+        <ToolInstall ids={VOICE_TOOLS} onInstalled={status.reload} intro={`The voice needs these on ${os.thisComputer}:`} />
         {st?.needsDownload ? (
           <div className="stack">
             <Text role="body-sm" muted>The voice model is downloaded once, from the internet, only when you press the button. After that it reads offline.</Text>
@@ -142,7 +154,7 @@ export function VoiceSettings() {
           <Button variant="ghost" onClick={() => setConfirmInstall(false)}>Cancel</Button>
           <Button variant="primary" loading={busy === "voice-install"} onClick={() => { setConfirmInstall(false); void install(); }}>Set up</Button>
         </>}>
-        <Text role="body">This installs the voice engine (about 200 MB) into its own folder on this Mac. It runs only here, never in the cloud.</Text>
+        <Text role="body">This installs the voice engine (about 200 MB) into its own folder on {os.thisComputer}. It runs only here, never in the cloud.</Text>
       </Dialog>
 
       <Card className="stack" aria-label="Reading aloud">
@@ -174,7 +186,7 @@ export function VoiceSettings() {
                       onClick={() => preview.play(p)}>{preview.playing === v ? "Stop" : "Preview"}</Button>
                   ) : st?.engine === "supertonic" ? (
                     <Button size="sm" variant="ghost" icon={Play} loading={making === v} disabled={!!making && making !== v}
-                      title={making && making !== v ? "Another sample is being made. One at a time keeps the Mac quick." : undefined}
+                      title={making && making !== v ? `Another sample is being made. One at a time keeps ${os.yourComputer} quick.` : undefined}
                       aria-label={making === v ? `Making a sample of ${voiceLabel(v)}` : `Preview ${voiceLabel(v)}`}
                       onClick={() => void sample(v)}>{making === v ? "Making sample…" : "Preview"}</Button>
                   ) : null}
@@ -207,7 +219,7 @@ export function VoiceSettings() {
         <Text role="body-sm" muted>Used when Claude makes learning guides, interview prep and recap videos.</Text>
         <div className="row row--top">
           <Select label="Voice engine" value={video.engine ?? "supertonic"} onChange={(e) => void save([{ path: "voice.engine", value: e.target.value }])}
-            options={VIDEO_ENGINES.map(([value, label]) => ({ value, label }))} />
+            options={videoEngines(video.engine)} />
           <Select label="Voice" value={video.voice ?? "F4"} onChange={(e) => void save([{ path: "voice.voice", value: e.target.value }])} options={VOICE_OPTIONS} />
           <Select label="Language" value={video.lang ?? "en"} onChange={(e) => void save([{ path: "voice.lang", value: e.target.value }])}
             options={langOptions(languages, video.lang ?? "en")} />

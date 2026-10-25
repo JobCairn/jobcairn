@@ -327,7 +327,8 @@ describe("Settings", () => {
   it("shows a plain message and a Try again button when the OS denies Keychain access, and the rest of the app keeps working", async () => {
     const user = userEvent.setup();
     const b = new MockBridge();
-    b.secrets.set = async () => { throw new Error("CareerOS couldn't use the Keychain, so your key wasn't saved."); };
+    // As it arrives over IPC: main's KeychainAccessError keeps its name in the text.
+    b.secrets.set = async () => { throw new Error("Error invoking remote method 'careeros:call': KeychainAccessError: CareerOS couldn't use the Keychain, so your key wasn't saved."); };
     renderApp(<SettingsScreen />, { bridge: b, hash: "#/settings?tab=connections&c=claude" });
     await openApiKey();
     const input = await screen.findByLabelText("Anthropic API key");
@@ -341,10 +342,24 @@ describe("Settings", () => {
     expect(screen.getByLabelText("Anthropic API key")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /^Search in my Chrome/ })).toBeInTheDocument();
   });
+  it("on Windows, shows Windows' own words for a refused save, with Try again, recognised by the error's name", async () => {
+    const user = userEvent.setup();
+    const b = new MockBridge();
+    b.secrets.set = async () => { throw new Error("Error invoking remote method 'careeros:call': KeychainAccessError: Windows couldn't protect your key, so it wasn't saved."); };
+    renderApp(<SettingsScreen />, { bridge: b, hash: "#/settings?tab=connections&c=claude" });
+    await openApiKey();
+    const input = await screen.findByLabelText("Anthropic API key");
+    await user.type(input, "abcd" + "efgh" + "ijkl" + "mnop");
+    await user.click(screen.getByRole("button", { name: "Save Anthropic API key" }));
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent("Windows couldn't protect your key, so it wasn't saved.");
+    expect(alert).not.toHaveTextContent("KeychainAccessError");
+    expect(within(alert).getByRole("button", { name: "Try again" })).toBeInTheDocument();
+  });
   it("clears a shown Keychain-denied message as soon as the person starts typing again", async () => {
     const user = userEvent.setup();
     const b = new MockBridge();
-    b.secrets.set = async () => { throw new Error("CareerOS couldn't use the Keychain, so your key wasn't saved."); };
+    b.secrets.set = async () => { throw Object.assign(new Error("CareerOS couldn't use the Keychain, so your key wasn't saved."), { name: "KeychainAccessError" }); };
     renderApp(<SettingsScreen />, { bridge: b, hash: "#/settings?tab=connections&c=claude" });
     await openApiKey();
     const input = await screen.findByLabelText("Anthropic API key");

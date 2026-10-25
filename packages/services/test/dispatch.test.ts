@@ -2,7 +2,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { ArgError, METHODS } from "@careeros/contract";
+import { ArgError, METHODS, SECURE_STORAGE_DENIED } from "@careeros/contract";
 import { addGrant, readMeta } from "@careeros/core";
 import { ServiceContext } from "../src/context.js";
 import { createRuntime } from "../src/runtime.js";
@@ -117,6 +117,15 @@ describe("dispatch errors", () => {
     expect(plainError("fetch https://example.com/x failed", null).message).toBe("fetch https://example.com/x failed");
     expect(plainError('open "/opt/Alex Example/x.json" failed', null).message).toBe('open "…/x.json" failed');
     expect(plainError("open '/Volumes/Data/Alex Work/ws/settings/profile.json'", ws).message).toBe("open 'settings/profile.json'");
+  });
+  it("keeps the name of an OS refusal of secure storage, so the window can tell it apart without reading the words", () => {
+    const denied = Object.assign(new Error("Windows couldn't protect your key, so it wasn't saved."), { name: SECURE_STORAGE_DENIED });
+    const out = plainError(denied, null);
+    expect(out.name).toBe(SECURE_STORAGE_DENIED);
+    expect(String(out)).toBe(`${SECURE_STORAGE_DENIED}: Windows couldn't protect your key, so it wasn't saved.`);
+    expect(out.stack).toBe(`${SECURE_STORAGE_DENIED}: Windows couldn't protect your key, so it wasn't saved.`);
+    // Any other name is still dropped.
+    expect(plainError(Object.assign(new Error("x"), { name: "SecretPathError" }), null).name).toBe("Error");
   });
   it("keeps contract errors as they are", async () => {
     const { ctx } = openSample();

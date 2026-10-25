@@ -4,6 +4,7 @@ import { INSTALL_PAGE_URL, type SetupToolId, type SetupToolView, type SetupView 
 import { errorText, useBridge, useLoad } from "../bridge-context";
 import { errorSentence } from "./ErrorBanner";
 import { copyText, TerminalFallback } from "./TerminalFix";
+import { uiOs } from "../platform";
 import "./tool-install.css";
 
 /** "2:05" since an ISO time, ticking each second, so a long install never looks stuck. "" when unknown. */
@@ -25,10 +26,28 @@ function Elapsed({ since }: { since: string }) {
   return t ? <Text role="body-sm" as="span" muted className="tinstall__elapsed" aria-label={`Running for ${t}`}>{t}</Text> : null;
 }
 
-/** Homebrew isn't on this Mac: the person installs it themselves (it needs their Mac password, which the app never asks for). */
+/** Where Windows' own package manager, winget, comes from: Microsoft's App Installer. */
+export const WINGET_URL = "https://learn.microsoft.com/windows/package-manager/winget/";
+
+/**
+ * Homebrew isn't on this Mac: the person installs it themselves (it needs their Mac password, which the app never
+ * asks for). On Windows the package manager is winget, which comes with Microsoft's App Installer.
+ */
 function HomebrewNeeded({ view, names, plural, onCheck, checking, onOpen }: { view: SetupView; names: string; plural: boolean; onCheck: () => void; checking: boolean; onOpen: (url: string) => void }) {
   const [copied, setCopied] = useState<"" | "yes" | "no">("");
   const copy = async () => setCopied((await copyText(view.homebrew.command)) ? "yes" : "no");
+  if (uiOs() === "windows") return (
+    <div className="tinstall__brew">
+      <Text role="body-sm">
+        {names} {plural ? "install" : "installs"} with winget, which isn&apos;t on this PC yet. winget comes with App Installer from Microsoft:
+        open the Microsoft Store, search for App Installer and install or update it. Then come back and choose Check again.
+      </Text>
+      <div className="csetup__row">
+        <Button size="sm" variant="ghost" loading={checking} onClick={onCheck}>Check again</Button>
+        <Button size="sm" variant="ghost" title="Opens Microsoft's winget page in your browser" onClick={() => onOpen(WINGET_URL)}>About winget</Button>
+      </div>
+    </div>
+  );
   return (
     <div className="tinstall__brew">
       <Text role="body-sm">

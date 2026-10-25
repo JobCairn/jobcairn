@@ -5,7 +5,7 @@ import path from "node:path";
 import identity from "@careeros/brand/identity.json" with { type: "json" };
 import { layout, readRecord, updateRecord } from "@careeros/core";
 import {
-  BOARD_NAMES, DEFAULT_BOARDS, RECRUITER_BOARDS,
+  BOARD_NAMES, DEFAULT_BOARDS, osWords, RECRUITER_BOARDS,
   type BoardFilters, type BoardId, type BoardRunDiag, type BoardSignIn, type ChromeRunProgress, type ChromeSearchSettings, type ChromeSearchState, type FindJobsMode, type SignInDiag, type SignInWhy,
   type TerminalFix, type WebReason,
 } from "@careeros/contract";
@@ -97,23 +97,23 @@ const LOAD_LOOKS = 8;
 /**
  * The install and remove confirms (native dialogs in main). They name the helper on purpose: the person is about
  * to put a program on their computer, so they're told what it is, what it does here, its size, where it goes and
- * how to take it off again.
+ * how to take it off again. Worded for the computer it runs on ("your Mac", "your PC").
  */
-export const HELPER_CONFIRM = {
+export const helperConfirm = (platform: string) => ({
   install: {
     message: "Install the browser helper?",
     // The first paragraph matches the short "Why your Chrome?" line in Settings and the tour (app-ui chrome/state.ts).
     detail: `Job sites block scrapers and hide details until you sign in. So Claude browses in your own Chrome, signed in as you, slowly and read-only, while you watch.\n\n`
       + `The helper is agent-browser, a small open-source tool from Vercel that lets an app control Chrome tabs.\n\n`
       + `${identity.name} uses it to open job boards in new tabs it owns, read the listings, and close them. It never types passwords, applies, messages or saves anything.\n\n`
-      + `It takes about ${HELPER_SIZE_MB} MB and goes in ${identity.name}'s own folder; nothing else on your Mac changes. `
+      + `It takes about ${HELPER_SIZE_MB} MB and goes in ${identity.name}'s own folder; nothing else on ${osWords(platform).yourComputer} changes. `
       + `You can remove it any time from Settings › Connections › Search in my Chrome.`,
   },
   remove: {
     message: "Remove the browser helper?",
     detail: `This deletes the helper from ${identity.name}'s own folder (about ${HELPER_SIZE_MB} MB) and turns Search in my Chrome off. Claude will search the web instead. You can install it again later.`,
   },
-} as const;
+}) as const;
 
 /** Plain words for the UI. Never "CDP", "MCP" or "workspace". */
 export const COPY = {
@@ -124,7 +124,7 @@ export const COPY = {
   installFailed: "The browser helper didn't install. Check your internet connection and try again.",
   noNpm: `The browser helper needs ${NODE.label}. Install Node.js above, then try again.`,
   remoteOff: "Chrome's remote control is off. Turn it on in Chrome, then come back.",
-  remotePageFailed: "Chrome didn't open the page. Paste chrome://inspect/#remote-debugging into Chrome's address bar and press Return.",
+  remotePageFailed: (platform: string) => `Chrome didn't open the page. Paste chrome://inspect/#remote-debugging into Chrome's address bar and press ${osWords(platform).enterKey}.`,
   connectFailed: "Chrome didn't let us connect. Click Allow when Chrome asks, then try again.",
   notConnected: "Connect to Chrome first.",
   /** The helper was driving a browser of its own, not the person's Chrome, and reconnecting didn't fix it. */
@@ -341,7 +341,8 @@ export class ChromeSearch {
   }
 
   private async installWith(h: ChromeHost): Promise<void> {
-    if (h.confirm && !(await h.confirm(HELPER_CONFIRM.install.message, HELPER_CONFIRM.install.detail))) return;
+    const ask = helperConfirm(h.platform).install;
+    if (h.confirm && !(await h.confirm(ask.message, ask.detail))) return;
     const npm = this.findNpm(h);
     if (!npm) throw new Error(COPY.noNpm);
     const dir = this.ownDir(h);
@@ -390,7 +391,7 @@ export class ChromeSearch {
     if (!h) throw new Error(COPY.noHost);
     if (!h.chromeInstalled()) throw new Error(COPY.noChrome);
     const ok = await h.openRemotePage();
-    if (!ok) throw new Error(COPY.remotePageFailed);
+    if (!ok) throw new Error(COPY.remotePageFailed(h.platform));
     return this.state(false);
   }
 
@@ -620,7 +621,8 @@ export class ChromeSearch {
     if (this.installing) throw new Error(COPY.installing);
     const f = await this.findHelper(true);
     if (f.helper && !this.isOwnCopy(h, f.helper.bin)) throw new Error(COPY.notOurs);
-    if (h.confirm && !(await h.confirm(HELPER_CONFIRM.remove.message, HELPER_CONFIRM.remove.detail, "Remove"))) return this.state(false);
+    const ask = helperConfirm(h.platform).remove;
+    if (h.confirm && !(await h.confirm(ask.message, ask.detail, "Remove"))) return this.state(false);
     await this.shutdown().catch(() => undefined);
     fs.rmSync(this.ownDir(h), { recursive: true, force: true });
     this.found = null;

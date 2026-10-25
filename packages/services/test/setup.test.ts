@@ -1,10 +1,10 @@
 import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { SETUP_TOOLS, type SetupView } from "@careeros/contract";
+import { SETUP_TOOLS, WINGET_INSTALL_COMMAND, WINGET_URL, type SetupView } from "@careeros/contract";
 import brand from "@careeros/brand/identity.json" with { type: "json" };
 import { dispatch } from "../src/dispatch.js";
-import { progressLine, SETUP_TOOL_INFO, type SetupHost } from "../src/setup.js";
+import { findGitBash, findWinget, progressLine, SETUP_TOOL_INFO, SETUP_TOOL_INFO_WIN32, setupToolInfo, type SetupHost } from "../src/setup.js";
 import { openSample } from "./helpers.js";
 
 const REPO = path.resolve(import.meta.dirname, "..", "..", "..");
@@ -32,7 +32,8 @@ describe("setup.status", () => {
     const x = setup({ programs: { "/opt/homebrew/bin/node": "20.11.0", "/opt/homebrew/bin/python3.12": "3.12.15", "/opt/homebrew/bin/ffmpeg": "7.1" } });
     const v = await x.call<SetupView>("setup.status", false);
     expect(v.can_install).toBe(true);
-    expect(v.homebrew.found).toBe(true);
+    expect(v.homebrew?.found).toBe(true);
+    expect(v.winget).toBeUndefined();
     expect(Object.fromEntries(v.tools.map((t) => [t.id, [t.state, t.version]]))).toEqual({
       "claude-code": ["missing", ""], node: ["too_old", "20.11.0"], python: ["ok", "3.12.15"], ffmpeg: ["ok", ""],
     });
@@ -147,6 +148,75 @@ describe("setup tools match setup.sh", () => {
       const c = JSON.parse(fs.readFileSync(path.join(REPO, "setup", "components", `${id}.json`), "utf8")) as { platforms: { darwin: { install: string[] } } };
       expect(c.platforms.darwin.install, id).toEqual([SETUP_TOOL_INFO[id].command]);
     }
+  });
+
+  it("on Windows too: each command, a line per step, is its component's win32 install", () => {
+    for (const id of SETUP_TOOLS) {
+      const c = JSON.parse(fs.readFileSync(path.join(REPO, "setup", "components", `${id}.json`), "utf8")) as { platforms: { win32: { install: string[] } } };
+      expect(c.platforms.win32.install, id).toEqual(SETUP_TOOL_INFO_WIN32[id].command.split("\n"));
+    }
+    expect(setupToolInfo("win32")).toBe(SETUP_TOOL_INFO_WIN32);
+    expect(setupToolInfo("darwin")).toBe(SETUP_TOOL_INFO);
+  });
+});
+
+describe("setup on Windows", () => {
+  const HOME = "C:\\Users\\fictional";
+  const WINGET = `${HOME}\\AppData\\Local\\Microsoft\\WindowsApps\\winget.exe`;
+  const GIT_BASH = "C:\\Program Files\\Git\\bin\\bash.exe";
+  const CLAUDE = `${HOME}\\.local\\bin\\claude.exe`;
+
+  /** A fictional PC: winget and Git for Windows present or not. */
+  function win(o: { winget?: boolean; git?: boolean; claude?: boolean; run?: SetupHost["run"] } = {}) {
+    const x = setup({ run: o.run });
+    const files = new Set([...(o.winget ?? true ? [WINGET] : []), ...(o.git ?? true ? [GIT_BASH] : [])]);
+    Object.assign(x.host, {
+      platform: "win32", home: HOME,
+      env: { PATH: "C:\\Windows\\System32", LOCALAPPDATA: `${HOME}\\AppData\\Local`, ProgramFiles: "C:\\Program Files" },
+      exists: (p: string) => files.has(p),
+      isExec: (p: string) => o.claude === true && p === CLAUDE,
+      probe: () => null,
+    } satisfies Partial<SetupHost>);
+    return x;
+  }
+
+  it("sends winget, not Homebrew, and the winget commands", async () => {
+    const v = await win().call<SetupView>("setup.status", false);
+    expect(v.homebrew).toBeUndefined();
+    expect(v.winget).toEqual({ found: true, command: WINGET_INSTALL_COMMAND, url: WINGET_URL });
+    expect(Object.fromEntries(v.tools.map((t) => [t.id, t.via]))).toEqual({ "claude-code": "anthropic", node: "winget", python: "winget", ffmpeg: "winget" });
+    expect(v.tools.find((t) => t.id === "ffmpeg")?.command).toBe("winget install --id Gyan.FFmpeg --exact --source winget --accept-source-agreements --accept-package-agreements --silent");
+    expect((await win({ winget: false }).call<SetupView>("setup.status", false)).winget?.found).toBe(false);
+  });
+
+  it("finds winget on PATH as well as in WindowsApps", () => {
+    expect(findWinget({ env: { PATH: "D:\\Tools;relative" }, home: HOME, exists: (p) => p === "D:\\Tools\\winget.exe" })).toBe("D:\\Tools\\winget.exe");
+    expect(findWinget({ env: {}, home: HOME, exists: () => false })).toBeNull();
+  });
+
+  it("Claude Code is ready only with Git Bash there too", async () => {
+    const state = async (o: { git: boolean }) => (await win({ claude: true, ...o }).call<SetupView>("setup.status", false)).tools.find((t) => t.id === "claude-code")?.state;
+    expect(await state({ git: true })).toBe("ok");
+    expect(await state({ git: false })).toBe("missing");
+    expect(findGitBash({ env: { PATH: "C:\\Program Files\\Git\\cmd" }, exists: (p) => p === "C:\\Program Files\\Git\\cmd\\git.exe" })).toBe(true);
+  });
+
+  it("needs winget first for winget tools, and says how to get it", async () => {
+    const x = win({ winget: false });
+    await expect(x.call("setup.install", "node")).rejects.toThrow(/^winget \(App Installer from the Microsoft Store\) is needed first\./);
+    // Claude Code needs winget only for Git: with Git there, it goes ahead.
+    await expect(win({ winget: false, git: false }).call("setup.install", "claude-code")).rejects.toThrow(/^winget/);
+    await x.call("setup.install", "claude-code");
+    expect(x.asked[0]).toContain('powershell -NoProfile -ExecutionPolicy Bypass -Command "irm https://claude.ai/install.ps1 | iex"');
+    expect(x.asked[0]).toContain("winget install --id Git.Git");
+  });
+
+  it("a failure offers PowerShell lines, never sudo", async () => {
+    const x = win({ run: async () => ({ ok: false, problem: "permission", message: "Python didn't install." }) });
+    const v = await x.call<SetupView>("setup.install", "python");
+    expect(v.last?.fix?.options[0]).toMatchObject({ title: "Run it in PowerShell", command: SETUP_TOOL_INFO_WIN32.python.command });
+    expect(v.last?.fix?.options[1]?.title).toMatch(/administrator/);
+    expect(v.last?.fix?.options.some((o) => /sudo|brew/.test(o.command))).toBe(false);
   });
 });
 

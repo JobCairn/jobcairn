@@ -27,6 +27,8 @@ jobs:
 
   windows:
     needs: draft
+    # Off until Windows launches: set the repository variable WINDOWS_RELEASE to "true" to build and attach the installers.
+    if: vars.WINDOWS_RELEASE == 'true'
     runs-on: windows-latest
     timeout-minutes: 60
     defaults:

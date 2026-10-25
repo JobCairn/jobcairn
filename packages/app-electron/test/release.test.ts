@@ -4,9 +4,10 @@ import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import crypto from "node:crypto";
+import { createRequire } from "node:module";
 import {
-  CHECKSUMS_FILE, checksumLines, checksumMismatches, feedFiles, feedProblems, isReleaseArtifact, notaryResult, notarytoolAuthArgs, signatureKind, strayMachO, UPDATE_FEED,
-  uploadAssets, writeChecksums,
+  CHECKSUMS_FILE, checksumLines, checksumMismatches, feedFiles, feedProblems, isReleaseArtifact, mergeChecksums, notaryResult, notarytoolAuthArgs, signatureKind, strayMachO,
+  UPDATE_FEED, uploadAssets, WIN_UPDATE_FEED, writeChecksums,
 } from "../scripts/release.mjs";
 
 let dir: string;
@@ -40,6 +41,23 @@ describe("SHA256SUMS.txt", () => {
     fs.writeFileSync(dmg, "tampered");
     fs.rmSync(path.join(dir, "Example-0.1.0-x64.dmg"));
     expect(checksumMismatches(dir).map((l) => l.slice(66))).toEqual(["Example-0.1.0-arm64.dmg", "Example-0.1.0-x64.dmg"]);
+  });
+
+  it("lists the Windows installers too, never their blockmaps or latest.yml", () => {
+    const files = [put("Example-0.1.0-x64.exe", "x64"), put("Example-0.1.0-arm64.exe", "arm"), put("Example-0.1.0-x64.exe.blockmap", "b"), put("latest.yml", "y")];
+    writeChecksums(dir, files);
+    expect(fs.readFileSync(path.join(dir, CHECKSUMS_FILE), "utf8").trimEnd().split("\n").map((l) => l.slice(66))).toEqual(["Example-0.1.0-arm64.exe", "Example-0.1.0-x64.exe"]);
+    expect(checksumMismatches(dir)).toEqual([]);
+  });
+
+  it("merges the mac and Windows checksum files into one, sorted, the newer line winning for the same file", () => {
+    const h = (c: string) => c.repeat(64);
+    const mac = `${h("a")}  Example-0.1.0-arm64.dmg\n${h("b")}  Example-0.1.0-x64.dmg\n`;
+    const win = `${h("c")}  Example-0.1.0-x64.exe\r\n${h("d")}  Example-0.1.0-arm64.exe\r\n${h("e")}  Example-0.1.0-x64.dmg\r\n`;
+    expect(mergeChecksums(mac, win)).toBe([
+      `${h("a")}  Example-0.1.0-arm64.dmg`, `${h("d")}  Example-0.1.0-arm64.exe`, `${h("e")}  Example-0.1.0-x64.dmg`, `${h("c")}  Example-0.1.0-x64.exe`, "",
+    ].join("\n"));
+    expect(mergeChecksums("", null, "not a checksum line\n")).toBe("");
   });
 
   it("writes nothing when there is no installer", () => {
@@ -92,6 +110,64 @@ describe("release assets for in-app updates", () => {
     expect(feedProblems(dir)).toEqual(["latest-mac.yml is missing"]);
     put(UPDATE_FEED, feed([]));
     expect(feedProblems(dir)).toEqual(["latest-mac.yml lists no zip"]);
+  });
+});
+
+describe("the Windows update feed (latest.yml)", () => {
+  const sha512 = (s: string) => crypto.createHash("sha512").update(s).digest("base64");
+  // The shape electron-builder writes for two per-arch NSIS installers built in one run.
+  const feed = (exes: { name: string; data: string }[]) => [
+    "version: 0.1.2", "files:",
+    ...exes.flatMap((e) => [`  - url: ${e.name}`, `    sha512: ${sha512(e.data)}`, `    size: ${Buffer.byteLength(e.data)}`]),
+    `path: ${exes[0]?.name ?? ""}`, `sha512: ${exes[0] ? sha512(exes[0].data) : ""}`, "releaseDate: '2026-10-15T00:00:00.000Z'", "",
+  ].join("\n");
+  const EXES = [{ name: "Example-0.1.2-x64.exe", data: "x64" }, { name: "Example-0.1.2-arm64.exe", data: "arm" }];
+  const build = () => { for (const e of EXES) { put(e.name, e.data); put(`${e.name}.blockmap`, "b"); } put(WIN_UPDATE_FEED, feed(EXES)); };
+
+  it("lists the installers, their blockmaps and latest.yml to attach", () => {
+    build();
+    put(CHECKSUMS_FILE, "x");
+    put("win-unpacked/Example.exe", "x");
+    put("builder-debug.yml", "x");
+    expect(uploadAssets(dir)).toEqual([
+      "Example-0.1.2-arm64.exe", "Example-0.1.2-arm64.exe.blockmap", "Example-0.1.2-x64.exe", "Example-0.1.2-x64.exe.blockmap", "SHA256SUMS.txt", "latest.yml",
+    ]);
+  });
+
+  it("checks every installer against the feed, with its blockmap, and one per architecture built", () => {
+    build();
+    expect(feedProblems(dir, WIN_UPDATE_FEED, { archs: ["x64", "arm64"] })).toEqual([]);
+    put("Example-0.1.2-x64.exe", "changed");
+    fs.rmSync(path.join(dir, "Example-0.1.2-arm64.exe.blockmap"));
+    expect(feedProblems(dir, WIN_UPDATE_FEED)).toEqual(["Example-0.1.2-x64.exe doesn't match latest.yml", "Example-0.1.2-arm64.exe.blockmap is missing"]);
+  });
+
+  it("reports a feed missing an architecture: the updater would hand that machine the other installer", () => {
+    put(EXES[0]!.name, EXES[0]!.data);
+    put(`${EXES[0]!.name}.blockmap`, "b");
+    put(WIN_UPDATE_FEED, feed([EXES[0]!]));
+    expect(feedProblems(dir, WIN_UPDATE_FEED, { archs: ["x64"] })).toEqual([]);
+    expect(feedProblems(dir, WIN_UPDATE_FEED, { archs: ["x64", "arm64"] })).toEqual(["latest.yml has no arm64 installer"]);
+  });
+
+  it("reports a missing feed, or one with no installer", () => {
+    expect(feedProblems(dir, WIN_UPDATE_FEED)).toEqual(["latest.yml is missing"]);
+    put(WIN_UPDATE_FEED, feed([]));
+    expect(feedProblems(dir, WIN_UPDATE_FEED)).toEqual(["latest.yml lists no exe"]);
+  });
+
+  it("matches how electron-updater picks the installer: the entry whose name has this machine's architecture", () => {
+    // electron-updater's own helper (NsisUpdater calls it), so a change in how it chooses fails here.
+    const require = createRequire(import.meta.url);
+    const { findFile } = require("electron-updater/out/providers/Provider.js") as { findFile: (f: unknown[], ext: string) => { info: { url: string } } };
+    const files = EXES.map((e) => ({ url: new URL(`https://example.com/${e.name}`), info: { url: e.name, sha512: "", size: 3 } }));
+    const pick = (arch: string) => {
+      const real = process.arch;
+      Object.defineProperty(process, "arch", { value: arch });
+      try { return findFile(files, "exe").info.url; } finally { Object.defineProperty(process, "arch", { value: real }); }
+    };
+    expect(pick("x64")).toBe("Example-0.1.2-x64.exe");
+    expect(pick("arm64")).toBe("Example-0.1.2-arm64.exe");
   });
 });
 

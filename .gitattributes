@@ -1,3 +1,36 @@
+# Text files are stored and checked out with LF on every system (Windows included), so hashes, snapshots and
+# scripts match across machines. Binary files are never touched.
+* text=auto eol=lf
+*.cmd text eol=crlf
+*.bat text eol=crlf
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.icns binary
+*.pdf binary
+*.mp4 binary
+*.mov binary
+*.webm binary
+*.mp3 binary
+*.wav binary
+*.m4a binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
+*.zip binary
+*.gz binary
+*.tgz binary
+*.7z binary
+*.onnx binary
+*.bin binary
+*.exe binary
+*.dmg binary
+*.node binary
+
 # Force LF for text assets that get hashed (sub-project 5 video rendering: a CRLF checkout
 # would change the hash of an otherwise-identical file and break render caching / diffing).
 plugin/**/*.css text eol=lf

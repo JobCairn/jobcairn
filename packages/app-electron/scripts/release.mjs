@@ -26,12 +26,14 @@ export function checksumLines(files) {
     .join("");
 }
 
-/** electron-builder's mac update feed, read by the installed app's updater (src/updates.ts). */
+/** electron-builder's mac update feed, read by the installed mac app's updater (src/updates.ts). */
 export const UPDATE_FEED = "latest-mac.yml";
+/** The Windows feed: both NSIS installers (x64 and arm64), read by the installed Windows app's updater. */
+export const WIN_UPDATE_FEED = "latest.yml";
 
 /**
  * Everything a GitHub release needs attached: the installers and zips, their .blockmap files (the updater's
- * smaller downloads), the update feed (latest-mac.yml; latest.yml / latest-linux.yml for other systems) and
+ * smaller downloads), the update feeds (latest-mac.yml, latest.yml for Windows, latest-linux.yml) and
  * SHA256SUMS.txt. Names only, sorted.
  */
 export function isUploadAsset(file) {
@@ -55,23 +57,46 @@ export function feedFiles(text) {
 }
 
 /**
- * Problems with the update feed in `dir`: missing, no zip listed, or a zip whose sha512 or size differ from the
- * file beside it. dmg entries aren't checked: stapling changes the dmg after the feed is written, and the mac
- * updater only ever downloads the zip.
+ * Problems with the update feed in `dir`: missing, nothing to update from listed, or an entry whose sha512 or size
+ * differ from the file beside it.
+ * - latest-mac.yml: the zips are checked. dmg entries aren't: stapling changes the dmg after the feed is written,
+ *   and the mac updater only ever downloads the zip.
+ * - latest.yml (Windows): every .exe is checked (electron-builder signs the installer before it hashes it), and
+ *   each needs its .blockmap beside it (differential downloads). `archs` (e.g. ["x64", "arm64"]) must each appear
+ *   in an installer's name: the updater picks the entry whose name contains the running app's process.arch, and
+ *   falls back to the first one, which would hand one architecture the other's installer.
  */
-export function feedProblems(dir, feed = UPDATE_FEED) {
+export function feedProblems(dir, feed = UPDATE_FEED, { archs = [] } = {}) {
   const file = path.join(dir, feed);
   if (!fs.existsSync(file)) return [`${feed} is missing`];
-  const zips = feedFiles(fs.readFileSync(file, "utf8")).filter((f) => f.url.endsWith(".zip"));
-  if (!zips.length) return [`${feed} lists no zip`];
+  const ext = feed === WIN_UPDATE_FEED ? ".exe" : ".zip";
+  const entries = feedFiles(fs.readFileSync(file, "utf8")).filter((f) => f.url.endsWith(ext));
+  if (!entries.length) return [`${feed} lists no ${ext.slice(1)}`];
   const bad = [];
-  for (const z of zips) {
+  for (const z of entries) {
     const p = path.join(dir, path.basename(z.url));
     if (!fs.existsSync(p)) { bad.push(`${z.url} is missing`); continue; }
     const sha = crypto.createHash("sha512").update(fs.readFileSync(p)).digest("base64");
     if (sha !== z.sha512 || fs.statSync(p).size !== z.size) bad.push(`${z.url} doesn't match ${feed}`);
+    if (ext === ".exe" && !fs.existsSync(`${p}.blockmap`)) bad.push(`${z.url}.blockmap is missing`);
   }
+  for (const a of archs) if (!entries.some((e) => e.url.includes(a))) bad.push(`${feed} has no ${a} installer`);
   return bad;
+}
+
+/**
+ * SHA256SUMS.txt texts merged into one: one line per file name, sorted; a later text wins for the same name.
+ * The mac and Windows builds each write their own, and the release carries one file for both.
+ */
+export function mergeChecksums(...texts) {
+  const byName = new Map();
+  for (const text of texts) {
+    for (const line of String(text ?? "").split(/\r?\n/).filter(Boolean)) {
+      const m = /^([0-9a-f]{64}) {2}(.+)$/.exec(line);
+      if (m) byName.set(m[2], m[1]);
+    }
+  }
+  return [...byName].sort(([a], [b]) => a.localeCompare(b)).map(([name, hash]) => `${hash}  ${name}\n`).join("");
 }
 
 /** Writes SHA256SUMS.txt beside the artifacts (electron-builder's afterAllArtifactBuild). Returns its path, or null. */

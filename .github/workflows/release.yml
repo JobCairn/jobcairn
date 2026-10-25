@@ -1,7 +1,9 @@
 name: Release
 
 # A version tag creates a draft release with the notes in .github/release-notes/<tag>.md.
-# The signed dmgs and SHA256SUMS.txt are attached before the draft is published.
+# The windows job builds the Windows installers (x64 and arm64, one run, so latest.yml lists both) and attaches
+# them, their blockmaps, latest.yml and its lines of SHA256SUMS.txt to the draft. The signed mac dmgs, zips and
+# latest-mac.yml are attached by hand (docs/packaging.md) before the draft is published.
 on:
   push:
     tags: ["v*"]
@@ -22,3 +24,47 @@ jobs:
         run: |
           if gh release view "$TAG" >/dev/null 2>&1; then echo "$TAG already has a release"; exit 0; fi
           gh release create "$TAG" --draft --verify-tag --title "JobCairn ${TAG#v}" --notes-file ".github/release-notes/$TAG.md"
+
+  windows:
+    needs: draft
+    runs-on: windows-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Build the Windows installers
+        # Signed with Azure Trusted Signing only when its secrets exist. Unset secrets arrive as empty strings, which
+        # the build treats as unset: the installers are then unsigned (the log says so). A partly set group fails.
+        env:
+          AZURE_TRUSTED_SIGNING_ENDPOINT: ${{ secrets.AZURE_TRUSTED_SIGNING_ENDPOINT }}
+          AZURE_CODE_SIGNING_ACCOUNT: ${{ secrets.AZURE_CODE_SIGNING_ACCOUNT }}
+          AZURE_CERT_PROFILE: ${{ secrets.AZURE_CERT_PROFILE }}
+          AZURE_PUBLISHER_NAME: ${{ secrets.AZURE_PUBLISHER_NAME }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+        run: npm run package:win:all
+      - name: The installers carry the app icon
+        # The build only warns when it can't render the icon (it needs Chrome or Playwright's Chromium); a release must not ship Electron's.
+        run: test -f packages/app-electron/.package/build-resources/icon.ico || { echo "::error::no icon.ico: the app icon wasn't rendered"; exit 1; }
+      - name: Verify the installers and the update feed
+        run: npm run release:verify
+      - name: Attach to the draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        working-directory: packages/app-electron/dist-release
+        # SHA256SUMS.txt is one file for every system: fold in what the release already has (e.g. the mac lines)
+        # instead of replacing it.
+        run: |
+          mkdir -p ../.release-sums
+          gh release download "$TAG" --pattern SHA256SUMS.txt --dir ../.release-sums --clobber || echo "no SHA256SUMS.txt on the release yet"
+          node ../scripts/merge-checksums.mjs SHA256SUMS.txt ../.release-sums/SHA256SUMS.txt
+          gh release upload "$TAG" --clobber *.exe *.exe.blockmap latest.yml SHA256SUMS.txt

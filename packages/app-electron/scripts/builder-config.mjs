@@ -11,7 +11,12 @@ import { appleEventsWhy } from "./mac-bundle.mjs";
 //     APPLE_API_KEY (.p8 path) + APPLE_API_KEY_ID + APPLE_API_ISSUER   App Store Connect API key
 //     APPLE_ID + APPLE_APP_SPECIFIC_PASSWORD + APPLE_TEAM_ID          Apple ID
 //     APPLE_KEYCHAIN_PROFILE (+ APPLE_KEYCHAIN)                       `xcrun notarytool store-credentials` profile
-//   WIN_CSC_LINK + WIN_CSC_KEY_PASSWORD: sign the Windows installer (read by electron-builder).
+//   Windows (optional; see winSigning below), either:
+//     AZURE_TRUSTED_SIGNING_ENDPOINT + AZURE_CODE_SIGNING_ACCOUNT + AZURE_CERT_PROFILE + AZURE_PUBLISHER_NAME
+//       + AZURE_TENANT_ID + AZURE_CLIENT_ID + AZURE_CLIENT_SECRET   Azure Trusted Signing (win.azureSignOptions)
+//     WIN_CSC_LINK + WIN_CSC_KEY_PASSWORD                         a .pfx certificate (read by electron-builder,
+//                                                                  which falls back to CSC_LINK + CSC_KEY_PASSWORD)
+//   Neither: the installers are unsigned (SmartScreen warns on first run).
 
 /**
  * What ships next to the app in Contents/Resources (resources/ on Windows and Linux). `to` names are what the
@@ -68,9 +73,11 @@ const BUILTINS = new Set(["assert", "buffer", "child_process", "crypto", "events
 
 /**
  * Files that must be real files on disk, outside app.asar: dist/mcp.mjs is run by Electron-as-Node for Claude Code
- * (claude-host maps app.asar -> app.asar.unpacked), and it reads ../schemas, so the schemas come out too.
+ * (claude-host maps app.asar -> app.asar.unpacked), and it reads ../schemas, so the schemas come out too. The
+ * Windows window icon (dist/app-icon.ico, only in Windows builds) is loaded by Windows itself from a file path,
+ * which can't reach inside an asar.
  */
-export const ASAR_UNPACK = ["dist/mcp.mjs", "dist/mcp.mjs.map", "schemas/**"];
+export const ASAR_UNPACK = ["dist/mcp.mjs", "dist/mcp.mjs.map", "schemas/**", "dist/app-icon.ico"];
 
 /**
  * `pkgDir` (packages/app-electron) anchors the resource folders; `runtimeModules` is the staged node_modules folder; `appDir` and `output` are relative to the
@@ -79,9 +86,10 @@ export const ASAR_UNPACK = ["dist/mcp.mjs", "dist/mcp.mjs.map", "schemas/**"];
  */
 /**
  * Where in-app updates come from (electron-updater, src/updates.ts). electron-builder writes it into the app as
- * Resources/app-update.yml and writes latest-mac.yml (the zips' versions and sha512) beside the installers. It never
- * uploads: scripts/package.mjs builds with `publish: "never"`, and the release assets are attached by hand
- * (docs/packaging.md).
+ * Resources/app-update.yml (resources\app-update.yml on Windows) and writes the update feeds beside the installers:
+ * latest-mac.yml (the mac zips) and latest.yml (the Windows installers), with their versions and sha512. It never
+ * uploads: scripts/package.mjs builds with `publish: "never"`; the mac assets are attached by hand and the Windows
+ * ones by the release workflow (docs/packaging.md).
  */
 export const PUBLISH = { provider: "github", owner: "JobCairn", repo: "jobcairn" };
 
@@ -108,6 +116,40 @@ export function notarizeMode(env = {}) {
   return env.APPLE_KEYCHAIN_PROFILE ? "keychain-profile" : null;
 }
 
+/** Azure Trusted Signing: the account, profile and endpoint, the certificate's subject name, and the Entra ID app. */
+export const AZURE_SIGNING_KEYS = [
+  "AZURE_TRUSTED_SIGNING_ENDPOINT", "AZURE_CODE_SIGNING_ACCOUNT", "AZURE_CERT_PROFILE", "AZURE_PUBLISHER_NAME",
+  "AZURE_TENANT_ID", "AZURE_CLIENT_ID", "AZURE_CLIENT_SECRET",
+];
+
+/**
+ * How the Windows build is signed: "azure" (Azure Trusted Signing, through electron-builder's win.azureSignOptions),
+ * "certificate" (WIN_CSC_LINK, read by electron-builder itself) or null (unsigned). Empty values count as unset, so
+ * CI can pass secrets that don't exist. A half-set Azure group throws, so a release never quietly ships unsigned.
+ * AZURE_PUBLISHER_NAME must be the certificate's subject CN exactly: electron-builder writes it into the app's
+ * app-update.yml and the installed app refuses any update installer not signed by that name.
+ */
+export function winSigning(env = {}) {
+  const azure = AZURE_SIGNING_KEYS.filter((k) => env[k]);
+  if (azure.length) {
+    const missing = AZURE_SIGNING_KEYS.filter((k) => !env[k]);
+    if (missing.length) throw new Error(`sign with Azure Trusted Signing: also set ${missing.join(", ")}`);
+    return "azure";
+  }
+  // electron-builder falls back to CSC_LINK for Windows when WIN_CSC_LINK isn't set.
+  return env.WIN_CSC_LINK || env.CSC_LINK ? "certificate" : null;
+}
+
+/** electron-builder's win.azureSignOptions from the environment (winSigning(env) === "azure"). */
+export function azureSignOptions(env) {
+  return {
+    publisherName: env.AZURE_PUBLISHER_NAME,
+    endpoint: env.AZURE_TRUSTED_SIGNING_ENDPOINT,
+    codeSigningAccountName: env.AZURE_CODE_SIGNING_ACCOUNT,
+    certificateProfileName: env.AZURE_CERT_PROFILE,
+  };
+}
+
 export function builderConfig({ identity, electronVersion, env = {}, pkgDir = ".", appDir = ".", output = "dist-release", icons, runtimeModules }) {
   // electron-builder wants the certificate name without its "Developer ID Application:" prefix (it adds the type
   // itself and refuses the full name), so the name as Keychain shows it is trimmed here. CSC_NAME goes the same way.
@@ -118,6 +160,7 @@ export function builderConfig({ identity, electronVersion, env = {}, pkgDir = ".
   const signed = macIdentity !== "-";
   const notarize = signed && notarizeMode(env) !== null;
   const entitlements = path.resolve(pkgDir, MAC_ENTITLEMENTS);
+  const winSign = winSigning(env);
   return {
     appId: identity.appId,
     productName: identity.name,
@@ -152,8 +195,22 @@ export function builderConfig({ identity, electronVersion, env = {}, pkgDir = ".
     // A signed build signs the dmg too; package.mjs then notarises and staples it (afterAllArtifactBuild), so
     // Gatekeeper accepts the download itself, not only the app inside.
     dmg: { title: identity.name, artifactName: "${productName}-${version}-${arch}.${ext}", sign: signed },
-    win: { icon: icons?.png, target: [{ target: "nsis", arch: ["x64", "arm64"] }] },
-    nsis: { oneClick: false, perMachine: false, allowToChangeInstallationDirectory: true, artifactName: "${productName}-Setup-${version}-${arch}.${ext}" },
+    // Windows: one installer per architecture (<productName>-<version>-x64.exe and -arm64.exe), built in ONE
+    // electron-builder run so both land in the same latest.yml. electron-updater's NSIS updater picks the feed
+    // entry whose file name contains process.arch, so ${arch} must stay in the name. (The default "universal"
+    // installer carries both architectures, about twice the download, and with ${arch} in the name electron-builder
+    // would build it as well as the two per-arch ones.) Azure Trusted Signing when its variables are set; otherwise
+    // WIN_CSC_LINK is read by electron-builder itself; otherwise unsigned.
+    win: {
+      icon: icons?.ico ?? icons?.png,
+      target: [{ target: "nsis", arch: ["x64", "arm64"] }],
+      ...(winSign === "azure" ? { azureSignOptions: azureSignOptions(env) } : {}),
+    },
+    nsis: {
+      oneClick: false, perMachine: false, allowToChangeInstallationDirectory: true,
+      buildUniversalInstaller: false,
+      artifactName: "${productName}-${version}-${arch}.${ext}",
+    },
     // Linux binaries are lower-case by convention; the fixed internal id keeps the name stable across renames.
     linux: { executableName: identity.internalId, icon: icons?.png, category: "Office", target: [{ target: "AppImage", arch: ["x64", "arm64"] }], synopsis: identity.tagline },
     appImage: { artifactName: "${productName}-${version}-${arch}.${ext}" },

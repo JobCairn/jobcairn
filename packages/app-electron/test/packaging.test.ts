@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import identity from "@careeros/brand/identity.json" with { type: "json" };
-import { ASAR_UNPACK, builderConfig, FONT_PACKAGES, MAC_ENTITLEMENTS, notarizeMode, PUBLISH, RESOURCES, RUNTIME_MODULES_DIR, runtimeRequires } from "../scripts/builder-config.mjs";
+import { ASAR_UNPACK, AZURE_SIGNING_KEYS, builderConfig, FONT_PACKAGES, MAC_ENTITLEMENTS, notarizeMode, PUBLISH, RESOURCES, RUNTIME_MODULES_DIR, runtimeRequires, winSigning } from "../scripts/builder-config.mjs";
 import { bundledPluginDir, electronClaudeHost, pluginRootEnv } from "../src/claude-host.js";
 import { guidesDir } from "../src/guide-media.js";
 import { sampleDirFor } from "../src/onboarding-host.js";
@@ -68,6 +68,8 @@ describe("resource paths, development vs packaged", () => {
     expect(ASAR_UNPACK).toContain("dist/mcp.mjs");
     // mcp.mjs reads ../schemas, so they must be unpacked next to it.
     expect(ASAR_UNPACK).toContain("schemas/**");
+    // Windows loads the window icon from a file path, which can't reach inside app.asar.
+    expect(ASAR_UNPACK).toContain("dist/app-icon.ico");
     const dev = electronClaudeHost({ ...DEV, execPath: "/fictional/bin" });
     expect(dev.pluginDir).toBe(path.join(REPO, "plugin"));
     expect(dev.mcp.args).toEqual([path.join(PKG, "dist", "mcp.mjs")]);
@@ -101,6 +103,51 @@ describe("electron-builder config", () => {
     expect(cfg.mac.target).toEqual([{ target: "dmg", arch: ["arm64", "x64"] }, { target: "zip", arch: ["arm64", "x64"] }]);
     expect(cfg.win.target[0].target).toBe("nsis");
     expect(cfg.linux.target[0].target).toBe("AppImage");
+  });
+
+  it("builds one Windows installer per architecture, named so the updater can pick this machine's one from latest.yml", () => {
+    expect(cfg.win.target).toEqual([{ target: "nsis", arch: ["x64", "arm64"] }]);
+    // Separate installers, not one "universal" installer carrying both (twice the download). electron-builder
+    // merges both into one latest.yml when they come from the same run, and electron-updater picks the entry whose
+    // file name contains process.arch, so ${arch} must stay in the name.
+    expect(cfg.nsis.buildUniversalInstaller).toBe(false);
+    expect(cfg.nsis.artifactName).toBe("${productName}-${version}-${arch}.${ext}");
+    expect(cfg.nsis.perMachine).toBe(false);
+    expect(cfg.nsis.oneClick).toBe(false);
+  });
+
+  it("uses the generated .ico for Windows when there is one, else the PNG", () => {
+    const ico = builderConfig({ identity, electronVersion: "44.7.0", env: {}, icons: { png: "/fictional/icon.png", ico: "/fictional/icon.ico" } });
+    expect(ico.win.icon).toBe("/fictional/icon.ico");
+    expect(ico.linux.icon).toBe("/fictional/icon.png");
+    expect(builderConfig({ identity, electronVersion: "44.7.0", env: {}, icons: { png: "/fictional/icon.png" } }).win.icon).toBe("/fictional/icon.png");
+  });
+
+  it("signs Windows with Azure Trusted Signing when all its variables are set, a certificate with WIN_CSC_LINK, else not at all", () => {
+    expect(winSigning({})).toBeNull();
+    expect(cfg.win.azureSignOptions).toBeUndefined();
+    const azure = {
+      AZURE_TRUSTED_SIGNING_ENDPOINT: "https://eus.codesigning.azure.net", AZURE_CODE_SIGNING_ACCOUNT: "example-labs", AZURE_CERT_PROFILE: "example-public",
+      AZURE_PUBLISHER_NAME: "Example Labs", AZURE_TENANT_ID: "fictional-tenant", AZURE_CLIENT_ID: "fictional-client", AZURE_CLIENT_SECRET: "fictional",
+    };
+    expect(Object.keys(azure).sort()).toEqual([...AZURE_SIGNING_KEYS].sort());
+    expect(winSigning(azure)).toBe("azure");
+    expect(builderConfig({ identity, electronVersion: "44.7.0", env: azure }).win.azureSignOptions).toEqual({
+      publisherName: "Example Labs", endpoint: "https://eus.codesigning.azure.net", codeSigningAccountName: "example-labs", certificateProfileName: "example-public",
+    });
+    // Azure wins over a certificate; electron-builder can't use both.
+    expect(winSigning({ ...azure, WIN_CSC_LINK: "/fictional/cert.pfx" })).toBe("azure");
+    expect(winSigning({ WIN_CSC_LINK: "/fictional/cert.pfx", WIN_CSC_KEY_PASSWORD: "fictional" })).toBe("certificate");
+    // electron-builder falls back to CSC_LINK for Windows, so that signs too.
+    expect(winSigning({ CSC_LINK: "/fictional/cert.pfx" })).toBe("certificate");
+    expect(builderConfig({ identity, electronVersion: "44.7.0", env: { WIN_CSC_LINK: "/fictional/cert.pfx" } }).win.azureSignOptions).toBeUndefined();
+    // CI passes secrets that don't exist as empty strings: that is unsigned, not half-set.
+    expect(winSigning(Object.fromEntries(AZURE_SIGNING_KEYS.map((k) => [k, ""])))).toBeNull();
+    // A half-set group fails the build rather than shipping unsigned; the publisher name is required (the installed
+    // app refuses updates not signed by it).
+    const { AZURE_PUBLISHER_NAME: _p, ...noPublisher } = azure;
+    expect(() => winSigning(noPublisher)).toThrow(/AZURE_PUBLISHER_NAME/);
+    expect(() => builderConfig({ identity, electronVersion: "44.7.0", env: { AZURE_TRUSTED_SIGNING_ENDPOINT: "https://eus.codesigning.azure.net" } })).toThrow(/AZURE_CLIENT_SECRET/);
   });
 
   it("points in-app updates at the public GitHub releases, and the package script never uploads", () => {

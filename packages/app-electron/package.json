@@ -7,11 +7,12 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "start": "node scripts/build.mjs && node scripts/dev-app.mjs",
-    "dev": "node scripts/build.mjs --no-renderer && CAREEROS_DEV_URL=http://127.0.0.1:5173 node scripts/dev-app.mjs",
+    "dev": "node scripts/build.mjs --no-renderer && node scripts/dev-app.mjs --dev-url=http://127.0.0.1:5173",
     "e2e": "node scripts/build.mjs && playwright test -c playwright.config.ts",
     "package:mac": "node scripts/package.mjs --mac",
     "package:mac:all": "node scripts/package.mjs --mac --all-arch",
     "package:win": "node scripts/package.mjs --win",
+    "package:win:all": "node scripts/package.mjs --win --all-arch",
     "package:linux": "node scripts/package.mjs --linux",
     "release:verify": "node scripts/verify-release.mjs"
   },

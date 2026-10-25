@@ -1,8 +1,9 @@
 // In-app updates: electron-updater against GitHub Releases (builder-config.mjs `publish`, so the packaged app carries
-// app-update.yml and each release carries latest-mac.yml and the zips). The installed mac app checks 10 seconds after
-// launch and every 6 hours while "check automatically" is on, downloads in the background (Squirrel.Mac takes the
-// zip), and installs when the person presses "Restart to update" (or on their next quit). Development and e2e runs
-// never load the updater. The status machine is plain code over an injected updater, so tests drive it with a fake.
+// app-update.yml and each release carries the feeds: latest-mac.yml with the mac zips, latest.yml with the Windows
+// NSIS installers). The installed app checks 10 seconds after launch and every 6 hours while "check automatically"
+// is on, downloads in the background (on macOS Squirrel.Mac takes the zip; on Windows the NSIS installer for this
+// architecture), and installs when the person presses "Restart to update" (or on their next quit). Development and
+// e2e runs never load the updater. The status machine is plain code over an injected updater, so tests drive it with a fake.
 import type { UpdateStatus } from "@careeros/contract";
 import type { UpdateHost } from "@careeros/services";
 
@@ -24,9 +25,12 @@ export const PROGRESS_EVERY_MS = 250;
 /** Release notes longer than this are cut (the full notes stay on GitHub). */
 const NOTES_MAX = 4000;
 
-/** Only the packaged mac app updates itself: releases carry mac builds only, and e2e runs must never check. */
+/** Systems whose releases carry an update feed: macOS (zips) and Windows (NSIS installers). */
+const UPDATING_PLATFORMS = new Set(["darwin", "win32"]);
+
+/** Only the packaged mac and Windows apps update themselves, and e2e runs must never check. */
 export function updatesSupported(o: { packaged: boolean; platform: string; env: Record<string, string | undefined> }): boolean {
-  return o.packaged && o.platform === "darwin" && !Object.keys(o.env).some((k) => k.startsWith("CAREEROS_E2E"));
+  return o.packaged && UPDATING_PLATFORMS.has(o.platform) && !Object.keys(o.env).some((k) => k.startsWith("CAREEROS_E2E"));
 }
 
 /**
@@ -60,8 +64,8 @@ export function updateErrorText(e: unknown): string {
   if (/ENOTFOUND|ECONNREFUSED|ECONNRESET|ETIMEDOUT|EAI_AGAIN|ERR_INTERNET_DISCONNECTED|ERR_NAME_NOT_RESOLVED|ERR_NETWORK|ERR_CONNECTION|net::/i.test(m)) {
     return "Couldn't reach GitHub to check for updates. Check your internet connection and try again.";
   }
-  if (/\b404\b|latest-mac\.yml|Cannot find latest|No published versions/i.test(m)) return "The newest release isn't ready for automatic updates yet. You can download it from GitHub.";
-  if (/sha512 checksum mismatch|signature|ShipIt|Squirrel/i.test(m)) return "The update couldn't be installed. Download the newest version from GitHub instead.";
+  if (/\b404\b|latest(-[a-z0-9]+)?\.yml|Cannot find latest|No published versions/i.test(m)) return "The newest release isn't ready for automatic updates yet. You can download it from GitHub.";
+  if (/sha512 checksum mismatch|signature|not signed by the application owner|ShipIt|Squirrel|ERR_UPDATER_INVALID_SIGNATURE/i.test(m)) return "The update couldn't be installed. Download the newest version from GitHub instead.";
   return "Couldn't check for updates. Try again later, or download the newest version from GitHub.";
 }
 
@@ -73,6 +77,11 @@ export interface UpdatesOptions {
   load: () => Promise<Updater>;
   /** Runs before quit-and-install (lets go of Chrome), so the app's own quit handling can't hold up the relaunch. */
   beforeInstall?: () => Promise<void>;
+  /**
+   * Install without showing the installer (Windows: the NSIS installer runs with /S into the existing install
+   * folder; without it the person would click through the setup wizard on every update). macOS ignores it.
+   */
+  silentInstall?: boolean;
   now?: () => Date;
   log?: (msg: string) => void;
 }
@@ -158,9 +167,9 @@ export function createUpdates(o: UpdatesOptions): Updates {
     check,
     install: () => {
       if (status.kind !== "ready" || !updater) return;
-      // Quit, let Squirrel.Mac swap the app in, and open it again.
+      // Quit, let the platform's installer swap the app in (Squirrel.Mac; NSIS on Windows), and open it again.
       void (o.beforeInstall?.() ?? Promise.resolve()).catch(() => undefined)
-        .then(() => updater).then((u) => u!.quitAndInstall(false, true)).catch(fail);
+        .then(() => updater).then((u) => u!.quitAndInstall(o.silentInstall ?? false, true)).catch(fail);
     },
     setAuto: (on) => {
       const was = auto;

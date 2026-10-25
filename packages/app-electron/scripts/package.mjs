@@ -2,14 +2,20 @@
 // Builds the installers with electron-builder into packages/app-electron/dist-release (gitignored).
 //   node scripts/package.mjs --mac              this Mac's architecture, from node_modules' Electron (no download)
 //   node scripts/package.mjs --mac --all-arch   arm64 and x64 (downloads the other Electron build)
-//   --win / --linux                             configured, but build them on their own systems or in CI
-// Unsigned unless the signing environment variables are set (scripts/builder-config.mjs, docs/packaging.md).
+//   node scripts/package.mjs --win              Windows NSIS installer for this machine's architecture
+//   node scripts/package.mjs --win --all-arch   x64 and arm64 installers in one run, so latest.yml (the Windows
+//                                               update feed) lists both: what a release needs (CI's release workflow)
+//   --linux                                     configured, but untested
+// Build each system on its own OS (the Windows build on Windows). Nothing Mac-only (xcrun, codesign) runs for
+// --win or --linux. Unsigned unless the signing environment variables are set (scripts/builder-config.mjs,
+// docs/packaging.md).
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
-import { builderConfig, FONT_PACKAGES, notarizeMode, runtimeRequires } from "./builder-config.mjs";
+import { builderConfig, FONT_PACKAGES, notarizeMode, runtimeRequires, winSigning } from "./builder-config.mjs";
 import { icnsFromPngs } from "./mac-bundle.mjs";
+import { icoFromPng } from "./win-icon.mjs";
 import { notaryResult, notarytoolAuthArgs, uploadAssets, writeChecksums } from "./release.mjs";
 
 const pkg = path.resolve(import.meta.dirname, "..");
@@ -70,6 +76,13 @@ if (fs.existsSync(png(512)) && fs.existsSync(png(1024))) {
   fs.writeFileSync(path.join(res, "icon.icns"), icnsFromPngs({ 512: fs.readFileSync(png(512)), 1024: fs.readFileSync(png(1024)) }));
   fs.copyFileSync(png(1024), path.join(res, "icon.png"));
   icons = { icns: path.join(res, "icon.icns"), png: path.join(res, "icon.png") };
+  if (platform === "win") {
+    // The exe, installer and shortcut icon (16 to 256 px), and a copy beside main.js for the window icon (main.ts).
+    const ico = icoFromPng(fs.readFileSync(png(1024)));
+    fs.writeFileSync(path.join(res, "icon.ico"), ico);
+    fs.writeFileSync(path.join(appDir, "dist", "app-icon.ico"), ico);
+    icons.ico = path.join(res, "icon.ico");
+  }
 } else {
   console.warn("package: no rendered app icon (packages/brand/assets/app-icon-*.png); the installer will use Electron's icon.");
 }
@@ -79,6 +92,12 @@ if (fs.existsSync(png(512)) && fs.existsSync(png(1024))) {
 const output = path.join(pkg, "dist-release");
 fs.rmSync(output, { recursive: true, force: true });
 const config = builderConfig({ identity, electronVersion, env: process.env, pkgDir: pkg, appDir: ".", output, icons, runtimeModules: modules });
+if (platform === "win") {
+  const sign = winSigning(process.env);
+  if (sign === "azure") console.log(`package: Windows signing: Azure Trusted Signing (${process.env.AZURE_CODE_SIGNING_ACCOUNT} / ${process.env.AZURE_CERT_PROFILE})${process.env.WIN_CSC_LINK ? "; WIN_CSC_LINK is ignored" : ""}`);
+  else if (sign === "certificate") console.log(`package: Windows signing: the certificate in ${process.env.WIN_CSC_LINK ? "WIN_CSC_LINK" : "CSC_LINK"}`);
+  else console.log("package: Windows signing: none. Building UNSIGNED installers (SmartScreen will warn). Set the AZURE_* variables or WIN_CSC_LINK to sign (docs/packaging.md).");
+}
 let builder;
 try { builder = await import("electron-builder"); } catch {
   console.error("package: electron-builder isn't installed. Run `npm ci` at the repo root.");
@@ -99,7 +118,7 @@ config.afterPack = async (ctx) => {
 // app inside), then SHA256SUMS.txt is written beside them, which the website asks users to check. Stapling changes
 // the dmg, so the sums come last.
 config.afterAllArtifactBuild = async (result) => {
-  if (config.mac.notarize) {
+  if (platform === "mac" && config.mac.notarize) {
     const auth = notarytoolAuthArgs(notarizeMode(process.env), process.env);
     for (const dmg of result.artifactPaths.filter((f) => f.endsWith(".dmg"))) {
       console.log(`package: notarising ${path.basename(dmg)}`);
@@ -121,12 +140,14 @@ if (platform === "mac") {
     targets = Platform.MAC.createTarget(["dmg", "zip"], hostArch);
   }
 } else if (platform === "win") {
+  // Both architectures must come from one run: each run writes latest.yml with only the installers it built.
   targets = Platform.WINDOWS.createTarget(["nsis"], ...(allArch ? [Arch.x64, Arch.arm64] : [hostArch]));
 } else {
   targets = Platform.LINUX.createTarget(["AppImage"], ...(allArch ? [Arch.x64, Arch.arm64] : [hostArch]));
 }
 // Never upload: with a publish config, electron-builder would otherwise publish on its own when it sees CI or a git
-// tag. The update feed (latest-mac.yml) is still written; the release assets are attached by hand.
+// tag. The update feed (latest-mac.yml for mac, latest.yml for Windows) is still written; the mac release assets
+// are attached by hand, the Windows ones by the release workflow (.github/workflows/release.yml).
 const out = await build({ projectDir: appDir, config, publish: "never", ...(targets ? { targets } : { mac: [] }) });
 console.log(`package: built\n  ${out.map((f) => path.relative(repo, f)).join("\n  ")}`);
 console.log(`package: attach to the GitHub release\n  ${uploadAssets(output).join("\n  ")}`);

@@ -16,10 +16,10 @@ function fakeUpdater(check: (u: ReturnType<typeof fakeUpdater>) => Promise<unkno
   return u;
 }
 const NOW = new Date("2026-10-15T09:00:00.000Z");
-const make = (u: Updater, o: { supported?: boolean; auto?: boolean; beforeInstall?: () => Promise<void> } = {}) => {
+const make = (u: Updater, o: { supported?: boolean; auto?: boolean; beforeInstall?: () => Promise<void>; silentInstall?: boolean } = {}) => {
   const load = vi.fn(async () => u);
   const log = vi.fn();
-  const up = createUpdates({ supported: o.supported ?? true, auto: o.auto ?? true, load, now: () => NOW, log, beforeInstall: o.beforeInstall });
+  const up = createUpdates({ supported: o.supported ?? true, auto: o.auto ?? true, load, now: () => NOW, log, beforeInstall: o.beforeInstall, silentInstall: o.silentInstall });
   const changes = vi.fn();
   up.onChange(changes);
   return { up, load, log, changes };
@@ -29,10 +29,13 @@ beforeEach(() => { vi.useFakeTimers(); vi.setSystemTime(NOW); });
 afterEach(() => { vi.useRealTimers(); });
 
 describe("updatesSupported", () => {
-  it("only the packaged mac app, and never in an end-to-end run", () => {
+  it("only the packaged mac and Windows apps, and never in an end-to-end run", () => {
     expect(updatesSupported({ packaged: true, platform: "darwin", env: {} })).toBe(true);
     expect(updatesSupported({ packaged: false, platform: "darwin", env: {} })).toBe(false);
-    expect(updatesSupported({ packaged: true, platform: "win32", env: {} })).toBe(false);
+    expect(updatesSupported({ packaged: true, platform: "win32", env: {} })).toBe(true);
+    expect(updatesSupported({ packaged: false, platform: "win32", env: {} })).toBe(false);
+    expect(updatesSupported({ packaged: true, platform: "linux", env: {} })).toBe(false);
+    expect(updatesSupported({ packaged: true, platform: "win32", env: { CAREEROS_E2E_HOME: "C:\\x" } })).toBe(false);
     expect(updatesSupported({ packaged: true, platform: "darwin", env: { CAREEROS_E2E_HOME: "/tmp/x" } })).toBe(false);
   });
 });
@@ -67,6 +70,14 @@ describe("the update status", () => {
 
     up.install();
     await vi.waitFor(() => expect(u.quitAndInstall).toHaveBeenCalledWith(false, true));
+  });
+
+  it("installs silently when asked (Windows: the NSIS installer runs with /S instead of showing its wizard)", async () => {
+    const u = fakeUpdater(async (x) => { x.emit("update-downloaded", { version: "0.2.0" }); return null; });
+    const { up } = make(u, { silentInstall: true });
+    await up.check();
+    up.install();
+    await vi.waitFor(() => expect(u.quitAndInstall).toHaveBeenCalledWith(true, true));
   });
 
   it("lets go of Chrome before quit-and-install, so the app's quit handling can't hold up the relaunch", async () => {
@@ -207,7 +218,9 @@ describe("updateErrorText", () => {
   it("names offline, a release without the update feed, and a failed install; anything else is generic", () => {
     expect(updateErrorText(new Error("getaddrinfo ENOTFOUND github.com"))).toMatch(/internet connection/);
     expect(updateErrorText(new Error("Cannot find latest-mac.yml in the latest release artifacts (https://github.com/x): HttpError: 404"))).toMatch(/isn't ready for automatic updates/);
+    expect(updateErrorText(new Error("Cannot find latest.yml in the latest release artifacts (https://github.com/x): HttpError: 404"))).toMatch(/isn't ready for automatic updates/);
     expect(updateErrorText(new Error("Code signature at URL file:///x did not pass validation"))).toMatch(/couldn't be installed/);
+    expect(updateErrorText(new Error("New version 0.2.0 is not signed by the application owner: publisherNames: Example Labs"))).toMatch(/couldn't be installed/);
     expect(updateErrorText("weird")).toBe("Couldn't check for updates. Try again later, or download the newest version from GitHub.");
   });
 });

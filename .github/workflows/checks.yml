@@ -12,8 +12,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
+    # Windows is new: its leg runs and reports on every push, but doesn't fail the workflow until it has been green
+    # for a while. Remove this line then.
+    continue-on-error: ${{ matrix.os == 'windows-latest' }}
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
@@ -29,6 +32,7 @@ jobs:
           path: |
             ~/.cache/electron
             ~/Library/Caches/electron
+            ~\AppData\Local\electron\Cache
           # Keyed on package-lock.json so a bumped Electron pin (or any other dependency change)
           # invalidates the cache automatically, rather than drifting from a hard-coded version string.
           key: ${{ runner.os }}-electron-${{ hashFiles('package-lock.json') }}
@@ -51,6 +55,8 @@ jobs:
           name: brand-snapshots
           path: docs/assets/brand-snapshots/*.png
       - name: Desktop app end-to-end (Electron)
+        # bash on every runner (Git Bash on Windows), so the script below works unchanged.
+        shell: bash
         run: |
           if [ "$RUNNER_OS" = "Linux" ]; then
             # Ubuntu 24.04 blocks the unprivileged user namespaces Chromium's sandbox needs; allow them rather than turning the sandbox off.

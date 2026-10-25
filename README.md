@@ -1,8 +1,8 @@
 # JobCairn
 
-JobCairn is a local-first job search app for macOS, built around Claude. It finds jobs, scores your fit, flags visa sponsorship wording and tailors your resume and cover letter, and it keeps your whole search in one folder on your computer.
+JobCairn is a local-first job search app for macOS and Windows (beta), built around Claude. It finds jobs, scores your fit, flags visa sponsorship wording and tailors your resume and cover letter, and it keeps your whole search in one folder on your computer.
 
-[![Platform: macOS 13+](https://img.shields.io/badge/platform-macOS%2013%2B-lightgrey)](https://jobcairn.github.io/install.html)
+[![Platform: macOS 13+ · Windows 10/11 beta](https://img.shields.io/badge/platform-macOS%2013%2B%20%C2%B7%20Windows%2010%2F11%20beta-lightgrey)](https://jobcairn.github.io/install.html)
 [![Works with your Claude plan](https://img.shields.io/badge/works%20with-your%20Claude%20plan-d97757)](https://jobcairn.github.io/#faq)
 
 If JobCairn helps, please ⭐ star this repo. It helps others find it.
@@ -25,9 +25,13 @@ https://github.com/user-attachments/assets/2e3ae9be-a18c-4288-9b03-7cdf4d6b6984
 
 This repository holds the app's **source code**, its **releases** and **questions**.
 
-- **Download:** [latest release](https://github.com/JobCairn/jobcairn/releases/latest). Pick `-arm64.dmg` for Apple silicon or `-x64.dmg` for Intel.
-- **Install guide:** https://jobcairn.github.io/install.html. Builds are signed with an Apple Developer ID and notarised by Apple.
-- **Check your download:** each release has a `SHA256SUMS.txt` file. Run `shasum -a 256 -c SHA256SUMS.txt --ignore-missing` in the folder with the dmg.
+- **Download:** [latest release](https://github.com/JobCairn/jobcairn/releases/latest).
+  - **Mac:** `-arm64.dmg` for Apple silicon or `-x64.dmg` for Intel. Signed with an Apple Developer ID and notarised by Apple.
+  - **Windows (beta):** `-x64.exe` for most PCs or `-arm64.exe` for Arm PCs (Settings › System › About › System type). The Windows installer isn't code-signed, so Windows shows "Windows protected your PC": choose **More info**, then **Run anyway**. If Windows 11 Smart App Control is on, it blocks unsigned apps and JobCairn can't be installed.
+- **Install guide:** https://jobcairn.github.io/install.html
+- **Check your download:** each release has a `SHA256SUMS.txt` file.
+  - Mac: run `shasum -a 256 -c SHA256SUMS.txt --ignore-missing` in the folder with the dmg.
+  - Windows: run `Get-FileHash .\JobCairn-<version>-x64.exe -Algorithm SHA256` in PowerShell and compare it with the matching line.
 - **Questions and help:** [Discussions](https://github.com/JobCairn/jobcairn/discussions)
 - **Terms of use:** https://jobcairn.github.io/terms.html · **Privacy:** https://jobcairn.github.io/privacy.html
 

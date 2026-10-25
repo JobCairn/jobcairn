@@ -20,18 +20,34 @@ keeps a copy of `Electron.app` in `packages/app-electron/.dev-app/<name>.app` (g
 only when the Electron version, the identity or the icon changes. `node scripts/dev-app.mjs --prepare-only` makes
 the copy without launching it. Other systems launch Electron as before.
 
+`npm run dev` passes the renderer's dev server as `--dev-url=http://127.0.0.1:5173`, which `dev-app.mjs` turns into
+`CAREEROS_DEV_URL` for the app. Setting it there rather than in the npm script keeps the script working in every
+shell, cmd.exe and PowerShell included.
+
 ## Installers
 
 ```
 npm run package:mac              # repo root or packages/app-electron: this Mac's architecture, unsigned
 npm run package:mac:all -w @careeros/app-electron   # arm64 + x64 (downloads the other Electron build)
-npm run package:win -w @careeros/app-electron       # configured; build on Windows or in CI
+npm run package:win              # repo root or packages/app-electron, on Windows: this PC's architecture
+npm run package:win:all          # on Windows: x64 + arm64 in one run (what a release needs; CI does this)
 npm run package:linux -w @careeros/app-electron     # configured; build on Linux or in CI
 ```
 
-Output: `packages/app-electron/dist-release/` (gitignored): `<name>-<version>-<arch>.dmg`, `-mac.zip`, a
-`.blockmap` beside each, `latest-mac.yml` (the update feed), `SHA256SUMS.txt` and the unpacked
-`mac-<arch>/<name>.app`. The package script ends by listing the files to attach to the GitHub release.
+Output: `packages/app-electron/dist-release/` (gitignored).
+
+- macOS: `<name>-<version>-<arch>.dmg`, `-mac.zip`, a `.blockmap` beside each, `latest-mac.yml` (the mac update
+  feed), `SHA256SUMS.txt` and the unpacked `mac-<arch>/<name>.app`.
+- Windows: `<name>-<version>-x64.exe` and `<name>-<version>-arm64.exe` (per-user NSIS installers: no admin rights
+  needed, and the person may pick the folder), a `.blockmap` beside each, `latest.yml` (the Windows update feed),
+  `SHA256SUMS.txt` and the unpacked `win-unpacked/` (x64) and `win-arm64-unpacked/`.
+
+The package script ends by listing the files to attach to the GitHub release.
+
+Icons: macOS gets `icon.icns` (`mac-bundle.mjs`), Windows `icon.ico` (`win-icon.mjs`: the 1024 px render decoded,
+area-averaged to 16, 24, 32, 48, 64, 128 and 256 px and stored as PNG entries, plain JavaScript with `node:zlib`).
+The .ico is also copied into the app as `dist/app-icon.ico`, which `main.ts` uses for the window icon on Windows.
+Nothing Mac-only (`xcrun`, `codesign`, notarisation) runs for a Windows build.
 
 `scripts/package.mjs` builds the app (`scripts/build.mjs`), stages only what ships in `.package/app` (the
 esbuild bundles, schemas and a dependency-free `package.json`), then runs electron-builder with the config from
@@ -85,7 +101,33 @@ set. Then, and only then:
 | `APPLE_API_KEY`, `APPLE_API_KEY_ID`, `APPLE_API_ISSUER` | Notarise with an App Store Connect API key. `APPLE_API_KEY` is the path to the `.p8` file. |
 | `APPLE_ID`, `APPLE_APP_SPECIFIC_PASSWORD`, `APPLE_TEAM_ID` | Notarise with an Apple ID and an app-specific password. |
 | `APPLE_KEYCHAIN_PROFILE` (+ optional `APPLE_KEYCHAIN`) | Notarise with credentials saved by `xcrun notarytool store-credentials` (recommended: no secret in the environment). |
-| `WIN_CSC_LINK`, `WIN_CSC_KEY_PASSWORD` | Sign the Windows installer. |
+| `WIN_CSC_LINK`, `WIN_CSC_KEY_PASSWORD` | Sign the Windows installers with a .pfx certificate (see Windows signing below). |
+
+### Windows signing (optional)
+
+Unsigned Windows installers work, but SmartScreen shows "Windows protected your PC" until the person clicks More
+info > Run anyway. `scripts/package.mjs` logs which of these it uses (`winSigning` in `builder-config.mjs`):
+
+1. **Azure Trusted Signing** (recommended; no certificate file to keep) when all of these are set. A partly set
+   group stops the build with the missing names rather than shipping unsigned. Empty values count as unset (CI
+   passes missing secrets as empty strings).
+
+   | Variable | What it is |
+   |----------|------------|
+   | `AZURE_TRUSTED_SIGNING_ENDPOINT` | The account's regional endpoint, e.g. `https://eus.codesigning.azure.net` |
+   | `AZURE_CODE_SIGNING_ACCOUNT` | The Trusted Signing account name |
+   | `AZURE_CERT_PROFILE` | The certificate profile name |
+   | `AZURE_PUBLISHER_NAME` | The certificate's subject CN, exactly (e.g. `Example Labs`). electron-builder writes it into the app's `app-update.yml`, and the installed app refuses an update installer not signed by that name, so a wrong value breaks every later update. |
+   | `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET` | An Entra ID app registration with the "Trusted Signing Certificate Profile Signer" role on the account |
+
+   electron-builder passes them to `win.azureSignOptions`, which signs through Microsoft's `TrustedSigning`
+   PowerShell module (it installs it if needed), so this only works on Windows.
+2. **A certificate file:** `WIN_CSC_LINK` (a .pfx path or base64) and `WIN_CSC_KEY_PASSWORD`, read by
+   electron-builder itself. Ignored when the Azure variables are set (electron-builder can't use both).
+3. **Neither:** unsigned, with a log line saying so.
+
+Signing covers the app's exe and the installer. Once releases are signed, keep signing them with the same publisher
+name: an installed signed app only accepts updates signed by its publisher.
 
 ### Helper binaries and native code
 
@@ -108,16 +150,28 @@ Notarisation rejects any Mach-O file in the bundle that isn't signed with the ha
 ### Checksums
 
 Every package run writes `dist-release/SHA256SUMS.txt` (an electron-builder `afterAllArtifactBuild` hook) for the
-dmgs and zips, in `shasum -a 256 -c` format. Publish it next to the dmgs: the website asks users to check it. A
-host-only build lists one architecture; `package:mac:all` lists arm64 and x64.
+dmgs and zips, or the Windows `.exe` installers, in `shasum -a 256 -c` format. Publish it next to the installers: the
+website asks users to check it. A host-only build lists one architecture; `package:mac:all` and `package:win:all`
+list both.
+
+The release carries **one** `SHA256SUMS.txt` for every system. The mac and Windows builds each write their own, so
+merge before uploading (after `release:verify`, which checks the file against the local installers only):
+
+```
+gh release download <tag> --pattern SHA256SUMS.txt --dir /tmp/release-sums
+node packages/app-electron/scripts/merge-checksums.mjs packages/app-electron/dist-release/SHA256SUMS.txt /tmp/release-sums/SHA256SUMS.txt
+```
+
+The release workflow's Windows job does this for its lines; do the same for the mac ones.
 
 ### In-app updates
 
-The installed mac app updates itself from the public GitHub releases (`JobCairn/jobcairn`) with electron-updater
-(`packages/app-electron/src/updates.ts`). It checks 10 seconds after launch and every 6 hours (unless the person turns
-"Check for updates automatically" off in About), downloads the new zip in the background, and shows a dot on the
-version in the sidebar. "Restart to update" in About installs it; otherwise it installs on the next quit. Development
-runs, end-to-end runs and Windows and Linux builds never check.
+The installed mac and Windows apps update themselves from the public GitHub releases (`JobCairn/jobcairn`) with
+electron-updater (`packages/app-electron/src/updates.ts`). They check 10 seconds after launch and every 6 hours
+(unless the person turns "Check for updates automatically" off in About), download the update in the background (the
+zip on macOS, the NSIS installer on Windows), and show a dot on the version in the sidebar. "Restart to update" in
+About installs it; otherwise it installs on the next quit. On Windows the installer runs silently (`/S`) into the
+existing install folder. Development runs, end-to-end runs and Linux builds never check.
 
 How it fits together:
 
@@ -144,12 +198,43 @@ How it fits together:
    - `JobCairn-<version>-arm64-mac.zip` and `JobCairn-<version>-mac.zip` (x64), for in-app updates
    - every `.blockmap` (smaller, partial downloads for the next update)
    - `latest-mac.yml`
-   - `SHA256SUMS.txt`
+   - `SHA256SUMS.txt`, merged first with the one the Windows job already attached (see Checksums), uploaded with
+     `--clobber`
+   The Windows files (`*.exe`, their blockmaps, `latest.yml`) are attached by the release workflow; check they are
+   there before publishing.
 4. Write the release notes in the release body: the app shows them under "What's new" once the update is ready.
 5. Publish the release as a normal (latest) release, not a pre-release. Installed apps see it within 6 hours, or at
    once with "Check for updates".
 
 Never rename the files: `latest-mac.yml` names the zips exactly as electron-builder wrote them.
+
+### Windows: two architectures, one feed
+
+The Windows updater reads `latest.yml` (there is no per-architecture Windows feed). The config builds **one
+installer per architecture** (`nsis.buildUniversalInstaller: false`, `artifactName`
+`${productName}-${version}-${arch}.${ext}`) in **one** electron-builder run, which writes both installers into the
+same `latest.yml`. electron-updater (6.x, `findFile`) then picks the entry whose file name contains the running
+app's `process.arch`, so an x64 PC gets the x64 installer and an arm64 PC the arm64 one (an x64 build running under
+emulation on arm64 reports `x64` and stays x64).
+
+Why not the alternatives:
+
+- **One "universal" installer** (electron-builder's default for two archs) carries both apps: about twice the
+  download for every install and update. It would also work with the updater, but there is no need for it.
+  With `${arch}` in the name and the default left on, electron-builder would build the universal installer as well
+  as the two per-arch ones.
+- **Two separate runs or CI jobs** (one per arch): each writes its own `latest.yml` with only its installer, and the
+  second upload replaces the first, so one architecture silently gets the other's installer. Always use
+  `package:win:all`.
+- **Dropping `${arch}` from the name:** the updater can't tell the entries apart and every PC takes the first one.
+
+`release:verify` on Windows checks that `latest.yml` lists an installer for each architecture built.
+
+**Windows release** (the `windows` job in `.github/workflows/release.yml`, on the same `v*` tag, after the draft
+exists): `npm ci`, `npm run package:win:all` (Azure Trusted Signing when the repository has the `AZURE_*` secrets
+above, unsigned otherwise), `npm run release:verify`, then it merges its `SHA256SUMS.txt` lines with the draft's
+and uploads `*.exe`, `*.exe.blockmap`, `latest.yml` and `SHA256SUMS.txt` with the workflow's token. To build it by
+hand instead: run the same commands on a Windows PC and attach those files.
 
 ### Checking a build
 
@@ -161,6 +246,12 @@ npm run release:verify -- --require-signed    # for a public release: an ad-hoc 
 It checks SHA256SUMS.txt, checks that `latest-mac.yml` lists each zip with its real sha512 and size, scans for unsigned binaries and runs `codesign --verify --deep --strict`. For a Developer
 ID build it also runs `spctl -a -vv` (must say `source=Notarized Developer ID`) and `xcrun stapler validate` on
 each app and each dmg. On an ad-hoc build those two are skipped with a note. Needs the Xcode Command Line Tools.
+
+On Windows (`scripts/verify-release-win.mjs`) it checks SHA256SUMS.txt; that `latest.yml` lists an installer for
+each architecture built, each with its real sha512 and size and its `.blockmap`; that the run-time packages import
+in the app's own Electron (this PC's architecture only); and runs `signtool verify /pa` on each installer and app
+exe. `signtool` comes with the Windows SDK: without it the signature check is skipped with a note (or fails with
+`--require-signed`), and an unsigned build is skipped with a note unless `--require-signed` is given.
 
 ### Owner setup, step by step
 

@@ -33,13 +33,18 @@ This repository holds the app's **source code**, its **releases** and **question
 
 ## Build from source
 
-You need macOS 13 or later and Node.js 22.13 or later.
+You need Node.js 22.13 or later, and macOS 13 or later for the Mac app or Windows 10/11 for the Windows app.
+Build each app on its own system.
 
 ```sh
 npm ci
 npm run typecheck && npm test
-npm run package:mac   # unsigned build in packages/app-electron/dist-release
+npm run package:mac       # macOS: unsigned build in packages/app-electron/dist-release
+npm run package:win       # Windows: unsigned NSIS installer for this PC's architecture
+npm run package:win:all   # Windows: x64 and arm64 installers and one latest.yml (what a release needs)
 ```
+
+Signing is optional and set up with environment variables; see [docs/packaging.md](docs/packaging.md).
 
 [docs/development.md](docs/development.md) explains how the app is put together. Coding agents (and people) should read [AGENTS.md](AGENTS.md) first: it has the repo rules and how to follow the implementation plans in `docs/superpowers/plans/`.
 

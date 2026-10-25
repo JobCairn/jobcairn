@@ -1,2 +1,7 @@
 { "id": "chrome", "name": "Google Chrome", "order": 30, "required": true, "why": "Reads job sites in your own Chrome profile and renders videos.", "docs": "https://www.google.com/chrome/",
-  "platforms": { "darwin": { "check": "test -d '/Applications/Google Chrome.app'", "install": ["brew install --cask google-chrome"] } } }
+  "platforms": { "darwin": { "check": "test -d '/Applications/Google Chrome.app'", "install": ["brew install --cask google-chrome"] },
+  "win32": {
+    "check": "if ((Test-Path \"$env:ProgramFiles/Google/Chrome/Application/chrome.exe\") -or (Test-Path \"${env:ProgramFiles(x86)}/Google/Chrome/Application/chrome.exe\") -or (Test-Path \"$env:LOCALAPPDATA/Google/Chrome/Application/chrome.exe\")) { exit 0 } else { exit 1 }",
+    "install": [
+      "winget install --id Google.Chrome --exact --source winget --accept-source-agreements --accept-package-agreements --silent"
+    ] } } }

@@ -1,2 +1,7 @@
 { "id": "agent-browser", "name": "agent-browser", "order": 80, "required": true, "why": "Lets Claude read job ads in your own Chrome profile.", "docs": "https://github.com/vercel-labs/agent-browser",
-  "platforms": { "darwin": { "check": "(command -v agent-browser >/dev/null && agent-browser --version) || \"$HOME/.npm-global/bin/agent-browser\" --version", "install": ["npm install -g agent-browser@0.38.2"] } } }
+  "platforms": { "darwin": { "check": "(command -v agent-browser >/dev/null && agent-browser --version) || \"$HOME/.npm-global/bin/agent-browser\" --version", "install": ["npm install -g agent-browser@0.38.2"] },
+  "win32": {
+    "check": "if ((Get-Command agent-browser -ErrorAction SilentlyContinue)) { agent-browser --version; if ($LASTEXITCODE -eq 0) { exit 0 } }; if (Test-Path \"$HOME/.npm-global/agent-browser.cmd\") { & \"$HOME/.npm-global/agent-browser.cmd\" --version; if ($LASTEXITCODE -eq 0) { exit 0 } }; exit 1",
+    "install": [
+      "npm install -g agent-browser@0.38.2"
+    ] } } }

@@ -1,2 +1,8 @@
 { "id": "claude-code", "name": "Claude Code", "order": 20, "required": true, "why": "The AI that does the work, on your own Claude plan.", "docs": "https://docs.claude.com/en/docs/claude-code/setup",
-  "platforms": { "darwin": { "check": "command -v claude >/dev/null && claude --version", "install": ["curl -fsSL https://claude.ai/install.sh | bash"] } } }
+  "platforms": { "darwin": { "check": "command -v claude >/dev/null && claude --version", "install": ["curl -fsSL https://claude.ai/install.sh | bash"] },
+  "win32": {
+    "check": "if (-not ((Test-Path \"$env:ProgramFiles/Git/bin/bash.exe\") -or (Get-Command git -ErrorAction SilentlyContinue))) { exit 1 }; if (-not (Get-Command claude -ErrorAction SilentlyContinue)) { exit 1 }; claude --version; if ($LASTEXITCODE -ne 0) { exit 1 }",
+    "install": [
+      "if (-not ((Test-Path \"$env:ProgramFiles/Git/bin/bash.exe\") -or (Get-Command git -ErrorAction SilentlyContinue))) { winget install --id Git.Git --exact --source winget --accept-source-agreements --accept-package-agreements --silent; if ($LASTEXITCODE -ne 0) { exit 1 } }",
+      "powershell -NoProfile -ExecutionPolicy Bypass -Command \"irm https://claude.ai/install.ps1 | iex\""
+    ] } } }

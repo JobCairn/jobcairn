@@ -1,2 +1,7 @@
 { "id": "ffmpeg", "name": "ffmpeg", "order": 40, "required": true, "why": "Builds the learning videos and cleans up audio.", "docs": "https://ffmpeg.org",
-  "platforms": { "darwin": { "check": "ffmpeg -version && ffprobe -version", "install": ["brew install ffmpeg"] } } }
+  "platforms": { "darwin": { "check": "ffmpeg -version && ffprobe -version", "install": ["brew install ffmpeg"] },
+  "win32": {
+    "check": "if (-not (Get-Command ffmpeg -ErrorAction SilentlyContinue) -or -not (Get-Command ffprobe -ErrorAction SilentlyContinue)) { exit 1 }; ffmpeg -version; if ($LASTEXITCODE -ne 0) { exit 1 }; ffprobe -version; if ($LASTEXITCODE -ne 0) { exit 1 }",
+    "install": [
+      "winget install --id Gyan.FFmpeg --exact --source winget --accept-source-agreements --accept-package-agreements --silent"
+    ] } } }

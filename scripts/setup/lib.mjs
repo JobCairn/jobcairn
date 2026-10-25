@@ -1,4 +1,4 @@
-import { execSync } from "node:child_process";
+import { execFileSync, execSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -42,8 +42,27 @@ export function loadComponents(dir) {
   return out.sort((a, b) => a.order - b.order || a.id.localeCompare(b.id));
 }
 
-export function shellExec(cmd, quiet = true) {
-  try { execSync(cmd, { stdio: quiet ? "ignore" : "inherit", shell: "/bin/bash" }); return 0; }
+/**
+ * Windows: each command runs in Windows PowerShell, with scripts allowed for that run only. It first adds the
+ * machine and user PATH from the registry, so the next step and the re-check find a tool winget just installed
+ * (this process's own PATH predates the install). -EncodedCommand carries the command as is: no quoting to get wrong.
+ */
+export const WIN_PATH_REFRESH = "$env:Path = (@($env:Path, [Environment]::GetEnvironmentVariable('Path', 'Machine'), [Environment]::GetEnvironmentVariable('Path', 'User')) | Where-Object { $_ }) -join ';'";
+
+/** How to run one command on Windows: [program, args, options] for execFileSync. Null elsewhere (bash, as before). */
+export function windowsShell(cmd, platform = process.platform) {
+  if (platform !== "win32") return null;
+  const script = `${WIN_PATH_REFRESH}\n${cmd}`;
+  return ["powershell.exe", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-EncodedCommand", Buffer.from(script, "utf16le").toString("base64")], { windowsHide: true }];
+}
+
+export function shellExec(cmd, quiet = true, platform = process.platform) {
+  const win = windowsShell(cmd, platform);
+  try {
+    if (win) execFileSync(win[0], win[1], { ...win[2], stdio: quiet ? "ignore" : "inherit" });
+    else execSync(cmd, { stdio: quiet ? "ignore" : "inherit", shell: "/bin/bash" });
+    return 0;
+  }
   catch (e) { return typeof e.status === "number" ? e.status : 1; }
 }
 
@@ -86,7 +105,18 @@ const NPM_GLOBAL = /^npm (install|i) (-g|--global)\b/;
 const SUDO_NOTE = "sudo asks for your Mac password (the one you log in with). Nothing shows while you type it; that's normal.";
 
 /** What to do when npm can't write its global folder: the no-password fix first, then the sudo ones. */
-export function npmPermissionHelp(cmd, prefix) {
+export function npmPermissionHelp(cmd, prefix, platform = process.platform) {
+  if (platform === "win32") {
+    return [
+      `npm isn't allowed to write to ${prefix} (access denied). Fix it in PowerShell, then run setup again.`,
+      "",
+      "  Give npm a folder in your home folder (no administrator needed):",
+      '    New-Item -ItemType Directory -Force "$HOME\\.npm-global" | Out-Null; npm config set prefix "$HOME\\.npm-global"',
+      '    [Environment]::SetEnvironmentVariable("Path", "$HOME\\.npm-global;" + [Environment]::GetEnvironmentVariable("Path", "User"), "User")',
+      "  Then close PowerShell, open it again and run setup again.",
+      "  If PowerShell says running scripts is disabled, run this once first: Set-ExecutionPolicy -Scope CurrentUser RemoteSigned",
+    ].join("\n");
+  }
   return [
     `npm isn't allowed to write to ${prefix} (permission denied). Fix it one of two ways in Terminal, then run setup again.`,
     "",
@@ -102,8 +132,13 @@ export function npmPermissionHelp(cmd, prefix) {
 }
 
 /** npm's global folder, or null when npm can't say. */
-export function npmGlobalPrefix() {
-  try { return execSync("npm prefix -g", { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], shell: "/bin/bash" }).trim() || null; }
+export function npmGlobalPrefix(platform = process.platform) {
+  const win = windowsShell("npm prefix -g", platform);
+  try {
+    const out = win ? execFileSync(win[0], win[1], { ...win[2], encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] })
+      : execSync("npm prefix -g", { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], shell: "/bin/bash" });
+    return out.trim() || null;
+  }
   catch { return null; }
 }
 
@@ -130,7 +165,7 @@ export function withNpmFallback(exec, o = {}) {
     if (code === 0 || !NPM_GLOBAL.test(cmd)) return code;
     const p = prefix();
     if (!p || writable(p)) return code;
-    log(npmPermissionHelp(cmd, p));
+    log(npmPermissionHelp(cmd, p, o.platform));
     log("\nTrying your home folder instead (~/.npm-global, no password needed)...");
     return exec(cmd.replace(NPM_GLOBAL, (m) => `${m} --prefix "$HOME/.npm-global" --cache "$HOME/.npm-global/_cache"`));
   };

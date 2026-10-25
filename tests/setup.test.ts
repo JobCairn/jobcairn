@@ -3,7 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 // @ts-expect-error plain ESM module without types
-import { HOMEBREW_ENV, isRoot, loadComponents, npmPermissionHelp, runSetup, validateComponent, withNpmFallback } from "../scripts/setup/lib.mjs";
+import { HOMEBREW_ENV, isRoot, loadComponents, npmPermissionHelp, runSetup, validateComponent, WIN_PATH_REFRESH, windowsShell, withNpmFallback } from "../scripts/setup/lib.mjs";
 
 const comp = (id: string, over: Record<string, unknown> = {}) => ({
   id, name: id, order: 10, required: true, why: "test", docs: "https://example.com",
@@ -143,7 +143,7 @@ describe("agent-browser in setup.sh", () => {
   });
 
   it("the guidance gives the no-password fix first, then sudo, and says what sudo asks", () => {
-    const t = npmPermissionHelp("npm install -g agent-browser@0.38.2", "/usr/local");
+    const t = npmPermissionHelp("npm install -g agent-browser@0.38.2", "/usr/local", "darwin");
     expect(t).toContain("mkdir -p ~/.npm-global && npm config set prefix ~/.npm-global");
     expect(t).toContain(`echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> ~/.zprofile`);
     expect(t).toContain('sudo chown -R "$(whoami)" "$(npm config get prefix)"/{lib/node_modules,bin,share}');
@@ -205,5 +205,90 @@ describe("security requirements", () => {
     const d = fs.mkdtempSync(path.join(os.tmpdir(), "comp-mismatch-"));
     fs.writeFileSync(path.join(d, "wrong-name.json"), JSON.stringify(comp("node")));
     expect(() => loadComponents(d)).toThrow(/wrong-name\.json.*must match id "node"/);
+  });
+});
+
+describe("setup on Windows", () => {
+  const dir = path.resolve(import.meta.dirname, "../setup/components");
+  const win = (id: string) => JSON.parse(fs.readFileSync(path.join(dir, `${id}.json`), "utf8")).platforms.win32 as { check: string; install: string[] };
+  const winComp = (id: string, over: Record<string, unknown> = {}) => comp(id, { platforms: { win32: { check: `check-${id}`, install: [`install-${id}`] } }, ...over });
+
+  it("runs the same components with their win32 commands", () => {
+    const installs: string[] = [];
+    const r = runSetup({ components: [winComp("a"), winComp("b")], mode: "install", platform: "win32", exec: fakeExec(new Set(["a"]), installs) });
+    expect(installs).toEqual(["b"]);
+    expect(r.results.map((x: { state: string }) => x.state)).toEqual(["ok", "installed"]);
+    expect(runSetup({ components: [winComp("a")], mode: "doctor", platform: "darwin", exec: () => 0 }).results[0].state).toBe("unsupported");
+  });
+
+  it("every shipped component has a win32 check and install, in PowerShell, with no stray control characters", () => {
+    for (const c of loadComponents(dir)) {
+      const w = c.platforms.win32 as { check: string; install: string[] } | undefined;
+      expect(w, `${c.id} needs platforms.win32`).toBeDefined();
+      // A JSON "\n" or "\b" from a Windows path with one backslash would parse silently into a control character.
+      // eslint-disable-next-line no-control-regex
+      for (const s of [w!.check, ...w!.install]) expect(s, c.id).not.toMatch(/[\u0000-\u001f]/);
+      for (const s of [w!.check, ...w!.install]) expect(s, c.id).not.toMatch(/\bcommand -v\b|(^|[\s"'])\/bin\/|&&|\bbrew\b|\bsudo\b|\btest -/);
+    }
+  });
+
+  it("installs with winget ids, silently and agreeing to the terms", () => {
+    const ids: Record<string, string> = { node: "OpenJS.NodeJS.LTS", python: "Python.Python.3.12", ffmpeg: "Gyan.FFmpeg", chrome: "Google.Chrome" };
+    for (const [id, pkg] of Object.entries(ids)) {
+      const cmd = win(id).install.join("\n");
+      expect(cmd, id).toContain(`winget install --id ${pkg} --exact`);
+      expect(cmd, id).toContain("--accept-source-agreements --accept-package-agreements --silent");
+    }
+  });
+
+  it("Claude Code: Git for Windows first when it's missing (Claude Code needs Git Bash), then Anthropic's PowerShell installer", () => {
+    const c = win("claude-code");
+    expect(c.install[0]).toMatch(/^if \(-not .*Git\/bin\/bash\.exe.*winget install --id Git\.Git /);
+    expect(c.install[1]).toBe('powershell -NoProfile -ExecutionPolicy Bypass -Command "irm https://claude.ai/install.ps1 | iex"');
+    expect(c.check).toContain("Git/bin/bash.exe");
+    expect(c.check).toContain("Get-Command claude");
+  });
+
+  it("pins the same versions as on a Mac, and the voice uses the venv's Scripts\\python.exe", () => {
+    const mac = (id: string) => JSON.parse(fs.readFileSync(path.join(dir, `${id}.json`), "utf8")).platforms.darwin as { install: string[] };
+    expect(win("agent-browser").install).toEqual(mac("agent-browser").install);
+    expect(win("agent-browser").check).toContain("$HOME/.npm-global/agent-browser.cmd");
+    expect(win("hyperframes").install).toEqual(mac("hyperframes").install);
+    expect(win("hyperframes").check).toContain("0\\.8\\.140");
+    const st = win("supertonic");
+    expect(st.install.join(" ")).toContain("supertonic==1.3.1");
+    expect(st.install.join(" ")).not.toContain("--upgrade");
+    expect(st.check).toContain(".careeros/venv/Scripts/python.exe");
+    expect(st.install.slice(1).every((s) => s.includes(".careeros/venv/Scripts/python.exe"))).toBe(true);
+    const w = win("whisper");
+    expect(w.check).toContain("ggml-base.en.bin");
+    expect(w.check).toContain("ggml-small.en.bin");
+    expect(w.install.join(" ")).toContain("--model base.en");
+  });
+
+  it("runs each command in PowerShell with scripts allowed for that run, after picking up newly installed tools", () => {
+    expect(windowsShell("brew install node", "darwin")).toBeNull();
+    const [file, args, opts] = windowsShell("node --version", "win32");
+    expect(file).toBe("powershell.exe");
+    expect(args.slice(0, -1)).toEqual(["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-EncodedCommand"]);
+    expect(Buffer.from(args.at(-1), "base64").toString("utf16le")).toBe(`${WIN_PATH_REFRESH}\nnode --version`);
+    expect(opts).toEqual({ windowsHide: true });
+  });
+
+  it("npm permission help: PowerShell lines, no sudo, and the execution policy note", () => {
+    const t = npmPermissionHelp("npm install -g agent-browser@0.38.2", "C:\\Program Files\\nodejs", "win32");
+    expect(t).toContain('npm config set prefix "$HOME\\.npm-global"');
+    expect(t).toContain("Set-ExecutionPolicy -Scope CurrentUser RemoteSigned");
+    expect(t).not.toMatch(/sudo|zprofile|Mac/);
+  });
+
+  it("setup.ps1 mirrors setup.sh: plain ASCII, winget for Node.js, then the same runner", () => {
+    const ps = fs.readFileSync(path.resolve(import.meta.dirname, "../setup.ps1"), "utf8");
+    // eslint-disable-next-line no-control-regex
+    expect(ps).toMatch(/^[\u0000-\u007f]*$/);
+    expect(ps).toContain("winget install --id OpenJS.NodeJS.LTS");
+    expect(ps).toContain("winget (App Installer from the Microsoft Store) is needed first");
+    expect(ps).toContain("node scripts/setup/run.mjs doctor");
+    expect(ps).toContain("node scripts/setup/run.mjs install");
   });
 });

@@ -198,7 +198,10 @@ describe("setup on Windows", () => {
     const state = async (o: { git: boolean }) => (await win({ claude: true, ...o }).call<SetupView>("setup.status", false)).tools.find((t) => t.id === "claude-code")?.state;
     expect(await state({ git: true })).toBe("ok");
     expect(await state({ git: false })).toBe("missing");
-    expect(findGitBash({ env: { PATH: "C:\\Program Files\\Git\\cmd" }, exists: (p) => p === "C:\\Program Files\\Git\\cmd\\git.exe" })).toBe(true);
+    const git = ["D:\\Git\\cmd\\git.exe", "D:\\Git\\bin\\bash.exe"];
+    expect(findGitBash({ env: { PATH: "D:\\Git\\cmd" }, exists: (p) => git.includes(p), machinePath: () => [] })).toBe("D:\\Git\\bin\\bash.exe");
+    // git.exe alone isn't enough: Claude Code runs bash.exe.
+    expect(findGitBash({ env: { PATH: "D:\\Git\\cmd" }, exists: (p) => p === git[0], machinePath: () => [] })).toBeNull();
   });
 
   it("needs winget first for winget tools, and says how to get it", async () => {

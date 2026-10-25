@@ -3,12 +3,16 @@ import path from "node:path";
 import { CLAUDE_MIN_VERSION, compareVersions, parseVersion, type ClaudeAuth, type ClaudeCliProblem, type ClaudeLogin } from "@careeros/contract";
 import type { McpLaunch } from "./args.js";
 import type { ProcessRunner } from "./process.js";
+import { findGitBash } from "../win-paths.js";
 
 /** What main gives the engine. The renderer never sees any of it. */
 export interface ClaudeHost {
   runner: ProcessRunner;
   platform: NodeJS.Platform;
-  /** Only PATH, HOME/USERPROFILE, APPDATA and npm_config_prefix are read, to find the CLI. */
+  /**
+   * Only PATH, HOME/USERPROFILE, APPDATA and npm_config_prefix are read, to find the CLI; on Windows also
+   * ProgramFiles, LOCALAPPDATA and CLAUDE_CODE_GIT_BASH_PATH, to find Git Bash (win-paths findGitBash).
+   */
   env: NodeJS.ProcessEnv;
   home: string;
   /** The bundled CareerOS plugin folder (with .claude-plugin/plugin.json), passed to each run with --plugin-dir. */
@@ -76,23 +80,34 @@ export function launchFor(cli: string, h: ClaudeHost): ClaudeLaunch | null {
   return node ? { cli, cmd: node, pre: [script] } : null;
 }
 
-export interface CliCheck { launch: ClaudeLaunch | null; version: string; problem: ClaudeCliProblem | null }
+/**
+ * `gitBash` (Windows): the bash.exe Claude Code's Bash tool uses, passed to runs as CLAUDE_CODE_GIT_BASH_PATH.
+ * `noGitBash`: Claude Code is there but Git Bash isn't, so it counts as missing, as Setup's card says (its Claude Code
+ * install puts Git in first).
+ */
+export interface CliCheck { launch: ClaudeLaunch | null; version: string; problem: ClaudeCliProblem | null; gitBash?: string; noGitBash?: true }
 
 export async function checkCli(h: ClaudeHost, env: Record<string, string>): Promise<CliCheck> {
   const cli = findClaude(h);
   if (!cli) return { launch: null, version: "", problem: "missing" };
+  let gitBash: string | null = null;
+  if (h.platform === "win32") {
+    gitBash = findGitBash({ env: h.env, exists: h.isExecutable ?? defaultExecutable(h.platform) });
+    if (!gitBash) return { launch: null, version: "", problem: "missing", noGitBash: true };
+  }
+  const done = (c: CliCheck): CliCheck => (gitBash ? { ...c, gitBash } : c);
   const launch = launchFor(cli, h);
-  if (!launch) return { launch: null, version: "", problem: "broken" };
+  if (!launch) return done({ launch: null, version: "", problem: "broken" });
   let out = "";
   try {
     const r = await h.runner.run(launch.cmd, [...launch.pre, "--version"], { cwd: h.home, env, timeoutMs: DETECT_TIMEOUT_MS });
-    if (r.code !== 0 || r.timedOut) return { launch, version: "", problem: "broken" };
+    if (r.code !== 0 || r.timedOut) return done({ launch, version: "", problem: "broken" });
     out = r.stdout;
-  } catch { return { launch, version: "", problem: "broken" }; }
+  } catch { return done({ launch, version: "", problem: "broken" }); }
   const v = parseVersion(out);
-  if (!v) return { launch, version: "", problem: "broken" };
+  if (!v) return done({ launch, version: "", problem: "broken" });
   const version = v.join(".");
-  return { launch, version, problem: compareVersions(version, CLAUDE_MIN_VERSION) < 0 ? "too_old" : null };
+  return done({ launch, version, problem: compareVersions(version, CLAUDE_MIN_VERSION) < 0 ? "too_old" : null });
 }
 
 const LOGIN_KEYS = ["loggedIn", "logged_in", "isLoggedIn", "authenticated"];

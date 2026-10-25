@@ -48,6 +48,35 @@ describe("Claude engine: setup state", () => {
     expect(readRecord("integrations", layout(x.root).integrations).claude_code).toEqual({ consent_at: "2026-01-15T09:00:00.000Z", notice_version: 3 });
   });
 
+  it("Windows (simulated): Claude Code without Git Bash isn't ready, and runs get the Git Bash that was found", async () => {
+    const x = setup({ run: writes(TAILORED) });
+    await x.ready;
+    const claude = "C:\\Tools\\claude.exe";
+    const files = new Set([claude]);
+    Object.assign(x.f.host, { platform: "win32", env: { ...x.f.host.env, PATH: "C:\\Tools;D:\\Git\\cmd" }, isExecutable: (p: string) => files.has(p) });
+    x.f.runner.calls.length = 0;
+    const without = await x.call<ClaudeEngineState>("claude.engine", true);
+    expect(without).toMatchObject({ ready: false, cli: { found: false, problem: "missing" } });
+    await expect(x.call("claude.run", "tailor_application", ACME, {})).rejects.toThrow(/needs Git for Windows/);
+    expect(x.f.runner.calls.filter((c) => c.args[0] === "--version")).toHaveLength(0);
+
+    files.add("D:\\Git\\cmd\\git.exe").add("D:\\Git\\bin\\bash.exe");
+    expect(await x.call<ClaudeEngineState>("claude.engine", true)).toMatchObject({ ready: true, cli: { found: true, problem: null } });
+    const started = await x.call<ClaudeRunView>("claude.run", "tailor_application", ACME, {});
+    await until(x.call, finished(started.id));
+    const run = x.f.runner.calls.find((c) => c.args[0] === "-p")!;
+    expect(run.cmd).toBe(claude);
+    expect(run.env).toMatchObject({ CLAUDE_CODE_GIT_BASH_PATH: "D:\\Git\\bin\\bash.exe" });
+  });
+
+  it("macOS runs get no CLAUDE_CODE_GIT_BASH_PATH", async () => {
+    const x = setup({ run: writes(TAILORED) });
+    await x.ready;
+    const started = await x.call<ClaudeRunView>("claude.run", "tailor_application", ACME, {});
+    await until(x.call, finished(started.id));
+    expect(x.f.runner.calls.find((c) => c.args[0] === "-p")!.env).not.toHaveProperty("CLAUDE_CODE_GIT_BASH_PATH");
+  });
+
   it("never exposes a path, the CLI's output or a credential", async () => {
     const x = setup();
     await x.ready;

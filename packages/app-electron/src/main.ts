@@ -31,8 +31,9 @@ const HERE = import.meta.dirname;
 const RENDERER = path.join(HERE, "renderer");
 const PRELOAD = path.join(HERE, "preload.cjs");
 // Rendered from packages/brand/assets/app-icon.svg by the brand icons script; the build copies it here
-// when it could render it (otherwise Electron's own icon shows).
-const ICON = builtIcon(path.join(HERE, "app-icon-1024.png"));
+// when it could render it (otherwise Electron's own icon shows). On Windows the packaged app also carries
+// app-icon.ico (16 to 256 px, scripts/package.mjs), which the title bar and taskbar scale better than the PNG.
+const ICON = (process.platform === "win32" ? builtIcon(path.join(HERE, "app-icon.ico")) : undefined) ?? builtIcon(path.join(HERE, "app-icon-1024.png"));
 // Storage is keyed on the fixed internal id, never the display name: the process name names the macOS
 // Keychain safeStorage entry, and userData holds secrets.json and state.json. A product rename must not
 // orphan them. The display name goes only to presentation APIs (window title, About panel, menu labels).
@@ -45,6 +46,14 @@ const keys = storageKeys(identity.internalId, app.getPath("appData"), e2eUserDat
 app.setName(keys.appName);
 app.setPath("userData", keys.userData);
 app.setAboutPanelOptions({ applicationName: identity.name, applicationVersion: app.getVersion() });
+// Windows ties notifications, taskbar grouping and pinned shortcuts to the AppUserModelID. The NSIS installer's
+// shortcuts carry electron-builder's appId (builder-config.mjs), so the running app must use the same one, or its
+// notifications don't show.
+if (process.platform === "win32") app.setAppUserModelId(identity.appId);
+// Windows and Linux: no menu bar. Electron's default one (File, Edit, View...) means nothing here; copy, paste and
+// undo still work there without it (Chromium handles those keys itself, unlike macOS, whose Edit menu provides
+// them). Development runs keep the default menu for its reload and DevTools shortcuts (DevTools is off when packaged).
+if (process.platform !== "darwin" && app.isPackaged) Menu.setApplicationMenu(null);
 const background = parseBackgroundArgs(process.argv);
 const e2eMailHook = e2eMail(process.env, app.isPackaged);
 const ipcLog = e2eIpcLog(process.env, app.isPackaged);
@@ -265,6 +274,7 @@ if (!app.requestSingleInstanceLock(handoff)) {
       auto: fileStateStore(path.join(app.getPath("userData"), "state.json")).read().autoUpdate !== false,
       load: async () => (await import("electron-updater")).autoUpdater,
       beforeInstall: () => quitDetach.beforeInstall(),
+      silentInstall: process.platform === "win32",
     });
     runtime = createRuntime(makeHost());
     runtime.onChange((e) => win?.webContents.send(CHANGE, e));

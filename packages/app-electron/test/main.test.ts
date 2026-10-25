@@ -41,7 +41,7 @@ const E = vi.hoisted(() => {
   const app = Object.assign(emitter(), {
     isPackaged: false,
     getPath: vi.fn(() => state.userData), getAppPath: vi.fn(() => state.appPath), setPath: vi.fn(), getVersion: () => "0.1.0",
-    setName: vi.fn(), setAboutPanelOptions: vi.fn(), dock: { setIcon: vi.fn() },
+    setName: vi.fn(), setAboutPanelOptions: vi.fn(), setAppUserModelId: vi.fn(), dock: { setIcon: vi.fn() },
     enableSandbox: vi.fn(), requestSingleInstanceLock: vi.fn(() => true), quit: vi.fn(),
     whenReady: () => Promise.resolve(),
   });
@@ -152,7 +152,10 @@ describe("window and app hardening", () => {
     expect(win().opts.title).toBe(identity.name);
     expect(E.module.app.setAboutPanelOptions).toHaveBeenCalledWith(expect.objectContaining({ applicationName: identity.name }));
     const icon = win().opts.icon as string | undefined;
-    if (icon) expect(icon).toMatch(/app-icon-1024\.png$/);
+    if (icon) expect(icon).toMatch(process.platform === "win32" ? /app-icon(\.ico|-1024\.png)$/ : /app-icon-1024\.png$/);
+    // Windows notifications need the AppUserModelID the installer's shortcuts carry (electron-builder's appId).
+    if (process.platform === "win32") expect(E.module.app.setAppUserModelId).toHaveBeenCalledWith(identity.appId);
+    else expect(E.module.app.setAppUserModelId).not.toHaveBeenCalled();
     if (process.platform === "darwin") {
       if (icon) expect(E.module.app.dock.setIcon).toHaveBeenCalledWith(icon);
       const menu = E.module.Menu.setApplicationMenu.mock.calls[0]![0] as { label?: string }[];

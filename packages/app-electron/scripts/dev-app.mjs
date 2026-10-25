@@ -5,6 +5,8 @@
 // and our app icon in its Info.plist, and launches that. The copy is remade only when the Electron version, the
 // identity or the icon changes. Other systems launch Electron as before.
 // Extra arguments are passed to the app (after the app folder). --prepare-only makes the copy without launching it.
+// --dev-url=<url> loads the renderer from a dev server (npm run dev): it becomes CAREEROS_DEV_URL in the app's
+// environment, set here rather than in the npm script so the script works in every shell (cmd.exe included).
 import { execFileSync, spawn } from "node:child_process";
 import crypto from "node:crypto";
 import fs from "node:fs";
@@ -70,7 +72,10 @@ function ensureDevBundle() {
 const prepareOnly = process.argv.includes("--prepare-only");
 const bin = process.platform === "darwin" ? ensureDevBundle() : electronBin;
 if (prepareOnly) { console.log(`dev-app: ready ${path.relative(pkg, bin)}`); process.exit(0); }
-const child = spawn(bin, [pkg, ...process.argv.slice(2)], { stdio: "inherit", env: process.env });
+const devUrlArg = process.argv.slice(2).find((a) => a.startsWith("--dev-url="));
+const appArgs = process.argv.slice(2).filter((a) => !a.startsWith("--dev-url="));
+const env = devUrlArg ? { ...process.env, CAREEROS_DEV_URL: devUrlArg.slice("--dev-url=".length) } : process.env;
+const child = spawn(bin, [pkg, ...appArgs], { stdio: "inherit", env });
 for (const sig of ["SIGINT", "SIGTERM"]) process.on(sig, () => { if (!child.killed) child.kill(sig); });
 child.on("close", (code, signal) => { process.exit(code ?? (signal ? 1 : 0)); });
 child.on("error", (e) => { console.error(`dev-app: couldn't start Electron (${e.message})`); process.exit(1); });

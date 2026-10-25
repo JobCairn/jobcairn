@@ -5,7 +5,8 @@
 // app's own Electron, no unsigned Mach-O hides in Resources, and `codesign --verify --deep --strict` passes. Developer ID builds also need `spctl -a -vv` (Gatekeeper) and
 // `xcrun stapler validate` (notarisation ticket stapled), for each app and each dmg in dist-release. Ad-hoc builds
 // skip those with a note, unless --require-signed is given (use it for a public release). Needs the Xcode Command
-// Line Tools.
+// Line Tools. On Windows the checks are the Windows ones instead (scripts/verify-release-win.mjs: SHA256SUMS.txt,
+// latest.yml, run-time packages, and `signtool verify /pa` when the Windows SDK is installed).
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
@@ -18,7 +19,9 @@ const out = path.join(pkg, "dist-release");
 const args = process.argv.slice(2);
 const requireSigned = args.includes("--require-signed");
 
-if (process.platform !== "darwin") { console.error("verify: needs macOS (codesign, spctl, stapler)."); process.exit(1); }
+// Windows: its own checks; that module exits when done.
+if (process.platform === "win32") await import("./verify-release-win.mjs");
+if (process.platform !== "darwin") { console.error("verify: needs macOS (codesign, spctl, stapler) or Windows."); process.exit(1); }
 
 const run = (cmd, a, opts = {}) => {
   const r = spawnSync(cmd, a, { encoding: "utf8", ...opts });

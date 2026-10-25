@@ -6,6 +6,9 @@ export const RUNTIME_MODULES_DIR: string;
 export const MAC_ENTITLEMENTS: string;
 export const PUBLISH: { provider: "github"; owner: string; repo: string };
 export function notarizeMode(env?: Record<string, string | undefined>): "apple-id" | "api-key" | "keychain-profile" | null;
+export const AZURE_SIGNING_KEYS: string[];
+export function winSigning(env?: Record<string, string | undefined>): "azure" | "certificate" | null;
+export function azureSignOptions(env: Record<string, string | undefined>): { publisherName?: string; endpoint?: string; codeSigningAccountName?: string; certificateProfileName?: string };
 export function runtimeRequires(code: string): string[];
 export function builderConfig(o: {
   identity: { internalId: string; name: string; shortName: string; tagline: string; appId: string };
@@ -14,6 +17,6 @@ export function builderConfig(o: {
   pkgDir?: string;
   appDir?: string;
   output?: string;
-  icons?: { icns?: string; png?: string };
+  icons?: { icns?: string; png?: string; ico?: string };
   runtimeModules?: string;
 }): Record<string, any>;

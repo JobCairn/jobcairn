@@ -15,6 +15,8 @@
     "scan": "node scripts/privacy/scan.mjs --all",
     "tokens": "npm run tokens -w @careeros/brand",
     "package:mac": "npm run package:mac -w @careeros/app-electron",
+    "package:win": "npm run package:win -w @careeros/app-electron",
+    "package:win:all": "npm run package:win:all -w @careeros/app-electron",
     "release:verify": "npm run release:verify -w @careeros/app-electron --"
   },
   "devDependencies": {

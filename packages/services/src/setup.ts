@@ -15,6 +15,7 @@ import type { HandlerTable } from "./handlers.js";
 import { terminalFix } from "./install-error.js";
 import { currentInstall, withInstallLock } from "./install-lock.js";
 import { findBrew, findTool, isExecutable, NODE, PYTHON, whichTool, type VersionProbe } from "./toolchain.js";
+import { findGitBash } from "./win-paths.js";
 
 /** `problem`: why it failed, from the installer's output (install-error.ts); it picks the Terminal fallback. */
 export interface SetupRunResult { ok: boolean; message: string; cancelled?: boolean; problem?: InstallProblem }
@@ -100,13 +101,8 @@ export function findWinget(h: Pick<SetupHost, "env" | "home" | "exists">): strin
   return null;
 }
 
-/** Windows: Git for Windows' bash, which Claude Code needs. Its usual folder, or git on PATH (Git puts its cmd folder there). */
-export function findGitBash(h: Pick<SetupHost, "env" | "exists">): boolean {
-  const exists = h.exists ?? fs.existsSync;
-  const pf = h.env.ProgramFiles ?? "C:\\Program Files";
-  if (exists(path.win32.join(pf, "Git", "bin", "bash.exe"))) return true;
-  return (h.env.PATH ?? h.env.Path ?? "").split(";").some((d) => d && path.win32.isAbsolute(d) && exists(path.win32.join(d, "git.exe")));
-}
+/** Windows: Git for Windows' bash.exe (win-paths findGitBash, the same check Claude Code's detection uses). */
+export { findGitBash };
 
 interface Last { id: string; ok: boolean; message: string; fix?: TerminalFix }
 const lasts = new WeakMap<object, Last>();
@@ -118,8 +114,8 @@ export function toolState(h: SetupHost, id: SetupToolId): Pick<SetupToolView, "s
   const o = { platform: h.platform, exists: h.exists, isExec: h.isExec, probe: h.probe };
   if (id === "claude-code") {
     const found = claudeCandidates({ platform: h.platform, env: h.env, home: h.home }).some((c) => (h.isExec ?? isExecutable)(c));
-    // Windows: Claude Code doesn't run without Git Bash, so it isn't ready until Git is there too.
-    return { state: found && (h.platform !== "win32" || findGitBash(h)) ? "ok" : "missing", version: "" };
+    // Windows: Claude Code's Bash tool needs Git Bash, so it isn't ready until Git is there too (as findClaude says).
+    return { state: found && (h.platform !== "win32" || !!findGitBash(h)) ? "ok" : "missing", version: "" };
   }
   if (id === "ffmpeg") return { state: whichTool("ffmpeg", h.env, o) ? "ok" : "missing", version: "" };
   const r = findTool(id === "node" ? NODE : PYTHON, h.env, o);

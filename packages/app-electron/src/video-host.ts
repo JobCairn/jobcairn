@@ -20,9 +20,13 @@ export function gsapPath(distDir: string, exists: (p: string) => boolean = fs.ex
   try { return createRequire(import.meta.url).resolve("gsap/dist/gsap.min.js"); } catch { return bundled; }
 }
 
-/** macOS: Homebrew's folders first, then the person's PATH (toolchain.toolPath). Other systems: PATH as it is. */
+/**
+ * macOS: Homebrew's folders first, then the person's PATH (toolchain.toolPath). Windows: PATH, then Windows' saved
+ * PATH and our installers' folders (toolPath too), so the video tools check finds a tool Setup installed after the
+ * app started. Other systems: PATH as it is.
+ */
 export function withBrewPath(pathVar: string | undefined, platform: NodeJS.Platform, exists: (p: string) => boolean = fs.existsSync): string | undefined {
-  if (platform !== "darwin") return pathVar;
+  if (platform !== "darwin" && platform !== "win32") return pathVar;
   return toolPath(pathVar, platform, { exists }) || pathVar;
 }
 
@@ -69,8 +73,10 @@ export function electronVideoHost(o: {
   };
   // The tool check and every render look tools up on this PATH, so they find Homebrew's ffmpeg the same way the installer does.
   const env: NodeJS.ProcessEnv = { ...o.env };
-  const pathVar = withBrewPath(env.PATH, o.platform, exists);
-  if (pathVar !== undefined) env.PATH = pathVar;
+  // Windows: a copy of process.env keeps PATH as `Path`; update that key, never add a second one.
+  const key = o.platform === "win32" ? Object.keys(env).find((k) => k.toUpperCase() === "PATH") ?? "PATH" : "PATH";
+  const pathVar = withBrewPath(env[key], o.platform, exists);
+  if (pathVar !== undefined) env[key] = pathVar;
   return {
     runner, pluginDir: o.pluginRoot, gsapFile, platform: o.platform, home: o.home, env, freeBytes: (d) => diskFree(d),
     ...(files ? { install } : {}),

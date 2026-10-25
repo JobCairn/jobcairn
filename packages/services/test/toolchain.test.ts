@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { findBrew, findNpm, findTool, NODE, probeEnv, PYTHON, readVersion, toolPath, whichTool } from "../src/toolchain.js";
+import { findBrew, findNpm, findTool, NODE, probeEnv, PYTHON, readVersion, STORE_PROBE_MS, supportedMinors, toolPath, whichTool } from "../src/toolchain.js";
+import { WIN_PYTHON_FOLDERS, winExtraDirs } from "../src/win-paths.js";
 import { toolEnv } from "../src/tts-runner.js";
 
 const BREW = (p: string) => p === "/opt/homebrew/bin" || p === "/opt/homebrew/sbin";
@@ -94,9 +95,72 @@ describe("Windows (simulated)", () => {
     expect(findTool(PYTHON, env, o).tool).toEqual({ path: "C:\\Python312\\python.EXE", version: "3.12.4", ok: true });
   });
 
-  it("falls back to the py launcher when there is no python.exe", () => {
-    const r = findTool(PYTHON, env, { platform: "win32", isExec: (p) => p === "C:\\Windows\\system32\\py.EXE", probe: () => "3.13.1" });
-    expect(r.tool?.path).toBe("C:\\Windows\\system32\\py.EXE");
+  it("falls back to the py launcher with each supported version, newest first, and runs the python.exe it names", () => {
+    const py = "C:\\Windows\\system32\\py.EXE";
+    const p312 = "C:\\Users\\alex\\AppData\\Local\\Programs\\Python\\Python312\\python.exe";
+    const asked: string[] = [];
+    // The launcher's default is a 3.15 (too new); asked for 3.12 by name it names a real 3.12.
+    const pyPython = (l: string, v: string) => { asked.push(`${l} -${v}`); return v === "3.12" ? p312 : null; };
+    const r = findTool(PYTHON, env, { platform: "win32", extra: [], isExec: (p) => p === py || p === p312, probe: (p) => (p === p312 ? "3.12.7" : "3.15.0"), pyPython });
+    expect(r.tool).toEqual({ path: p312, version: "3.12.7", ok: true });
+    expect(asked).toEqual([`${py} -3.14`, `${py} -3.13`, `${py} -3.12`]);
+    expect(supportedMinors(PYTHON)).toEqual(["3.14", "3.13", "3.12", "3.11"]);
+    // python.org's folders searched on Windows follow the same range.
+    expect([...WIN_PYTHON_FOLDERS]).toEqual(supportedMinors(PYTHON).map((v) => `Python${v.replace(".", "")}`));
+  });
+
+  describe("a tool installed after the app started (its PATH is older)", () => {
+    const LOCAL = "C:\\Users\\alex\\AppData\\Local";
+    const winEnv = { Path: "C:\\Windows\\system32", LOCALAPPDATA: LOCAL, ProgramFiles: "C:\\Program Files", PATHEXT: ".COM;.EXE" };
+    const known = (readdir: (d: string) => string[] = () => []) => winExtraDirs(winEnv, { machinePath: () => [], readdir });
+
+    it("finds Node.js in Program Files\\nodejs and in the person's Programs\\nodejs", () => {
+      for (const node of ["C:\\Program Files\\nodejs\\node.EXE", `${LOCAL}\\Programs\\nodejs\\node.EXE`]) {
+        const r = findTool(NODE, winEnv, { platform: "win32", extra: known(), isExec: (p) => p === node, probe: () => "22.13.0" });
+        expect(r.tool?.path).toBe(node);
+      }
+    });
+
+    it("finds python.org's per-person Python, newest supported first, and never a 3.15 there", () => {
+      const has: Record<string, string> = { [`${LOCAL}\\Programs\\Python\\Python315\\python.EXE`]: "3.15.0", [`${LOCAL}\\Programs\\Python\\Python312\\python.EXE`]: "3.12.7", [`${LOCAL}\\Programs\\Python\\Python311\\python.EXE`]: "3.11.9" };
+      const r = findTool(PYTHON, winEnv, { platform: "win32", extra: known(), isExec: (p) => p in has, probe: (p) => has[p] ?? null, pyPython: () => null });
+      expect(r.tool?.path).toBe(`${LOCAL}\\Programs\\Python\\Python312\\python.EXE`);
+    });
+
+    it("finds winget's ffmpeg in its Links folder, else in Gyan.FFmpeg's newest bin folder", () => {
+      const pkgs = `${LOCAL}\\Microsoft\\WinGet\\Packages`;
+      const readdir = (d: string) => (d === pkgs ? ["Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe", "Other.Tool"] : d.startsWith(`${pkgs}\\Gyan.FFmpeg`) ? ["ffmpeg-7.0-full_build", "ffmpeg-7.1-full_build"] : []);
+      const linked = `${LOCAL}\\Microsoft\\WinGet\\Links\\ffmpeg.EXE`;
+      expect(whichTool("ffmpeg", winEnv, { platform: "win32", extra: known(readdir), isExec: (p) => p === linked })).toBe(linked);
+      const newest = `${pkgs}\\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\\ffmpeg-7.1-full_build\\bin\\ffmpeg.EXE`;
+      const older = newest.replace("7.1", "7.0");
+      expect(whichTool("ffmpeg", winEnv, { platform: "win32", extra: known(readdir), isExec: (p) => p === newest || p === older })).toBe(newest);
+    });
+
+    it("finds a tool on Windows' saved PATH, after the app's own PATH", () => {
+      const extra = winExtraDirs(winEnv, { machinePath: () => ["D:\\Tools\\ffmpeg\\bin"], readdir: () => [] });
+      expect(extra[0]).toBe("D:\\Tools\\ffmpeg\\bin");
+      expect(whichTool("ffmpeg", winEnv, { platform: "win32", extra, isExec: (p) => p === "D:\\Tools\\ffmpeg\\bin\\ffmpeg.EXE" })).toBe("D:\\Tools\\ffmpeg\\bin\\ffmpeg.EXE");
+      expect(toolPath("C:\\Windows\\system32;d:\\tools\\ffmpeg\\bin", "win32", { extra })).toBe("C:\\Windows\\system32;d:\\tools\\ffmpeg\\bin;" + extra.slice(1).join(";"));
+    });
+
+    it("tries the Microsoft Store's python.exe last, with a short limit, and passes over the stand-in that gives no version", () => {
+      const store = `${LOCAL}\\Microsoft\\WindowsApps`;
+      const env2 = { ...winEnv, Path: `${store};C:\\Python312` };
+      const limits: (number | undefined)[] = [];
+      const versions: Record<string, string | null> = { [`${store}\\python.EXE`]: null, "C:\\Python312\\python.EXE": "3.12.4" };
+      const probe = (p: string, o?: { timeoutMs?: number }) => { if (p.startsWith(store)) limits.push(o?.timeoutMs); return versions[p] ?? null; };
+      const isExec = (p: string) => p in versions;
+      expect(findTool(PYTHON, env2, { platform: "win32", extra: [], isExec, probe, pyPython: () => null }).tool?.path).toBe("C:\\Python312\\python.EXE");
+      expect(limits).toEqual([]);
+      // Only the stand-in: asked quickly, and it doesn't count.
+      versions["C:\\Python312\\python.EXE"] = null;
+      expect(findTool(PYTHON, env2, { platform: "win32", extra: [], isExec, probe, pyPython: () => null }).tool).toBeNull();
+      expect(limits).toEqual([STORE_PROBE_MS]);
+      // A real Store Python answers with a version, so it counts.
+      versions[`${store}\\python.EXE`] = "3.12.10";
+      expect(findTool(PYTHON, env2, { platform: "win32", extra: [], isExec, probe, pyPython: () => null }).tool?.path).toBe(`${store}\\python.EXE`);
+    });
   });
 
   it("whichTool returns ffmpeg.exe, never ffmpeg.cmd or a bare name", () => {

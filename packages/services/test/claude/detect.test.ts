@@ -41,6 +41,19 @@ describe("finding Claude Code", () => {
     expect(f.runner.calls).toEqual([]);
   });
 
+  it("Windows (simulated): Claude Code without Git Bash counts as missing, and reports the Git Bash it found", async () => {
+    const claude = "C:\\Tools\\claude.exe";
+    const files = new Set([claude]);
+    const f = fakeClaude();
+    const h: ClaudeHost = { ...f.host, platform: "win32", env: { PATH: "C:\\Tools", ProgramFiles: "C:\\Program Files" }, isExecutable: (p) => files.has(p) };
+    expect(await checkCli(h, ENV)).toEqual({ launch: null, version: "", problem: "missing", noGitBash: true });
+    expect(f.runner.calls).toEqual([]);
+    files.add("C:\\Program Files\\Git\\bin\\bash.exe");
+    expect(await checkCli(h, ENV)).toMatchObject({ launch: { cmd: claude }, version: "2.1.280", problem: null, gitBash: "C:\\Program Files\\Git\\bin\\bash.exe" });
+    // macOS never looks for it.
+    expect(await checkCli(f.host, ENV)).not.toHaveProperty("gitBash");
+  });
+
   it("reads the version and pins a minimum", async () => {
     expect(await checkCli(fakeClaude().host, ENV)).toMatchObject({ version: "2.1.280", problem: null, launch: { cmd: CLI } });
     expect(await checkCli(fakeClaude({ version: "1.0.99" }).host, ENV)).toMatchObject({ version: "1.0.99", problem: "too_old" });

@@ -111,6 +111,7 @@ const NOT_READY: Record<string, string> = {
   consent: "Set up Claude first: open Settings > Claude and read the short notice.",
   missing: "Claude Code isn't installed on this computer. Open Settings > Claude to set it up.",
   too_old: `Claude Code is too old (${identity.name} needs ${CLAUDE_MIN_VERSION} or newer). Update it, then try again.`,
+  git_bash: "Claude Code needs Git for Windows, which isn't installed on this computer. Open Settings > Claude to set it up.",
   broken: "Claude Code is installed but didn't answer. Open Settings > Claude and choose Check again.",
   signed_out: "Claude Code isn't signed in. Open Settings > Claude to sign in.",
   plugin: `This copy of ${identity.name} is missing its Claude add-on. Reinstall ${identity.name}, then try again.`,
@@ -151,7 +152,8 @@ export class ClaudeEngine {
   private queue: Live[] = [];
   /** "api_key" once a run reported an API key; used only when Claude Code's status doesn't say. Never "subscription". */
   private runAuth: ClaudeAuth = "unknown";
-  private cached: { at: number; state: Omit<ClaudeEngineState, "consent" | "ready" | "active_runs" | "cost">; launch: ClaudeLaunch | null } | null = null;
+  /** `gitBash`/`noGitBash`: Windows' Git Bash, as checkCli found it. */
+  private cached: { at: number; state: Omit<ClaudeEngineState, "consent" | "ready" | "active_runs" | "cost">; launch: ClaudeLaunch | null; gitBash?: string; noGitBash?: boolean } | null = null;
 
   constructor(private ctx: ServiceContext) {
     // A workspace switch or app quit stops this workspace's runs.
@@ -162,6 +164,10 @@ export class ClaudeEngine {
   private env(): Record<string, string> {
     const h = this.host!;
     const env = cleanEnv({ PATH: h.env.PATH ?? h.env.Path ?? "" }, h.env);
+    // Windows: the Git Bash checkCli found. Claude Code looks for it itself, but with the app's PATH (older than a
+    // Git that Setup just installed) or a Git in another folder it can miss it; this is its documented setting.
+    const bash = h.platform === "win32" ? this.cached?.gitBash : undefined;
+    if (bash) env.CLAUDE_CODE_GIT_BASH_PATH = bash;
     // The person's own API key (Settings > Connections > Claude), when they chose to pay per use: Claude Code then
     // bills it instead of their Claude plan. Only this workspace's saved key; never one from the app's environment.
     const key = this.apiKey();
@@ -187,6 +193,11 @@ export class ClaudeEngine {
     } catch { return { given: false, at: "", notice_version: CLAUDE_NOTICE_VERSION }; }
   }
 
+  /** Why Claude Code can't run: NOT_READY's sentence, or on Windows that Git Bash is what's missing. */
+  private notReadyCli(problem: string): string {
+    return problem === "missing" && this.cached?.noGitBash ? NOT_READY.git_bash! : NOT_READY[problem]!;
+  }
+
   private activeCount(): number { return [...this.live.values()].filter((l) => isActiveRun(l.view.status)).length; }
 
   async state(recheck: boolean): Promise<ClaudeEngineState> {
@@ -203,7 +214,7 @@ export class ClaudeEngine {
         const plugin: BundledPlugin = bundledPlugin(h.pluginDir);
         if (cli.launch && !cli.problem) ({ login, auth } = await checkAuth(h, cli.launch, env));
         this.cached = {
-          at: now, launch: cli.problem ? null : cli.launch,
+          at: now, launch: cli.problem ? null : cli.launch, gitBash: cli.gitBash, noGitBash: cli.noGitBash,
           state: { cli: { found: cli.problem !== "missing", version: cli.version, min_version: CLAUDE_MIN_VERSION, problem: cli.problem }, login, auth, plugin },
         };
       }
@@ -244,7 +255,7 @@ export class ClaudeEngine {
 
   private async launchOrThrow(): Promise<ClaudeLaunch> {
     const s = await this.state(false);
-    if (s.cli.problem || !this.cached?.launch) throw new Error(NOT_READY[s.cli.problem ?? "missing"]);
+    if (s.cli.problem || !this.cached?.launch) throw new Error(this.notReadyCli(s.cli.problem ?? "missing"));
     return this.cached.launch;
   }
 
@@ -258,7 +269,7 @@ export class ClaudeEngine {
   private async readyOrThrow(needPlugin: boolean): Promise<ClaudeLaunch> {
     const s = await this.state(false);
     if (!s.consent.given) throw new Error(NOT_READY.consent);
-    if (s.cli.problem) throw new Error(NOT_READY[s.cli.problem]);
+    if (s.cli.problem) throw new Error(this.notReadyCli(s.cli.problem));
     if (s.login === "signed_out") throw new Error(NOT_READY.signed_out);
     if (needPlugin && !s.plugin.found) throw new Error(NOT_READY.plugin);
     return this.cached!.launch!;

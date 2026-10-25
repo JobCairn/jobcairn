@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { ACTION_IDS, ACTIONS, actionPaths, claudeWrites, LOCKABLE_DIRS, ownTarget, PLUGIN_SKILLS, type ActionId, type ActionTarget } from "@careeros/contract";
-import { assertRuleFolder, claudeArgs, inboxSuggestPlan, mcpConfig, NON_INTERACTIVE, testArgs, toolArgs, WEB_ACTIONS, type RunPlace } from "../../src/claude/args.js";
+import { absRule, assertRuleFolder, claudeArgs, inboxSuggestPlan, mcpConfig, NON_INTERACTIVE, testArgs, toolArgs, WEB_ACTIONS, type RunPlace } from "../../src/claude/args.js";
 import { mcpToolsFor } from "../../src/claude/mcp/tools.js";
 import brand from "@careeros/brand/identity.json" with { type: "json" };
 
@@ -34,6 +34,21 @@ function after(args: string[], flag: string): string[] {
 const RULE = /^(Edit|Write)\((.*)\)$/;
 /** What every run with the plugin gets: its skills by name, and read-only access to the plugin's folder. */
 const SKILL_RULES = [...PLUGIN_SKILLS.map((k) => `Skill(careeros:${k})`), "Read(//apps/careeros/plugin/**)"];
+
+describe("absRule: an absolute folder in a permission rule", () => {
+  it("macOS and Linux paths are `//` plus the path", () => {
+    expect(absRule("/apps/careeros/plugin")).toBe("//apps/careeros/plugin");
+    expect(absRule("/apps/careeros/plugin/")).toBe("//apps/careeros/plugin");
+  });
+
+  it("Windows (simulated): the drive becomes a lower-case folder, as Claude Code matches Windows paths", () => {
+    expect(absRule("C:\\Users\\alex\\AppData\\Local\\Programs\\JobCairn\\resources\\plugin")).toBe("//c/Users/alex/AppData/Local/Programs/JobCairn/resources/plugin");
+    expect(absRule("d:/Apps/plugin\\")).toBe("//d/Apps/plugin");
+    const t = toolArgs({ folder: null, web: false, mcp: [] }, [], "C:\\Program Files\\App\\plugin");
+    expect(t.allowed).toContain("Read(//c/Program Files/App/plugin/**)");
+    expect(t.denied).toContain("Edit(//c/Program Files/App/plugin/**)");
+  });
+});
 
 describe("per-action permissions", () => {
   for (const id of ACTION_IDS.filter(claudeWrites)) {

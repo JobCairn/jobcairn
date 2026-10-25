@@ -52,10 +52,15 @@ app.setAboutPanelOptions({ applicationName: identity.name, applicationVersion: a
 // shortcuts carry electron-builder's appId (builder-config.mjs), so the running app must use the same one, or its
 // notifications don't show.
 if (process.platform === "win32") app.setAppUserModelId(identity.appId);
-// Windows and Linux: no menu bar. Electron's default one (File, Edit, View...) means nothing here; copy, paste and
-// undo still work there without it (Chromium handles those keys itself, unlike macOS, whose Edit menu provides
-// them). Development runs keep the default menu for its reload and DevTools shortcuts (DevTools is off when packaged).
-if (process.platform !== "darwin" && app.isPackaged) Menu.setApplicationMenu(null);
+// Windows and Linux: a small hidden menu (Alt shows it) instead of Electron's default File, Edit, View... It keeps
+// the Edit keys and Ctrl+= / Ctrl+- / Ctrl+0 zoom, which people with low vision rely on, without Reload or DevTools.
+// Development runs keep the default menu for its reload and DevTools shortcuts (DevTools is off when packaged).
+if (process.platform !== "darwin" && app.isPackaged) {
+  Menu.setApplicationMenu(Menu.buildFromTemplate([
+    { role: "editMenu" },
+    { label: "View", submenu: [{ role: "zoomIn" }, { role: "zoomIn", accelerator: "CommandOrControl+=", visible: false }, { role: "zoomOut" }, { role: "resetZoom" }, { type: "separator" }, { role: "togglefullscreen" }] },
+  ]));
+}
 const background = parseBackgroundArgs(process.argv);
 const e2eMailHook = e2eMail(process.env, app.isPackaged);
 const ipcLog = e2eIpcLog(process.env, app.isPackaged);
@@ -185,7 +190,7 @@ function makeHost(): Host {
 
 function createWindow(): void {
   win = new BrowserWindow({
-    width: 1280, height: 820, minWidth: 960, minHeight: 640, show: false, title: identity.name, icon: ICON,
+    width: 1280, height: 820, minWidth: 960, minHeight: 640, show: false, title: identity.name, icon: ICON, autoHideMenuBar: true,
     backgroundColor: "#0d0e11", // Graphite background (color.ink.900); avoids a white flash before the CSS loads.
     webPreferences: { preload: PRELOAD, contextIsolation: true, sandbox: true, nodeIntegration: false, webSecurity: true, spellcheck: false, devTools: !app.isPackaged },
   });

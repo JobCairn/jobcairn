@@ -14,7 +14,8 @@ import { appleEventsWhy } from "./mac-bundle.mjs";
 //   Windows (optional; see winSigning below), either:
 //     AZURE_TRUSTED_SIGNING_ENDPOINT + AZURE_CODE_SIGNING_ACCOUNT + AZURE_CERT_PROFILE + AZURE_PUBLISHER_NAME
 //       + AZURE_TENANT_ID + AZURE_CLIENT_ID + AZURE_CLIENT_SECRET   Azure Trusted Signing (win.azureSignOptions)
-//     WIN_CSC_LINK + WIN_CSC_KEY_PASSWORD                         a .pfx certificate (read by electron-builder)
+//     WIN_CSC_LINK + WIN_CSC_KEY_PASSWORD                         a .pfx certificate (read by electron-builder,
+//                                                                  which falls back to CSC_LINK + CSC_KEY_PASSWORD)
 //   Neither: the installers are unsigned (SmartScreen warns on first run).
 
 /**
@@ -72,9 +73,11 @@ const BUILTINS = new Set(["assert", "buffer", "child_process", "crypto", "events
 
 /**
  * Files that must be real files on disk, outside app.asar: dist/mcp.mjs is run by Electron-as-Node for Claude Code
- * (claude-host maps app.asar -> app.asar.unpacked), and it reads ../schemas, so the schemas come out too.
+ * (claude-host maps app.asar -> app.asar.unpacked), and it reads ../schemas, so the schemas come out too. The
+ * Windows window icon (dist/app-icon.ico, only in Windows builds) is loaded by Windows itself from a file path,
+ * which can't reach inside an asar.
  */
-export const ASAR_UNPACK = ["dist/mcp.mjs", "dist/mcp.mjs.map", "schemas/**"];
+export const ASAR_UNPACK = ["dist/mcp.mjs", "dist/mcp.mjs.map", "schemas/**", "dist/app-icon.ico"];
 
 /**
  * `pkgDir` (packages/app-electron) anchors the resource folders; `runtimeModules` is the staged node_modules folder; `appDir` and `output` are relative to the
@@ -133,7 +136,8 @@ export function winSigning(env = {}) {
     if (missing.length) throw new Error(`sign with Azure Trusted Signing: also set ${missing.join(", ")}`);
     return "azure";
   }
-  return env.WIN_CSC_LINK ? "certificate" : null;
+  // electron-builder falls back to CSC_LINK for Windows when WIN_CSC_LINK isn't set.
+  return env.WIN_CSC_LINK || env.CSC_LINK ? "certificate" : null;
 }
 
 /** electron-builder's win.azureSignOptions from the environment (winSigning(env) === "azure"). */

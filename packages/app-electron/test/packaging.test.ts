@@ -68,6 +68,8 @@ describe("resource paths, development vs packaged", () => {
     expect(ASAR_UNPACK).toContain("dist/mcp.mjs");
     // mcp.mjs reads ../schemas, so they must be unpacked next to it.
     expect(ASAR_UNPACK).toContain("schemas/**");
+    // Windows loads the window icon from a file path, which can't reach inside app.asar.
+    expect(ASAR_UNPACK).toContain("dist/app-icon.ico");
     const dev = electronClaudeHost({ ...DEV, execPath: "/fictional/bin" });
     expect(dev.pluginDir).toBe(path.join(REPO, "plugin"));
     expect(dev.mcp.args).toEqual([path.join(PKG, "dist", "mcp.mjs")]);
@@ -136,6 +138,8 @@ describe("electron-builder config", () => {
     // Azure wins over a certificate; electron-builder can't use both.
     expect(winSigning({ ...azure, WIN_CSC_LINK: "/fictional/cert.pfx" })).toBe("azure");
     expect(winSigning({ WIN_CSC_LINK: "/fictional/cert.pfx", WIN_CSC_KEY_PASSWORD: "fictional" })).toBe("certificate");
+    // electron-builder falls back to CSC_LINK for Windows, so that signs too.
+    expect(winSigning({ CSC_LINK: "/fictional/cert.pfx" })).toBe("certificate");
     expect(builderConfig({ identity, electronVersion: "44.7.0", env: { WIN_CSC_LINK: "/fictional/cert.pfx" } }).win.azureSignOptions).toBeUndefined();
     // CI passes secrets that don't exist as empty strings: that is unsigned, not half-set.
     expect(winSigning(Object.fromEntries(AZURE_SIGNING_KEYS.map((k) => [k, ""])))).toBeNull();

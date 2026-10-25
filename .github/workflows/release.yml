@@ -51,6 +51,9 @@ jobs:
           AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
         run: npm run package:win:all
+      - name: The installers carry the app icon
+        # The build only warns when it can't render the icon (it needs Chrome or Playwright's Chromium); a release must not ship Electron's.
+        run: test -f packages/app-electron/.package/build-resources/icon.ico || { echo "::error::no icon.ico: the app icon wasn't rendered"; exit 1; }
       - name: Verify the installers and the update feed
         run: npm run release:verify
       - name: Attach to the draft release

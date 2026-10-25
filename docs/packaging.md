@@ -123,7 +123,7 @@ info > Run anyway. `scripts/package.mjs` logs which of these it uses (`winSignin
    electron-builder passes them to `win.azureSignOptions`, which signs through Microsoft's `TrustedSigning`
    PowerShell module (it installs it if needed), so this only works on Windows.
 2. **A certificate file:** `WIN_CSC_LINK` (a .pfx path or base64) and `WIN_CSC_KEY_PASSWORD`, read by
-   electron-builder itself. Ignored when the Azure variables are set (electron-builder can't use both).
+   electron-builder itself (it falls back to `CSC_LINK` / `CSC_KEY_PASSWORD`). Ignored when the Azure variables are set (electron-builder can't use both).
 3. **Neither:** unsigned, with a log line saying so.
 
 Signing covers the app's exe and the installer. Once releases are signed, keep signing them with the same publisher

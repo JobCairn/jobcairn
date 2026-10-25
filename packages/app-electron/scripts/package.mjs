@@ -95,7 +95,7 @@ const config = builderConfig({ identity, electronVersion, env: process.env, pkgD
 if (platform === "win") {
   const sign = winSigning(process.env);
   if (sign === "azure") console.log(`package: Windows signing: Azure Trusted Signing (${process.env.AZURE_CODE_SIGNING_ACCOUNT} / ${process.env.AZURE_CERT_PROFILE})${process.env.WIN_CSC_LINK ? "; WIN_CSC_LINK is ignored" : ""}`);
-  else if (sign === "certificate") console.log("package: Windows signing: the certificate in WIN_CSC_LINK");
+  else if (sign === "certificate") console.log(`package: Windows signing: the certificate in ${process.env.WIN_CSC_LINK ? "WIN_CSC_LINK" : "CSC_LINK"}`);
   else console.log("package: Windows signing: none. Building UNSIGNED installers (SmartScreen will warn). Set the AZURE_* variables or WIN_CSC_LINK to sign (docs/packaging.md).");
 }
 let builder;

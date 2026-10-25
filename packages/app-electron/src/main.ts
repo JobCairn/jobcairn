@@ -33,7 +33,9 @@ const PRELOAD = path.join(HERE, "preload.cjs");
 // Rendered from packages/brand/assets/app-icon.svg by the brand icons script; the build copies it here
 // when it could render it (otherwise Electron's own icon shows). On Windows the packaged app also carries
 // app-icon.ico (16 to 256 px, scripts/package.mjs), which the title bar and taskbar scale better than the PNG.
-const ICON = (process.platform === "win32" ? builtIcon(path.join(HERE, "app-icon.ico")) : undefined) ?? builtIcon(path.join(HERE, "app-icon-1024.png"));
+// The .ico is unpacked from app.asar (builder-config ASAR_UNPACK): Windows loads it from a real file path.
+const ICO = path.join(app.isPackaged ? HERE.replace(/app\.asar(?=[\\/]|$)/, "app.asar.unpacked") : HERE, "app-icon.ico");
+const ICON = (process.platform === "win32" ? builtIcon(ICO) : undefined) ?? builtIcon(path.join(HERE, "app-icon-1024.png"));
 // Storage is keyed on the fixed internal id, never the display name: the process name names the macOS
 // Keychain safeStorage entry, and userData holds secrets.json and state.json. A product rename must not
 // orphan them. The display name goes only to presentation APIs (window title, About panel, menu labels).

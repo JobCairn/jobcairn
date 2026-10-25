@@ -17,7 +17,7 @@ export interface ProcessRunner { run(cmd: string, args: string[], opts: RunOptio
  * line with no newline must not grow this buffer without bound. */
 const PENDING_LINE_CAP = 64 * 1024;
 
-const KEEP = ["USER", "LOGNAME", "SHELL", "PATH", "Path", "PATHEXT", "HOME", "USERPROFILE", "APPDATA", "LOCALAPPDATA", "TMPDIR", "TEMP", "TMP", "SystemRoot", "SYSTEMROOT", "ComSpec", "LANG", "LC_ALL", "XDG_RUNTIME_DIR", "XDG_CACHE_HOME"];
+const KEEP = ["USER", "LOGNAME", "SHELL", "PATH", "Path", "PATHEXT", "HOME", "USERPROFILE", "APPDATA", "LOCALAPPDATA", "TMPDIR", "TEMP", "TMP", "SystemRoot", "SYSTEMROOT", "windir", "ComSpec", "LANG", "LC_ALL", "XDG_RUNTIME_DIR", "XDG_CACHE_HOME"];
 /** Claude Code also needs these, to find its own config and to reach Anthropic from behind a company proxy. Video tools
  * run offline and never get them. */
 export const CLAUDE_ENV_KEYS = ["CLAUDE_CONFIG_DIR", "HTTPS_PROXY", "https_proxy", "HTTP_PROXY", "http_proxy", "NO_PROXY", "no_proxy", "NODE_EXTRA_CA_CERTS"] as const;

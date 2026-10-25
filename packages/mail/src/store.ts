@@ -2,7 +2,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import {
-  check, isCaseInsensitiveFs, iso, LOCKED_DIRS, RecordError, uniquePath, writeFileAtomic,
+  check, isCaseInsensitiveFs, iso, LOCKED_DIRS, RecordError, uniquePath, WINDOWS_DEVICE, writeFileAtomic,
   type Clock, type EmailMatchKind, type EmailRecord, type Job,
 } from "@careeros/core";
 import { normalizeSubject, syntheticMessageId, type ParsedMessage } from "./parse.js";
@@ -95,8 +95,6 @@ export function baseNameFor(date: string, subject: string, messageId: string): s
   return `${day}-${slug}-${hash}`;
 }
 
-/** Windows device names, compared against an ASCII slug (NFKD already turned ¹²³ into digits, "$" into "-"). */
-const WINDOWS_DEVICE = /^(?:con|prn|aux|nul|conin|conout|com[0-9]|lpt[0-9])$/;
 const INVISIBLE = /\p{Default_Ignorable_Code_Point}/gu;
 const CONTROL = /[\u0000-\u001f\u007f-\u009f\u2028\u2029]/g;
 

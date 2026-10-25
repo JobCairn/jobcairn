@@ -63,7 +63,7 @@ export function SecretRow({ status, broken, onChanged, platform }: { status: Sec
       onChanged(); setReplacing(false); setKeychainError(null);
     } catch (e) {
       const message = errorText(e);
-      setKeychainError(isKeychainDenied(message) ? message : null);
+      setKeychainError(isKeychainDenied(e) ? message : null);
       throw e;
     } finally {
       setValue(""); setShow(false);

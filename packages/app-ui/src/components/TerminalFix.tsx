@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button, Text } from "@careeros/brand";
 import type { TerminalFix, TerminalOption } from "@careeros/contract";
+import { uiWords } from "../platform";
 import "./tool-install.css";
 
 export async function copyText(text: string): Promise<boolean> {
@@ -28,10 +29,11 @@ function Option({ o }: { o: TerminalOption }) {
  * commands and folders, never from the installer's output), each with Copy. Permission problems add the fixes.
  */
 export function TerminalFallback({ fix }: { fix: TerminalFix }) {
+  const w = uiWords();
   return (
-    <div className="tinstall__brew tinstall__terminal" role="group" aria-label="Run it in Terminal">
+    <div className="tinstall__brew tinstall__terminal" role="group" aria-label={`Run it in ${w.terminal}`}>
       <Text role="body-sm">
-        You can run it yourself instead: open Terminal (in Applications › Utilities, or search Spotlight for Terminal), paste the lines, press Return, and wait for it to finish.
+        You can run it yourself instead: {w.openTerminal}, paste the lines, press {w.enterKey}, and wait for it to finish.
       </Text>
       {fix.options.map((o) => <Option key={o.title} o={o} />)}
     </div>

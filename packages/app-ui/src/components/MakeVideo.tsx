@@ -12,6 +12,7 @@ import { CLAUDE_SETTINGS, navigate, useRoute, type Route } from "../router";
 import { sourceName } from "../screens/Video";
 import { StartWith } from "./ActionButton";
 import { VideoLengthPicker } from "./VideoLength";
+import { uiWords } from "../platform";
 
 /** The catalogue's video actions (addendum) and the video type each one makes (contract owns the map). */
 export { VIDEO_ACTION_TYPES };
@@ -307,7 +308,7 @@ export function MakeVideoDialog({ open, onClose, target, typeId, note: initialNo
             ) : null}
             <div className="stack make-video__review">
               <Checkbox label="Sound effects" checked={sound} onChange={(e) => setSound(e.target.checked)} aria-describedby={soundHelpId} />
-              <Text role="body-sm" muted id={soundHelpId}>{sound ? "Soft whooshes and pops under the voice, made on your Mac." : "Voice only."}</Text>
+              <Text role="body-sm" muted id={soundHelpId}>{sound ? `Soft whooshes and pops under the voice, made on ${uiWords().yourComputer}.` : "Voice only."}</Text>
             </div>
             {type.modes.length ? (
               <div className="make-video__fields">

@@ -1,13 +1,23 @@
 import fs from "node:fs";
 import path from "node:path";
+import { WINDOWS_DEVICE } from "./safe-name.js";
 import { LOCKABLE_DIRS } from "./types.js";
 
 export const ME_DIRS = ["resumes", "history", "identity", "employment", "education", "projects"] as const;
 export type MeDir = (typeof ME_DIRS)[number];
 export const LOCKED_DIRS = LOCKABLE_DIRS;
 
+/**
+ * A lower-case ASCII slug for a file or folder name ("Acme Corp" → "acme-corp"). A Windows device name gets a
+ * "-1" ("con" → "con-1") on every platform, so a workspace made on a Mac still opens on Windows.
+ */
 export function slugify(input: string, fallback = "item"): string {
-  const s = input
+  const out = slugText(input) || fallback;
+  return WINDOWS_DEVICE.test(out) ? `${out}-1` : out;
+}
+
+function slugText(input: string): string {
+  return input
     .normalize("NFKD")
     .replace(/[̀-ͯ]/g, "")
     .toLowerCase()
@@ -16,7 +26,6 @@ export function slugify(input: string, fallback = "item"): string {
     .replace(/^-+|-+$/g, "")
     .slice(0, 60)
     .replace(/-+$/, "");
-  return s || fallback;
 }
 
 export function splitClient(name: string): { company: string; client: string | null } {

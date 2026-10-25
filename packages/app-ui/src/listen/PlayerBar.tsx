@@ -1,5 +1,6 @@
 import { Button, Icon, Text } from "@careeros/brand";
 import { READ_ALOUD_SPEEDS } from "@careeros/contract";
+import { isMacUi } from "../platform";
 import { useListenPlayer } from "./context";
 import { Pause, Play, RotateCcw, SkipBack, SkipForward, Square, Volume2 } from "./icons";
 
@@ -13,8 +14,9 @@ export function PlayerBar() {
   const where = `Part ${v.index + 1} of ${v.total}`;
   const state = v.status === "preparing" ? (v.wait ?? "Preparing voice…") : v.status === "paused" ? `Paused · ${where}` : v.status === "error" ? (v.error ?? "Something went wrong.") : where;
   const last = v.index + 1 >= v.total;
-  // A slow start or a failure can always switch to the Mac's own voice, which starts at once.
-  const offerMac = !v.macVoice && ((v.status === "preparing" && !!v.wait) || v.status === "error");
+  // On a Mac, a slow start or a failure can always switch to the Mac's own voice, which starts at once. Other
+  // computers have no such voice, so they don't offer it.
+  const offerMac = isMacUi() && !v.macVoice && ((v.status === "preparing" && !!v.wait) || v.status === "error");
   return (
     <section className="listen-bar" role="region" aria-label="Read aloud">
       <div className="listen-bar__what">

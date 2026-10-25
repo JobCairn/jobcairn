@@ -2,7 +2,9 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { KeychainAccessError, safeStorageSecrets, type SafeStorageLike } from "../src/secret-store.js";
+import brand from "@careeros/brand/identity.json" with { type: "json" };
+import { SECURE_STORAGE_DENIED } from "@careeros/contract";
+import { deniedText, KeychainAccessError, safeStorageSecrets, type SafeStorageLike } from "../src/secret-store.js";
 import { fileStateStore } from "../src/state-store.js";
 
 const tmp = () => fs.mkdtempSync(path.join(os.tmpdir(), "careeros-shell-"));
@@ -78,6 +80,21 @@ describe("fileStateStore", () => {
       },
     }));
     expect(fileStateStore(f).read().inboxOrigins).toEqual({ "/fictional/alex-example/CareerOS": { "cv.pdf": ok } });
+  });
+  it("keeps a drop box origin whose ino is a 64-bit NTFS file id past 2^53, unchanged, but not a fraction or a huge number", () => {
+    const f = path.join(tmp(), "state.json");
+    // What Node's stat reports for a large NTFS file id: already rounded to the nearest double.
+    const big = { path: "/fictional/alex-example/Downloads/cv.pdf", dev: 3_456_789_012, ino: 2 ** 63 + 2 ** 12 };
+    const mac = { path: "/fictional/alex-example/Downloads/cv.pdf", dev: 16_777_220, ino: 12_345_678 };
+    const root = "/fictional/alex-example/CareerOS";
+    fs.writeFileSync(f, JSON.stringify({
+      lastWorkspace: null, recent: [],
+      inboxOrigins: { [root]: { "cv.pdf": big, "mac.pdf": mac, "half.pdf": { ...mac, ino: 1.5 }, "huge.pdf": { ...mac, ino: 2 ** 70 }, "neg.pdf": { ...mac, ino: -(2 ** 70) } } },
+    }));
+    const kept = fileStateStore(f).read().inboxOrigins?.[root];
+    expect(Object.keys(kept ?? {}).sort()).toEqual(["cv.pdf", "mac.pdf"]);
+    expect(kept?.["cv.pdf"]).toEqual(big); // JSON keeps the double exactly, so it still equals a fresh stat's ino
+    expect(kept?.["mac.pdf"]).toEqual(mac);
   });
 });
 
@@ -160,5 +177,20 @@ describe("safeStorageSecrets", () => {
     expect(() => denyDecrypt.get("anthropic_api_key")).toThrow(/couldn't use the Keychain/);
     // Secure storage simply being unavailable is a different, already-handled state: no throw, just null.
     expect(safeStorageSecrets(f, fakeSafeStorage({ isEncryptionAvailable: () => false }), "darwin").get("anthropic_api_key")).toBeNull();
+  });
+  it("names Windows, not the Keychain, when Windows refuses, and keeps the same catchable error and stable name", () => {
+    const deny = (): never => { throw new Error("CryptProtectData failed."); };
+    const denyEncrypt = safeStorageSecrets(path.join(tmp(), "a.json"), fakeSafeStorage({ encryptString: deny }), "win32");
+    expect(() => denyEncrypt.set("anthropic_api_key", "x")).toThrow(KeychainAccessError);
+    expect(() => denyEncrypt.set("anthropic_api_key", "x")).toThrow("Windows couldn't protect your key, so it wasn't saved.");
+    try { denyEncrypt.set("anthropic_api_key", "x"); } catch (e) { expect((e as Error).name).toBe(SECURE_STORAGE_DENIED); }
+
+    const f = path.join(tmp(), "b.json");
+    safeStorageSecrets(f, fakeSafeStorage(), "win32").set("anthropic_api_key", "x");
+    const denyDecrypt = safeStorageSecrets(f, fakeSafeStorage({ decryptString: deny }), "win32");
+    expect(() => denyDecrypt.get("anthropic_api_key")).toThrow(`Windows couldn't unlock your saved key, so ${brand.name} can't use it.`);
+    expect(deniedText("win32", "set")).not.toMatch(/Keychain|Mac/);
+    expect(deniedText("linux", "set")).toMatch(/system keyring/);
+    expect(deniedText("darwin", "set")).toMatch(/couldn't use the Keychain/);
   });
 });

@@ -2,9 +2,35 @@ import { describe, expect, it, vi } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
 import { assertSegment, insideRoot, isCaseInsensitiveFs, layout, slugify, splitClient } from "../src/paths.js";
+import { WINDOWS_DEVICE } from "../src/safe-name.js";
 import { tmpDir } from "./helpers.js";
 
 describe("slugify", () => {
+  it("never makes a Windows device name, on any platform, so a workspace still opens on Windows", () => {
+    const devices = ["CON", "PRN", "AUX", "NUL", "CONIN$", "CONOUT$", ...Array.from({ length: 10 }, (_, i) => `COM${i}`), ...Array.from({ length: 10 }, (_, i) => `LPT${i}`), "COM¹", "LPT³"];
+    for (const d of devices) {
+      for (const v of [d, d.toLowerCase(), `${d}.`, `${d}...`, `${d}   `, ` ${d} . `]) {
+        const s = slugify(v);
+        expect(WINDOWS_DEVICE.test(s), `${JSON.stringify(v)} -> ${s}`).toBe(false);
+        expect(s, v).toMatch(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
+      }
+    }
+    expect(slugify("Con")).toBe("con-1");
+    expect(slugify("AUX")).toBe("aux-1");
+    expect(slugify("com1")).toBe("com1-1");
+    expect(slugify("LPT¹")).toBe("lpt1-1");
+    expect(slugify("", "nul")).toBe("nul-1");
+  });
+  it("leaves ordinary names, and names that only start like a device, exactly as before", () => {
+    expect(slugify("Acme Corp")).toBe("acme-corp");
+    expect(slugify("Console Labs")).toBe("console-labs");
+    expect(slugify("Comet")).toBe("comet");
+    expect(slugify("Con Ed")).toBe("con-ed");
+    expect(slugify("Aux Systems")).toBe("aux-systems");
+    expect(slugify("COM10")).toBe("com10");
+    expect(slugify("con.txt")).toBe("con-txt");
+    expect(slugify("Nullabs")).toBe("nullabs");
+  });
   it("lowercases, strips accents, turns & into and", () => {
     expect(slugify("Café & Co")).toBe("cafe-and-co");
   });

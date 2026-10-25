@@ -1,8 +1,10 @@
 import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
+import { WINGET_URL } from "@careeros/contract";
 import { ToolInstall } from "../src/components/ToolInstall";
 import { MockBridge } from "../src/mock/MockBridge";
+import { onPlatform } from "./os";
 import { renderApp } from "./render";
 
 describe("ToolInstall", () => {
@@ -38,6 +40,7 @@ describe("ToolInstall", () => {
   });
 
   it("without Homebrew, gives the one line to run in Terminal, never an Install button, and checks again", async () => {
+    onPlatform("MacIntel");
     const user = userEvent.setup();
     const bridge = new MockBridge({ setup: { missing: ["node"], brew: false } });
     renderApp(<ToolInstall ids={["node"]} />, { bridge });
@@ -59,7 +62,35 @@ describe("ToolInstall", () => {
     expect(await screen.findByText("Claude Code didn't install. Check the internet connection and try again.")).toBeInTheDocument();
   });
 
+  it("on Windows, without winget, says to get App Installer instead of Homebrew, with no Mac words", async () => {
+    onPlatform("Win32");
+    const user = userEvent.setup();
+    const bridge = new MockBridge({ setup: { missing: ["node"], brew: false } });
+    renderApp(<ToolInstall ids={["node"]} />, { bridge });
+    expect(await screen.findByText(/installs with winget, which isn't on this PC yet\. winget comes with App Installer from Microsoft/)).toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(/Homebrew|Mac|Terminal|Return/);
+    expect(screen.queryByRole("button", { name: "Install Node.js" })).toBeNull();
+    await user.click(screen.getByRole("button", { name: "Get App Installer" }));
+    expect(bridge.calls.filter((c) => c.method === "links.open").map((c) => c.args)).toEqual([[WINGET_URL]]);
+    act(() => bridge.setSetupBrew(true));
+    await user.click(screen.getByRole("button", { name: "Check again" }));
+    expect(await screen.findByRole("button", { name: "Install Node.js" })).toBeEnabled();
+  });
+
+  it("on Windows, a failed install's own lines run in PowerShell, opened from the Start menu, then Enter", async () => {
+    onPlatform("Win32");
+    const user = userEvent.setup();
+    const fix = { problem: "other" as const, options: [{ title: "Run it in PowerShell", command: "irm https://claude.ai/install.ps1 | iex" }] };
+    const bridge = new MockBridge({ setup: { missing: ["claude-code"], failWith: "Claude Code didn't install.", failFix: fix } });
+    renderApp(<ToolInstall ids={["claude-code"]} />, { bridge });
+    await user.click(await screen.findByRole("button", { name: "Install Claude Code" }));
+    act(() => bridge.finishSetupInstall(true));
+    const panel = await screen.findByRole("group", { name: "Run it in PowerShell" });
+    expect(within(panel).getByText("You can run it yourself instead: open PowerShell (open the Start menu, type PowerShell and choose it), paste the lines, press Enter, and wait for it to finish.")).toBeInTheDocument();
+  });
+
   it("after a failure, offers the exact lines to run in Terminal, each with Copy, and says what sudo asks", async () => {
+    onPlatform("MacIntel");
     const user = userEvent.setup();
     const fix = { problem: "permission" as const, options: [
       { title: "Run it in Terminal", command: "curl -fsSL https://claude.ai/install.sh | bash" },

@@ -1,6 +1,9 @@
+import { isSecureStorageDenied } from "@careeros/contract";
+
 /**
- * Whether a save failure was the OS denying Keychain access (app-electron's KeychainAccessError), recognised by
- * its wording since errors cross IPC as plain text. Anything else (secure storage missing entirely, a network
- * failure) is a different problem and gets the normal error toast instead.
+ * Whether a save failure was the OS denying secure storage (the Keychain on a Mac, credential protection on
+ * Windows): app-electron's KeychainAccessError, recognised by its error name, which survives IPC in the error
+ * text, never by its English wording. Anything else (secure storage missing entirely, a network failure) is a
+ * different problem and gets the normal error toast instead. Pass the error as caught, before `errorText`.
  */
-export const isKeychainDenied = (message: string) => message.includes("couldn't use the Keychain");
+export const isKeychainDenied = (e: unknown) => isSecureStorageDenied(e);

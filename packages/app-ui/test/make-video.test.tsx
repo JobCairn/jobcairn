@@ -5,6 +5,7 @@ import { isoWeek } from "@careeros/contract";
 import { ActionButton, WORKSPACE } from "../src/components/ActionButton";
 import { MakeVideoButton, openMakeVideo, subjectFor, VideoIntentListener, withoutSponsorship } from "../src/components/MakeVideo";
 import { loadFixture, MockBridge } from "../src/mock/MockBridge";
+import { onPlatform } from "./os";
 import { renderApp } from "./render";
 import brand from "@careeros/brand/identity.json" with { type: "json" };
 
@@ -64,6 +65,19 @@ describe("Make video", () => {
     await user.click(within(dialog).getByRole("button", { name: "Start" }));
     await waitFor(() => expect(window.location.hash).toBe(`#/video?folder=${encodeURIComponent(JD_FOLDER)}`));
     expect(bridge.calls.filter((c) => c.method === "video.start").map((c) => c.args)).toEqual([["jd-walkthrough", JOB, { length_s: 150, sound: "on" }]]);
+  });
+
+  it("says the sound effects are made on your Mac, or on your PC on Windows", async () => {
+    const user = userEvent.setup();
+    onPlatform("MacIntel");
+    const { unmount } = renderApp(<ActionButton action="jd_walkthrough_video" target={JOB} />);
+    await user.click(await screen.findByRole("button", { name: "JD video" }));
+    expect(await within(await screen.findByRole("dialog", { name: "Make a video" })).findByText("Soft whooshes and pops under the voice, made on your Mac.")).toBeInTheDocument();
+    unmount();
+    onPlatform("Win32");
+    renderApp(<ActionButton action="jd_walkthrough_video" target={JOB} />);
+    await user.click(await screen.findByRole("button", { name: "JD video" }));
+    expect(await within(await screen.findByRole("dialog", { name: "Make a video" })).findByText("Soft whooshes and pops under the voice, made on your PC.")).toBeInTheDocument();
   });
 
   it("turns this video's sound effects off when \"Sound effects\" is unticked", async () => {

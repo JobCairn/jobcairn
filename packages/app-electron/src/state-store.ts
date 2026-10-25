@@ -11,6 +11,8 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const LOCKABLE: readonly string[] = LOCKABLE_DIRS;
 
 const isObject = (v: unknown): v is Record<string, unknown> => !!v && typeof v === "object" && !Array.isArray(v);
+/** A stat dev or ino as Node reports it: a whole number within 64 bits (past 2^53 it's already rounded). */
+const statId = (v: unknown): v is number => typeof v === "number" && Number.isInteger(v) && Math.abs(v) < 2 ** 64;
 
 /** Keeps only absolute-path keys whose values survive `clean`. */
 function perRoot<T>(v: unknown, clean: (x: unknown) => T | undefined): Record<string, T> {
@@ -53,12 +55,14 @@ export function fileStateStore(file: string): AppStateStore {
         for (const r of Object.keys(recentInfo)) if (!out.recent.includes(r)) delete recentInfo[r];
         if (Object.keys(recentInfo).length) out.recentInfo = recentInfo;
         // Drop box origins: plain file names (no slash, not hidden) to an absolute path plus the copy's dev/ino.
+        // NTFS file ids are 64-bit, so on Windows an ino can pass 2^53: Node's stat already rounds it to the
+        // nearest double, the same way every time, so any whole number is kept and still matches a fresh stat.
         const inboxOrigins = perRoot(v.inboxOrigins, (m) => {
           if (!isObject(m)) return undefined;
           const kept = Object.entries(m).filter((e): e is [string, InboxOrigin] => {
             const o = e[1];
             return /^[^/\\\0.][^/\\\0]{0,254}$/.test(e[0]) && isObject(o) && typeof o.path === "string" && path.isAbsolute(o.path)
-              && Number.isSafeInteger(o.dev) && Number.isSafeInteger(o.ino);
+              && statId(o.dev) && statId(o.ino);
           }).map(([n, o]) => [n, { path: o.path, dev: o.dev, ino: o.ino }] as const);
           return kept.length ? Object.fromEntries(kept) : undefined;
         });

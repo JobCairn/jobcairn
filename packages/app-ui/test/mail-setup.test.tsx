@@ -41,8 +41,8 @@ describe("Email setup", { timeout: 20_000 }, () => {
     expect(within(card).queryByLabelText("App password (16 letters)")).not.toBeInTheDocument();
     expect(JSON.stringify(bridge.calls)).not.toContain(MOCK_GOOD_PASSWORD);
   });
-  // The wording main's KeychainAccessError uses (app-electron/src/secret-store.ts).
-  const KEYCHAIN_DENIED = "CareerOS couldn't use the Keychain, so your key wasn't saved.";
+  // Main's KeychainAccessError (app-electron/src/secret-store.ts) as it arrives over IPC, its name kept in the text.
+  const KEYCHAIN_DENIED = "Error invoking remote method 'careeros:call': KeychainAccessError: CareerOS couldn't use the Keychain, so your key wasn't saved.";
   async function testThenSave(bridge: MockBridge) {
     const { user, card } = await openEmail(bridge);
     await user.type(within(card).getByLabelText("Gmail address"), ADDRESS);

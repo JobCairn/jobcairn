@@ -4,6 +4,7 @@ import { CLAUDE_INSTALL_URL, CLAUDE_NOTICE, isActiveRun, type ClaudeEngineState 
 import { useAction, useBridge } from "../bridge-context";
 import { ErrorState, Loading } from "../components/States";
 import { ToolInstall } from "../components/ToolInstall";
+import { uiWords } from "../platform";
 import { formatCost } from "./ClaudeRunPanel";
 import { useClaudeEngine, useClaudeRuns } from "./useClaudeRun";
 import "./claude.css";
@@ -50,6 +51,7 @@ export function ClaudeSetup({ onDone, variant = "settings" }: { onDone?: () => v
   const { busy, run } = useAction();
   const [agree, setAgree] = useState(false);
   const e = engine.data;
+  const os = uiWords();
   if (!e) return engine.error ? <ErrorState title="Claude's setup can't be checked" text={engine.error} /> : <Loading />;
 
   const next = setupStep(e);
@@ -58,7 +60,7 @@ export function ClaudeSetup({ onDone, variant = "settings" }: { onDone?: () => v
   const consent = () => run("consent", async () => { await bridge.claude.consent(); engine.reload(); }, "Thanks. Claude can now run for you.");
   const signIn = () => run("signin", async () => {
     const ok = await bridge.claude.openSignIn();
-    if (!ok) throw new Error("Terminal didn't open. Open it yourself, type claude and press Return to sign in.");
+    if (!ok) throw new Error(`${os.terminal.charAt(0).toUpperCase()}${os.terminal.slice(1)} didn't open. Open it yourself, type claude and press ${os.enterKey} to sign in.`);
   });
   const runTest = () => run("test", async () => { await bridge.claude.testRun(); runs.reload(); });
   const order = ["consent", "cli", "login", "test", "app"] as const;
@@ -94,13 +96,13 @@ export function ClaudeSetup({ onDone, variant = "settings" }: { onDone?: () => v
             </>
           ) : e.cli.problem === "too_old" ? (
             <>
-              <Text role="body-sm">This Claude Code is version {e.cli.version}. {PRODUCT} needs {e.cli.min_version} or newer. To update, open Terminal and run:</Text>
+              <Text role="body-sm">This Claude Code is version {e.cli.version}. {PRODUCT} needs {e.cli.min_version} or newer. To update, open {os.terminal} and run:</Text>
               <code className="csetup__code">claude update</code>
               <div className="csetup__row"><Button size="sm" variant="ghost" loading={busy === "recheck"} onClick={() => void recheck()}>Check again</Button></div>
             </>
           ) : e.cli.problem === "broken" ? (
             <>
-              <Text role="body-sm">Claude Code is installed but didn't answer. Try opening it once in Terminal, then check again.</Text>
+              <Text role="body-sm">Claude Code is installed but didn't answer. Try opening it once in {os.terminal}, then check again.</Text>
               <div className="csetup__row"><Button size="sm" variant="ghost" loading={busy === "recheck"} onClick={() => void recheck()}>Check again</Button></div>
             </>
           ) : null}
@@ -111,10 +113,10 @@ export function ClaudeSetup({ onDone, variant = "settings" }: { onDone?: () => v
             <>
               <Text role="body-sm">
                 {e.login === "signed_out" ? "Claude Code isn't signed in." : "We couldn't tell whether Claude Code is signed in. The test run below will show it."}
-                {" "}Sign in inside Terminal with your own Claude account. {PRODUCT} never sees your login.
+                {" "}Sign in inside {os.terminal} with your own Claude account. {PRODUCT} never sees your login.
               </Text>
               <div className="csetup__row">
-                <Button size="sm" variant={e.login === "signed_out" ? "primary" : "secondary"} loading={busy === "signin"} title="Opens Terminal to sign in" onClick={() => void signIn()}>Sign in</Button>
+                <Button size="sm" variant={e.login === "signed_out" ? "primary" : "secondary"} loading={busy === "signin"} title={`Opens ${os.terminal} to sign in`} onClick={() => void signIn()}>Sign in</Button>
                 <Button size="sm" variant="ghost" loading={busy === "recheck"} onClick={() => void recheck()}>Check again</Button>
               </div>
             </>

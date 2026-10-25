@@ -12,6 +12,7 @@ import { TourHelpButton, TourLayer } from "./tour"; // guided tours: overlay + "
 import { WorkspaceSwitcher } from "./workspaces/WorkspaceSwitcher";
 import { useSidebarPrefs } from "./nav/sidebar-prefs";
 import { useNewJobsCount } from "./nav/new-jobs";
+import { isMacUi } from "./platform";
 
 const SCREEN_LABELS: [Route, string][] = [
   [{ screen: "home" }, "Home"], [{ screen: "jobs" }, "Jobs"], [{ screen: "searches" }, "Searches"], [{ screen: "companies" }, "Companies"], [{ screen: "recruiters" }, "Recruiters"],
@@ -115,7 +116,7 @@ export function Shell({ route, children }: { route: Route; children: ReactNode }
     return [...jobs, ...companies, ...[...screens, ...actions].filter((c) => !q || c.label.toLowerCase().includes(q)), ...settings];
   }, [query, hits.data, companyList.data, setTheme]);
 
-  const isMac = typeof navigator !== "undefined" && /Mac/i.test(navigator.platform);
+  const isMac = isMacUi();
   const sidebar = useSidebarPrefs(isMac);
   return (
     <ClaudeActivityProvider>

@@ -2,6 +2,7 @@ import { execFile } from "node:child_process";
 import { saveDownload } from "./save-file.js";
 import { promisify } from "node:util";
 import { app, clipboard, dialog, shell, type BrowserWindow, type OpenDialogOptions } from "electron";
+import { osWords } from "@careeros/contract";
 import { isSafeLink, type ShellHost } from "@careeros/services";
 import { identity } from "@careeros/brand/identity";
 import { openClaudeDesktop } from "./claude.js";
@@ -41,7 +42,7 @@ export function electronShell(getWindow: () => BrowserWindow | null, picks: stri
     },
     showItemInFolder: (p) => shell.showItemInFolder(p),
     // Services check the path first (workspace, locks, a document or media kind only; never an app or a script).
-    openPath: async (p) => { if (await shell.openPath(p)) throw new Error("No app on this computer opens this kind of file. Use Show in Finder instead."); },
+    openPath: async (p) => { if (await shell.openPath(p)) throw new Error(`No app on this computer opens this kind of file. Use ${osWords(process.platform).showInFolder} instead.`); },
     // Recoverable: the file goes to the system Trash, never straight to deletion. Services choose and check the path.
     trashItem: (p) => shell.trashItem(p),
     openClaudeDesktop: () => openClaudeDesktop(process.platform, (cmd, args) => run(cmd, args)),

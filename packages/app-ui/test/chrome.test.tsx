@@ -7,6 +7,7 @@ import { diagLines, profileHint, searchModeLine, signInReason, signInRow } from 
 import { RequestComposer } from "../src/composer";
 import { MockBridge } from "../src/mock/MockBridge";
 import { RunButton } from "../src/learn/RunButton";
+import { onPlatform } from "./os";
 import { renderApp } from "./render";
 import brand from "@careeros/brand/identity.json" with { type: "json" };
 
@@ -199,6 +200,7 @@ describe("a board's Details: how its check opened the tab (pure)", () => {
 
 describe("Search in my Chrome setup card", () => {
   it("a failed helper install says why and gives the lines to run in Terminal, with Copy", async () => {
+    onPlatform("MacIntel");
     const user = userEvent.setup();
     const cmd = `npm install --prefix "$HOME/Library/Application Support/${brand.name}/browser-helper" --no-audit --no-fund --ignore-scripts --registry=https://registry.npmjs.org/ agent-browser@0.38.2`;
     const f = fakeChrome({ installFails: { problem: "permission", options: [
@@ -216,7 +218,26 @@ describe("Search in my Chrome setup card", () => {
     expect(await navigator.clipboard.readText()).toBe(cmd);
   });
 
+  it("on Windows, says PowerShell, Enter and your PC instead of Terminal, Return and your Mac", async () => {
+    onPlatform("Win32");
+    const user = userEvent.setup();
+    const f = fakeChrome({ installFails: { problem: "other", options: [{ title: "Run it in PowerShell", command: "npm install agent-browser@0.38.2" }] } });
+    renderApp(<ChromeSearchSettings />, { bridge: bridgeWith(f) });
+    expect(await screen.findByText(new RegExp(String.raw`About 118 MB, in ${brand.name}'s own folder; nothing else on your PC changes\.`))).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Install helper" }));
+    const panel = await screen.findByRole("group", { name: "Run it in PowerShell" });
+    expect(within(panel).getByText(/open PowerShell \(open the Start menu, type PowerShell and choose it\), paste the lines, press Enter/)).toBeInTheDocument();
+    // (The failure line itself comes from main, worded there; this checks the window's own words.)
+    expect(panel.textContent).not.toMatch(/Terminal|Return|Spotlight|Applications › Utilities/);
+  });
+  it("on Windows, the remote-control step says press Enter", async () => {
+    onPlatform("Win32");
+    renderApp(<ChromeSearchSettings />, { bridge: bridgeWith(fakeChrome({ helper: true })) });
+    expect(await screen.findByText("Paste this into Chrome's address bar and press Enter.")).toBeInTheDocument();
+  });
+
   it("walks the steps with friendly words and turns itself on when it connects (no Finish)", async () => {
+    onPlatform("MacIntel");
     const f = fakeChrome();
     const b = bridgeWith(f);
     renderApp(<ChromeSearchSettings />, { bridge: b });

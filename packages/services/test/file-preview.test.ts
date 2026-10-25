@@ -5,7 +5,7 @@ import { zipSync, strToU8 } from "fflate";
 import { samplePdf } from "@careeros/core";
 import { PREVIEW_LIMITS } from "@careeros/contract";
 import { dispatch } from "../src/dispatch.js";
-import { filePreviewHandlers as P } from "../src/file-preview.js";
+import { filePreviewHandlers as P, useShowInstead } from "../src/file-preview.js";
 import { openSample } from "./helpers.js";
 
 // Fictional files only.
@@ -103,9 +103,15 @@ describe("files.open", () => {
     const { ctx, root, host } = openSample();
     const shell = host.shell;
     put(root, "inbox/run-me.command", "echo fictional");
-    await expect(P["files.open"](ctx, "inbox/run-me.command")).rejects.toThrow(/can't be opened from the app/);
+    await expect(P["files.open"](ctx, "inbox/run-me.command")).rejects.toThrow(`This kind of file can't be opened from the app. ${useShowInstead()}`);
     put(root, "me/identity/passport.pdf", samplePdf(["fictional"]));
     await expect(P["files.open"](ctx, "me/identity/passport.pdf")).rejects.toThrow(/locked folder/);
     expect(shell.openedPaths).toEqual([]);
+  });
+
+  it("points to the way to reveal the file that this computer has: Finder, File Explorer or a folder", () => {
+    expect(useShowInstead("darwin")).toBe("Use Show in Finder instead.");
+    expect(useShowInstead("win32")).toBe("Use Show in File Explorer instead.");
+    expect(useShowInstead("linux")).toBe("Use Show in folder instead.");
   });
 });

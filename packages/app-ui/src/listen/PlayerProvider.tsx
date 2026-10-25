@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { MAX_SPEED, MIN_SPEED, READ_ALOUD_DEFAULTS, TTS_LANG_CODE, TTS_VOICES, type TtsActivity, type TtsOptions, type TtsVoice } from "@careeros/contract";
 import { errorText, useBridge } from "../bridge-context";
+import { isMacUi, uiWords } from "../platform";
 import { listenElements } from "./blocks";
 import { ListenCtx, type AudioLike, type ListenChunk, type ListenStatus, type PlayerApi, type PlayerView, type StartRequest } from "./context";
 import { PlayerBar } from "./PlayerBar";
@@ -15,7 +16,10 @@ const ACTIVE_CLASS = "listen-active";
 
 export const WARMING_NOTE = "Natural voice warming up";
 export const MAC_NOTE = "Using the Mac voice for this reading";
-const FALLBACK_NOTE = "Using the macOS voice. Supertonic isn't set up on this Mac.";
+/** The voice fell back from Supertonic: on a Mac to the macOS voice; elsewhere to whatever simpler voice there is. */
+export const fallbackNote = () => (isMacUi()
+  ? "Using the macOS voice. Supertonic isn't set up on this Mac."
+  : `Using a simpler voice. Supertonic isn't set up on ${uiWords().thisComputer}.`);
 
 /** `warm`: parts the Mac voice read while the natural voice was starting (the note shows while one plays). */
 interface Session { id: number; req: StartRequest; urls: (string | undefined)[]; failed: Set<number>; opts: TtsOptions; warm: Set<number> }
@@ -184,7 +188,7 @@ export function PlayerProvider({ children, createAudio }: { children: ReactNode;
 
   const noteFor = useCallback((s: Session, i: number, r: { engine: string; fellBack: boolean; warming?: boolean }) => {
     if (r.warming) { s.warm.add(i); return; }
-    if (s.opts.engine !== "macos_say" && r.engine !== "supertonic" && r.fellBack) setNote(FALLBACK_NOTE);
+    if (s.opts.engine !== "macos_say" && r.engine !== "supertonic" && r.fellBack) setNote(fallbackNote());
   }, [setNote]);
 
   // Makes chunks one at a time: the current one first, then up to AHEAD more.

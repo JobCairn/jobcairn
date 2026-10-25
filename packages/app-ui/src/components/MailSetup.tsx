@@ -93,8 +93,8 @@ function Wizard({ onSaved }: { onSaved: () => void }) {
       await bridge.mail.saveAccount(tested, name.trim());
     } catch (e) {
       const message = errorText(e);
-      if (!isKeychainDenied(message)) throw e;
-      // The Mac said no to the Keychain. The tested password is gone from main, so the next try starts with a fresh paste and test.
+      if (!isKeychainDenied(e)) throw e;
+      // The OS said no to secure storage (the Keychain on a Mac). The tested password is gone from main, so the next try starts with a fresh paste and test.
       setKeychainError(message); setResult(null); setTested("");
       return;
     }

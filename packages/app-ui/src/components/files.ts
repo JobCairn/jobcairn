@@ -1,8 +1,9 @@
 import { fmtDay, parseDay } from "../reading/dates";
+import { uiWords } from "../platform";
 
 /** File helpers shared by the Job, Apply and Drop box screens. */
-const isMac = () => typeof navigator !== "undefined" && /Mac/i.test(navigator.platform);
-export const showInFolderLabel = () => (isMac() ? "Show in Finder" : "Show in folder");
+/** "Show in Finder" on a Mac, "Show in File Explorer" on Windows, "Show in folder" elsewhere. */
+export const showInFolderLabel = () => uiWords().showInFolder;
 
 const DOC_NAMES: Record<string, string> = { resume: "Resume", "cover-letter": "Cover letter", cover: "Cover letter", answers: "Answers", claims: "Claim check", review: "Second-pass review", letter: "Cover letter" };
 const KIND_TEXT: Record<string, string> = {

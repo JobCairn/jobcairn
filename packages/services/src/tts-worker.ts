@@ -9,7 +9,7 @@ import type { TtsEngine } from "@careeros/contract";
 import { CHUNK_TAIL_S, killProcessTree, OFFLINE_ENV, TtsCancelled, type ChildLike } from "./tts-runner.js";
 
 export interface WorkerChild extends ChildLike { stdin: NodeJS.WritableStream | null }
-export type WorkerSpawnFn = (cmd: string, args: string[], opts: { env: NodeJS.ProcessEnv; detached: boolean; shell: false; stdio: ["pipe", "pipe", "pipe"] }) => WorkerChild;
+export type WorkerSpawnFn = (cmd: string, args: string[], opts: { env: NodeJS.ProcessEnv; detached: boolean; shell: false; windowsHide: true; stdio: ["pipe", "pipe", "pipe"] }) => WorkerChild;
 
 export interface WorkerJob { text: string; voice: string; lang: string; out: string }
 export interface WorkerResult { engine: TtsEngine; fellBack: boolean }
@@ -72,7 +72,7 @@ export class NarratorWorker {
     this.ready$ = new Promise((r) => { this.readyResolve = r; });
     const spawn = o.spawn ?? (nodeSpawn as unknown as WorkerSpawnFn);
     try {
-      this.child = spawn(o.python, [o.script, "--serve", "--no-download"], { env: { ...o.env, ...OFFLINE_ENV }, detached: true, shell: false, stdio: ["pipe", "pipe", "pipe"] });
+      this.child = spawn(o.python, [o.script, "--serve", "--no-download"], { env: { ...o.env, ...OFFLINE_ENV }, detached: process.platform !== "win32", shell: false, windowsHide: true, stdio: ["pipe", "pipe", "pipe"] });
     } catch {
       this.finish(new Error("The natural voice couldn't start."));
       return;

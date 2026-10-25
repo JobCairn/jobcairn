@@ -1,5 +1,6 @@
 export * from "./types.js";
 export * from "./process.js";
+export * from "./find-exe.js";
 export { oneLine as scrubLine, scrubMessage } from "./scrub.js";
 export * from "./hash.js";
 export * from "./registry.js";

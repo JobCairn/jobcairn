@@ -1,7 +1,7 @@
 // Runs the on-device narrator (plugin/skills/voice/scripts/narrate.py) for read aloud.
 // No shell: the command and its arguments are an array. Every run has a timeout, and a cancel or a timeout
 // kills the whole process group (python, ffmpeg and `say` children included).
-import { spawn as nodeSpawn } from "node:child_process";
+import { spawn as nodeSpawn, spawnSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -18,7 +18,7 @@ export interface ChildLike {
   on(event: "error", cb: (err: Error) => void): unknown;
   kill(signal?: NodeJS.Signals): boolean;
 }
-export type SpawnFn = (cmd: string, args: string[], opts: { env: NodeJS.ProcessEnv; detached: boolean; shell: false; stdio: ["ignore", "pipe", "pipe"] }) => ChildLike;
+export type SpawnFn = (cmd: string, args: string[], opts: { env: NodeJS.ProcessEnv; detached: boolean; shell: false; windowsHide: true; stdio: ["ignore", "pipe", "pipe"] }) => ChildLike;
 
 export interface RunOptions {
   timeoutMs: number;
@@ -29,13 +29,27 @@ export interface RunOptions {
   graceMs?: number;
   /** Kills the child and everything it started. Injected in tests. */
   killTree?: (child: ChildLike, signal: NodeJS.Signals) => void;
+  /** Test seam: the platform the child runs on (Windows: no detached console, taskkill for the tree). */
+  platform?: NodeJS.Platform;
 }
 export interface RunResult { code: number | null; stdout: string; stderr: string; timedOut: boolean; cancelled: boolean; spawnError: string | null }
 
 const KEEP = 64 * 1024;
 const tail = (s: string) => (s.length > KEEP ? s.slice(-KEEP) : s);
 
-export function killProcessTree(child: ChildLike, signal: NodeJS.Signals): void {
+/** Runs `taskkill` (no shell, no window). A test seam for killProcessTree on Windows. */
+export type TaskKill = (args: string[]) => void;
+const runTaskkill: TaskKill = (args) => { spawnSync("taskkill", args, { windowsHide: true, stdio: "ignore", shell: false }); };
+
+export function killProcessTree(child: ChildLike, signal: NodeJS.Signals, o: { platform?: NodeJS.Platform; taskkill?: TaskKill } = {}): void {
+  // Windows has no process groups: taskkill /T ends the child and everything it started (ffmpeg under python too).
+  if ((o.platform ?? process.platform) === "win32") {
+    if (child.pid) {
+      try { (o.taskkill ?? runTaskkill)(["/T", "/F", "/PID", String(child.pid)]); return; } catch { /* fall back to the child */ }
+    }
+    try { child.kill(signal); } catch { /* already gone */ }
+    return;
+  }
   // The child leads its own process group (spawned detached), so a negative pid reaches its children too.
   if (child.pid) {
     try { process.kill(-child.pid, signal); return; } catch { /* group gone or not ours: fall back to the child */ }
@@ -50,6 +64,8 @@ export function toolEnv(base: NodeJS.ProcessEnv = process.env, platform: NodeJS.
 
 /** What a narrator child may see: tools, home, locale, the venv and the Hugging Face cache. Nothing else. */
 const CHILD_ENV_ALLOW = ["PATH", "HOME", "USER", "LOGNAME", "LANG", "LC_ALL", "LC_CTYPE", "TMPDIR", "VIRTUAL_ENV", "HF_HOME", "HF_HUB_CACHE", "XDG_CACHE_HOME"] as const;
+/** Windows also needs these for python and ffmpeg to start at all (system DLLs, temp, the person's folders). */
+const WIN_CHILD_ENV_ALLOW = ["SystemRoot", "SYSTEMROOT", "windir", "USERPROFILE", "APPDATA", "LOCALAPPDATA", "TEMP", "TMP", "PATHEXT", "ComSpec"] as const;
 /** Only the explicit model download may also use the person's proxy and certificate settings. */
 const DOWNLOAD_ENV_ALLOW = ["HTTPS_PROXY", "HTTP_PROXY", "NO_PROXY", "https_proxy", "http_proxy", "no_proxy", "SSL_CERT_FILE", "REQUESTS_CA_BUNDLE"] as const;
 export const OFFLINE_ENV = { HF_HUB_OFFLINE: "1", TRANSFORMERS_OFFLINE: "1" } as const;
@@ -58,10 +74,12 @@ export const OFFLINE_ENV = { HF_HUB_OFFLINE: "1", TRANSFORMERS_OFFLINE: "1" } as
  * The environment for a narrator child. Read aloud (the default) is offline: HF_HUB_OFFLINE and TRANSFORMERS_OFFLINE
  * are set, so no library can fetch anything. `network` is only for the explicit model download in Setup.
  */
-export function ttsChildEnv(base: NodeJS.ProcessEnv = process.env, o: { network?: boolean } = {}): NodeJS.ProcessEnv {
-  const withTools = toolEnv({ PATH: base.PATH ?? "" });
+export function ttsChildEnv(base: NodeJS.ProcessEnv = process.env, o: { network?: boolean; platform?: NodeJS.Platform } = {}): NodeJS.ProcessEnv {
+  const platform = o.platform ?? process.platform;
+  const withTools = toolEnv({ PATH: base.PATH ?? base.Path ?? "" }, platform);
   const out: NodeJS.ProcessEnv = {};
-  for (const k of [...CHILD_ENV_ALLOW, ...(o.network ? DOWNLOAD_ENV_ALLOW : [])]) if (base[k] !== undefined) out[k] = base[k];
+  const allow = [...CHILD_ENV_ALLOW, ...(platform === "win32" ? WIN_CHILD_ENV_ALLOW : []), ...(o.network ? DOWNLOAD_ENV_ALLOW : [])];
+  for (const k of allow) if (base[k] !== undefined) out[k] = base[k];
   out.PATH = withTools.PATH;
   return o.network ? out : { ...out, ...OFFLINE_ENV };
 }
@@ -70,7 +88,8 @@ const offline = (env: NodeJS.ProcessEnv | undefined): NodeJS.ProcessEnv => ({ ..
 
 export function runProcess(cmd: string, args: string[], o: RunOptions): Promise<RunResult> {
   const spawn = o.spawn ?? (nodeSpawn as unknown as SpawnFn);
-  const killTree = o.killTree ?? killProcessTree;
+  const platform = o.platform ?? process.platform;
+  const killTree = o.killTree ?? ((c: ChildLike, s: NodeJS.Signals) => killProcessTree(c, s, { platform }));
   return new Promise((resolve) => {
     let stdout = "";
     let stderr = "";
@@ -101,7 +120,8 @@ export function runProcess(cmd: string, args: string[], o: RunOptions): Promise<
       return;
     }
     try {
-      child = spawn(cmd, args, { env: o.env ?? process.env, detached: true, shell: false, stdio: ["ignore", "pipe", "pipe"] });
+      // Windows: not detached (that gives the child a console window of its own); taskkill /T reaches its children.
+      child = spawn(cmd, args, { env: o.env ?? process.env, detached: platform !== "win32", shell: false, windowsHide: true, stdio: ["ignore", "pipe", "pipe"] });
     } catch (e) {
       finish({ code: null, spawnError: (e as Error).message });
       return;
@@ -153,8 +173,13 @@ export function careerosVenvDir(): string {
   return path.join(os.homedir(), ".careeros", "venv");
 }
 
+/** A program inside a venv: bin/python and bin/pip, or on Windows Scripts\python.exe and Scripts\pip.exe. */
+export function venvTool(venvDir: string, tool: "python" | "pip", platform: NodeJS.Platform = process.platform): string {
+  return platform === "win32" ? path.win32.join(venvDir, "Scripts", `${tool}.exe`) : path.posix.join(venvDir, "bin", tool);
+}
+
 export function narratorPaths(env: NodeJS.ProcessEnv = toolEnv()): NarratorPaths {
-  const venv = path.join(careerosVenvDir(), "bin", "python");
+  const venv = venvTool(careerosVenvDir(), "python");
   return {
     venvPython: executable(venv) ? venv : null,
     systemPython: findTool(PYTHON, env).tool?.path ?? null,
@@ -252,7 +277,7 @@ export class TtsCancelled extends Error {
  */
 export const CHUNK_TAIL_S = 0.06;
 
-export interface SynthOptions extends Pick<RunOptions, "spawn" | "env" | "signal" | "killTree" | "graceMs"> {
+export interface SynthOptions extends Pick<RunOptions, "spawn" | "env" | "signal" | "killTree" | "graceMs" | "platform"> {
   timeoutMs?: number;
   /** Speak with the macOS voice even when Supertonic is set up (the person asked for it, or Supertonic is warming up). */
   engine?: "macos_say";
@@ -357,7 +382,7 @@ export async function installSupertonic(
   if (mk.code !== 0) throw new Error("The private Python environment couldn't be created.");
 
   o.onProgress?.(INSTALL_STAGES[1]!);
-  const pip = path.join(venvDir, "bin", "pip");
+  const pip = venvTool(venvDir, "pip", o.platform);
   const env = ttsChildEnv(o.env ?? process.env, { network: true });
   const install = await runProcess(pip, ["install", `supertonic==${SUPERTONIC_PINNED_VERSION}`], { ...o, env, timeoutMs: o.timeoutMs ?? 10 * 60_000 });
   if (install.cancelled) throw new TtsCancelled();

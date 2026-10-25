@@ -2,6 +2,7 @@ import path from "node:path";
 import { oneLine } from "./errors.js";
 import { captionsModelFile, HF_VERSION, pickCaptionsModel, type CaptionsModel, type HfPaths } from "./hf.js";
 import { cleanEnv, OFFLINE_ENV, type ProcessRunner } from "./process.js";
+import { findExecutable } from "./find-exe.js";
 import identity from "@careeros/brand/identity.json" with { type: "json" };
 
 export const TOOL_IDS = ["ffmpeg", "ffprobe", "node", "chrome", "hyperframes", "python", "narrate", "supertonic", "whisper"] as const;
@@ -23,14 +24,6 @@ export interface ToolsEnv {
 /** The captions model's row in the tools card. */
 export const CAPTIONS_MODEL_MESSAGE = "About 140 MB, one-time download. Times the on-screen words to the voice. Runs on this computer.";
 
-const DEFAULT_PATHEXT = ".COM;.EXE;.BAT;.CMD";
-// Only these two can ever be started directly by the OS loader with no interpreter involved - a
-// .BAT/.CMD "shim" needs cmd.exe to run it, which is a shell by another name (and a .JS/.VBS shim
-// needs a script host). Accepting only .COM/.EXE means `findOnPath` can never hand back something
-// that would force the caller into running a shell just to launch it.
-const WIN_EXEC_EXTS = [".COM", ".EXE"];
-const WIN_DRIVE_ABSOLUTE = /^[a-zA-Z]:[\\/]/;
-
 /** Parses the first `(major).(minor)` pair out of `re`'s capture groups. A plain `RegExp#exec`
  * call (no global flag, so it only ever runs once, from the start) stays linear even on a large
  * block of hostile text - there is no backtracking blow-up risk here because every pattern this
@@ -42,15 +35,6 @@ export function majorMinor(text: string, re: RegExp): [number, number] | null {
   return m ? [Number(m[1]), Number(m[2] ?? 0)] : null;
 }
 
-function winExecExts(e: ToolsEnv): string[] {
-  // "" (unset) is treated the same as missing (Fix round 1, item 7) - `??` would otherwise accept
-  // an explicitly empty PATHEXT literally, which (after intersecting with WIN_EXEC_EXTS) ends up
-  // at the same fallback anyway, but `||` says what's actually meant.
-  const raw = (e.env.PATHEXT || DEFAULT_PATHEXT).split(";").filter(Boolean);
-  const allowed = raw.filter((x) => WIN_EXEC_EXTS.includes(x.toUpperCase()));
-  return allowed.length ? allowed : WIN_EXEC_EXTS;
-}
-
 /** Looks a binary up on PATH, the way a shell would - but never runs a shell to do it, and never
  * trusts a directory it can't pin down to one real, fixed location: an empty PATH entry (classic
  * `::` or a leading/trailing `:`/`;`), a literal "." or other relative entry, and - on Windows - a
@@ -59,25 +43,11 @@ function winExecExts(e: ToolsEnv): string[] {
  * current," exactly the same ambient-context problem a relative entry has) are all skipped. A
  * Windows PATH entry may be wrapped in one pair of double quotes (standard, for a directory
  * containing a space); those are stripped before any of the above checks run. Only `.COM`/`.EXE`
- * are ever tried as extensions on Windows (see `WIN_EXEC_EXTS`); there is no bare-name fallback
+ * are ever tried as extensions on Windows (see `WIN_EXEC_EXTS` in find-exe.ts); there is no bare-name fallback
  * there, since an extension-less match on Windows isn't reliably something the OS loader will run
  * directly. */
 export function findOnPath(name: string, e: ToolsEnv): string | null {
-  const isWin = e.platform === "win32";
-  const p = isWin ? path.win32 : path.posix;
-  const sep = isWin ? ";" : ":";
-  const exts = isWin ? winExecExts(e) : [""];
-  const dirs = (e.env.PATH ?? e.env.Path ?? "")
-    .split(sep)
-    .map((d) => (isWin && d.length >= 2 && d.startsWith('"') && d.endsWith('"') ? d.slice(1, -1) : d))
-    .filter((d) => d !== "" && p.isAbsolute(d) && (!isWin || WIN_DRIVE_ABSOLUTE.test(d)));
-  for (const dir of dirs) {
-    for (const ext of exts) {
-      const c = p.join(dir, name + ext);
-      if (e.exists(c)) return c;
-    }
-  }
-  return null;
+  return findExecutable(name, { platform: e.platform, env: e.env, exists: (c) => e.exists(c) });
 }
 
 /** An env var naming a path (`HYPERFRAMES_BROWSER_PATH`, `CHROME_PATH`, `npm_config_prefix`) is

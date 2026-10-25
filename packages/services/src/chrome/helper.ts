@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { safeDir, safePathDirs } from "@careeros/video";
 import { cleanEnv, type ProcessRunner } from "../claude/process.js";
 
 /**
@@ -351,15 +352,37 @@ export function versionAtLeast(v: string, min: string): boolean {
 }
 
 /** Where to look for the helper, in order: the copy the app installed, then PATH, then Homebrew and npm's usual bins. */
-export function helperCandidates(o: { ownDir: string; env: NodeJS.ProcessEnv; platform: NodeJS.Platform; home: string }): string[] {
-  const p = o.platform === "win32" ? path.win32 : path.posix;
-  const name = o.platform === "win32" ? "agent-browser.cmd" : "agent-browser";
+export function helperCandidates(o: { ownDir: string; env: NodeJS.ProcessEnv; platform: NodeJS.Platform; home: string; arch?: string }): string[] {
+  if (o.platform === "win32") return winHelperCandidates({ ...o, arch: o.arch ?? process.arch });
+  const p = path.posix;
+  const name = "agent-browser";
   const out = [p.join(o.ownDir, "node_modules", ".bin", name)];
-  const sep = o.platform === "win32" ? ";" : ":";
-  for (const d of (o.env.PATH ?? o.env.Path ?? "").split(sep)) if (d && p.isAbsolute(d)) out.push(p.join(d, name));
+  for (const d of safePathDirs(o.env.PATH ?? o.env.Path ?? "", o.platform)) out.push(p.join(d, name));
   if (o.platform === "darwin") out.push("/opt/homebrew/bin/agent-browser", "/usr/local/bin/agent-browser");
   if (o.env.npm_config_prefix && p.isAbsolute(o.env.npm_config_prefix)) out.push(p.join(o.env.npm_config_prefix, "bin", name));
   out.push(p.join(o.home, ".npm-global", "bin", name));
+  return [...new Set(out)];
+}
+
+/**
+ * Windows: npm's agent-browser.cmd can't start without a shell, but the package ships its own Windows program
+ * (bin\agent-browser-win32-x64.exe), which is what the shim ends up running. So the candidates are that .exe inside
+ * each place npm puts the package: the app's own copy, then next to every shim on PATH (a global npm prefix holds
+ * agent-browser.cmd and node_modules side by side), then npm_config_prefix and %APPDATA%\npm, npm's default global
+ * prefix (on Windows the prefix itself, not <prefix>\bin). An agent-browser.exe on PATH counts too. ARM64 Windows
+ * uses an arm64 build when the package has one, else the x64 one (Windows runs it emulated), like the package's own
+ * launcher.
+ */
+function winHelperCandidates(o: { ownDir: string; env: NodeJS.ProcessEnv; home: string; arch: string }): string[] {
+  const p = path.win32;
+  const exes = [...(o.arch === "arm64" ? ["agent-browser-win32-arm64.exe"] : []), "agent-browser-win32-x64.exe"];
+  const inPrefix = (prefix: string) => exes.map((e) => p.join(prefix, "node_modules", "agent-browser", "bin", e));
+  const out = inPrefix(o.ownDir);
+  for (const d of safePathDirs(o.env.PATH ?? o.env.Path ?? "", "win32")) out.push(p.join(d, "agent-browser.exe"), ...inPrefix(d));
+  const prefix = o.env.npm_config_prefix;
+  if (prefix && safeDir(prefix, "win32")) out.push(...inPrefix(prefix));
+  const appData = o.env.APPDATA && safeDir(o.env.APPDATA, "win32") ? o.env.APPDATA : p.join(o.home, "AppData", "Roaming");
+  out.push(...inPrefix(p.join(appData, "npm")));
   return [...new Set(out)];
 }
 

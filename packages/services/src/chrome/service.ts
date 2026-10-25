@@ -11,7 +11,7 @@ import {
 } from "@careeros/contract";
 import type { ServiceContext } from "../context.js";
 import { classifyInstall, installFailedText, shellPath, terminalFix } from "../install-error.js";
-import { findNpm, NODE, toolPath, type VersionProbe } from "../toolchain.js";
+import { findNpm, NODE, toolPath, type FoundNpm, type VersionProbe } from "../toolchain.js";
 import type { ProcessRunner } from "../claude/process.js";
 import type { BrowserPlan } from "../claude/args.js";
 import { BOARDS, canonicalAddress, cleanBoards, directAddress, hasControls, landingPage, pageKind } from "./boards.js";
@@ -347,13 +347,14 @@ export class ChromeSearch {
     const dir = this.ownDir(h);
     fs.mkdirSync(dir, { recursive: true });
     // npm runs `#!/usr/bin/env node`, so the folder of the node that was picked leads PATH.
-    const env = helperEnv({ path: toolPath(h.env.PATH ?? h.env.Path, h.platform, { first: [path.dirname(npm)], exists: h.exists }), home: h.home }, h.env);
+    const nodeDir = (h.platform === "win32" ? path.win32 : path.posix).dirname(npm.node.path);
+    const env = helperEnv({ path: toolPath(h.env.PATH ?? h.env.Path, h.platform, { first: [nodeDir], exists: h.exists }), home: h.home }, h.env);
     // No install scripts (the package ships its binaries; its launcher marks them runnable) and npm's own registry.
     const pkg = `agent-browser@${HELPER_VERSION}`;
     const flags = ["--no-audit", "--no-fund", "--ignore-scripts", "--registry=https://registry.npmjs.org/"];
     // npm's own words decide what went wrong (install-error.ts), so the card can say why, not just "try again".
     const npmInstall = async (more: string[]) => {
-      const r = await h.runner.run(npm, ["install", "--prefix", dir, ...flags, "--loglevel=error", ...more, pkg], { cwd: dir, env, timeoutMs: INSTALL_TIMEOUT_MS });
+      const r = await h.runner.run(npm.cmd, [...npm.pre, "install", "--prefix", dir, ...flags, "--loglevel=error", ...more, pkg], { cwd: dir, env, timeoutMs: INSTALL_TIMEOUT_MS });
       return r.code !== 0 || r.timedOut ? classifyInstall(`${r.stdout}\n${r.stderr}`, { timedOut: r.timedOut }) : null;
     };
     let failure = await npmInstall([]);
@@ -374,15 +375,10 @@ export class ChromeSearch {
     if (!f.helper || f.tooOld) throw new Error(COPY.installFailed);
   }
 
-  /** macOS and Linux: npm next to the first node that is new enough (toolchain). Windows: the first npm.cmd on PATH. */
-  private findNpm(h: ChromeHost): string | null {
+  /** npm next to the first node that is new enough (toolchain). Windows: run as node.exe npm-cli.js, never npm.cmd. */
+  private findNpm(h: ChromeHost): FoundNpm | null {
     const isExec = h.isExecutable ?? defaultExecutable;
-    if (h.platform !== "win32") return findNpm(h.env, { platform: h.platform, exists: h.exists, isExec, probe: h.probe })?.npm ?? null;
-    const name = h.platform === "win32" ? "npm.cmd" : "npm";
-    const sep = h.platform === "win32" ? ";" : ":";
-    const dirs = [...this.pathVar(h).split(sep)].filter((d) => d && path.isAbsolute(d));
-    for (const d of dirs) { const c = path.join(d, name); if (isExec(c)) return c; }
-    return null;
+    return findNpm(h.env, { platform: h.platform, exists: h.exists, isExec, probe: h.probe });
   }
 
   async openRemote(): Promise<ChromeSearchState> {

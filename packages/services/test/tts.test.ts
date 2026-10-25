@@ -8,7 +8,7 @@ import { dispatch } from "../src/dispatch.js";
 import { CACHE_CAP_BYTES, cacheDirFor, cachedFile, cacheKey, clearCache, ENGINE_VERSION, ensureCacheDir, privateDirFor, prune, storeFile } from "../src/tts-cache.js";
 import {
   downloadModel, engineStatus, generatePreviewFiles, installSupertonic, LANGUAGE_PROBE, probeLanguages, runProcess, SUPERTONIC_PINNED_VERSION, synthesize,
-  ttsChildEnv, type ChildLike, type NarratorPaths, type SpawnFn,
+  killProcessTree, ttsChildEnv, venvTool, type ChildLike, type NarratorPaths, type SpawnFn,
 } from "../src/tts-runner.js";
 import { installTtsHooks, purgeEphemeral, resolveTtsMedia, setTtsDeps } from "../src/tts.js";
 import { openWorkspace } from "../src/workspace.js";
@@ -86,6 +86,40 @@ describe("runProcess", () => {
   it("reports a spawn failure instead of throwing", async () => {
     const r = await runProcess("/nope", [], { timeoutMs: 100, spawn: () => { throw new Error("ENOENT"); } });
     expect(r.spawnError).toBe("ENOENT");
+  });
+});
+
+describe("read aloud on Windows (simulated)", () => {
+  it("doesn't detach (no console window) and stops the whole tree with taskkill /T /F", async () => {
+    const f = fakeSpawn(() => { /* hangs */ });
+    const r = await runProcess("C:\\venv\\Scripts\\python.exe", ["x"], { timeoutMs: 20, graceMs: 10_000, spawn: f.spawn, killTree, platform: "win32" });
+    expect(r.timedOut).toBe(true);
+    expect(f.runs[0]!.opts).toMatchObject({ shell: false, detached: false, windowsHide: true });
+
+    const calls: string[][] = [];
+    const child = new FakeChild();
+    (child as { pid: number | undefined }).pid = 4242;
+    killProcessTree(child, "SIGTERM", { platform: "win32", taskkill: (a) => calls.push(a) });
+    expect(calls).toEqual([["/T", "/F", "/PID", "4242"]]);
+    expect(child.signals).toEqual([]);
+    killProcessTree(new FakeChild(), "SIGTERM", { platform: "win32", taskkill: (a) => calls.push(a) });
+    expect(calls).toHaveLength(1); // no pid: only the child itself
+  });
+
+  it("uses the venv's Scripts\\python.exe and Scripts\\pip.exe", async () => {
+    expect(venvTool("C:\\Users\\alex\\.careeros\\venv", "python", "win32")).toBe("C:\\Users\\alex\\.careeros\\venv\\Scripts\\python.exe");
+    expect(venvTool("/Users/alex/.careeros/venv", "pip", "darwin")).toBe("/Users/alex/.careeros/venv/bin/pip");
+    const f = fakeSpawn((_a, c) => c.exit(0));
+    await installSupertonic(PATHS, { spawn: f.spawn, platform: "win32" });
+    expect(f.runs[1]!.cmd).toMatch(/[\\/]\.careeros[\\/]venv\\Scripts\\pip\.exe$/);
+  });
+
+  it("keeps the variables python and ffmpeg need to start on Windows, and still no secrets", () => {
+    const base = { Path: "C:\\Python312", SystemRoot: "C:\\Windows", windir: "C:\\Windows", USERPROFILE: "C:\\Users\\alex", APPDATA: "C:\\a", LOCALAPPDATA: "C:\\l", TEMP: "C:\\t", TMP: "C:\\t", PATHEXT: ".EXE", ComSpec: "C:\\Windows\\system32\\cmd.exe", ANTHROPIC_API_KEY: "sk-must-not-leak" };
+    const env = ttsChildEnv(base, { platform: "win32" });
+    expect(env).toMatchObject({ PATH: "C:\\Python312", SystemRoot: "C:\\Windows", windir: "C:\\Windows", USERPROFILE: "C:\\Users\\alex", APPDATA: "C:\\a", LOCALAPPDATA: "C:\\l", TEMP: "C:\\t", TMP: "C:\\t", PATHEXT: ".EXE", HF_HUB_OFFLINE: "1" });
+    expect(env.ANTHROPIC_API_KEY).toBeUndefined();
+    expect(ttsChildEnv({ PATH: "/usr/bin", SystemRoot: "C:\\Windows", HOME: "/h" }, { platform: "darwin" }).SystemRoot).toBeUndefined();
   });
 });
 

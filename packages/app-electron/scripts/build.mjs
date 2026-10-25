@@ -14,8 +14,19 @@ const withRenderer = !process.argv.includes("--no-renderer");
 fs.rmSync(dist, { recursive: true, force: true });
 fs.mkdirSync(dist, { recursive: true });
 
+/**
+ * Runs npm with array arguments and no shell. Windows: node can't start npm.cmd without a shell (EINVAL), so npm's
+ * own script runs on this node: npm_execpath when npm started this build, else npm-cli.js next to node.exe.
+ */
+function npm(args, opts) {
+  if (process.platform !== "win32") return execFileSync("npm", args, opts);
+  const fromNpm = process.env.npm_execpath;
+  const cli = fromNpm && /^npm-cli\.c?js$/i.test(path.basename(fromNpm)) ? fromNpm : path.join(path.dirname(process.execPath), "node_modules", "npm", "bin", "npm-cli.js");
+  return execFileSync(process.execPath, [cli, ...args], opts);
+}
+
 if (withRenderer) {
-  execFileSync(process.platform === "win32" ? "npm.cmd" : "npm", ["run", "build", "-w", "@careeros/app-ui"], { cwd: repo, stdio: "inherit" });
+  npm(["run", "build", "-w", "@careeros/app-ui"], { cwd: repo, stdio: "inherit" });
   fs.cpSync(path.join(repo, "packages/app-ui/dist"), path.join(dist, "renderer"), { recursive: true });
 }
 
@@ -66,7 +77,7 @@ await build({
 const icons = ["app-icon-512.png", "app-icon-1024.png"].map((f) => path.join(repo, "packages/brand/assets", f));
 if (icons.some((f) => !fs.existsSync(f))) {
   try {
-    execFileSync(process.platform === "win32" ? "npm.cmd" : "npm", ["run", "icons:png", "-w", "@careeros/brand"], { cwd: repo, stdio: "inherit" });
+    npm(["run", "icons:png", "-w", "@careeros/brand"], { cwd: repo, stdio: "inherit" });
   } catch {
     console.warn("build: couldn't render the app icon (no Chromium for Playwright?). Continuing with Electron's default icon.");
   }

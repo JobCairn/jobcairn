@@ -841,3 +841,35 @@ describe("Search in my Chrome: no extra Allow prompts for retries; scheduled sea
     expect((await x.call<ChromeSearchState>("chrome.state", false)).last_run).toMatchObject({ mode: "web", reason: "connect_failed" });
   });
 });
+
+describe("Search in my Chrome on Windows (simulated)", () => {
+  it("installs with node.exe running npm-cli.js (never npm.cmd), then runs the helper's own .exe", async () => {
+    const x = setup({ helper: "none" });
+    const nodeExe = "C:\\Program Files\\nodejs\\node.EXE";
+    const cli = "C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npm-cli.js";
+    let installed = false;
+    const fb = fakeBrowser({ version: "0.38.2" });
+    const runs: { cmd: string; args: string[]; env?: Record<string, string> }[] = [];
+    x.host.platform = "win32";
+    x.host.env = { Path: "C:\\Windows\\system32;C:\\Program Files\\nodejs", PATHEXT: ".COM;.EXE;.BAT;.CMD", SystemRoot: "C:\\Windows", APPDATA: "C:\\Users\\alex\\AppData\\Roaming", ANTHROPIC_API_KEY: "sk-must-not-leak" };
+    x.host.home = "C:\\Users\\alex";
+    x.host.exists = () => false;
+    x.host.probe = (p) => (p === nodeExe ? "22.13.0" : null);
+    const ownExe = (p: string) => p.includes("browser-helper") && p.endsWith("\\node_modules\\agent-browser\\bin\\agent-browser-win32-x64.exe");
+    x.host.isExecutable = (p) => p === nodeExe || p === cli || p === "C:\\Program Files\\nodejs\\npm.cmd" || (installed && ownExe(p));
+    x.host.runner = fakeRunner(async (cmd, args, opts) => {
+      runs.push({ cmd, args, env: opts.env });
+      if (cmd === nodeExe) { installed = true; return { code: 0 }; }
+      return fb.runner.run(cmd, args, opts);
+    });
+    const st = await x.call<ChromeSearchState>("chrome.install");
+    expect(runs[0]!.cmd).toBe(nodeExe);
+    expect(runs[0]!.args.slice(0, 4)).toEqual([cli, "install", "--prefix", path.join(x.host.dataDir, "browser-helper")]);
+    expect(runs[0]!.env!.PATH!.split(";")[0]).toBe("C:\\Program Files\\nodejs");
+    expect(runs[0]!.env!.SystemRoot).toBe("C:\\Windows");
+    expect(Object.keys(runs[0]!.env!)).not.toContain("ANTHROPIC_API_KEY");
+    expect(runs.some((r) => /\.(cmd|bat)$/i.test(r.cmd))).toBe(false);
+    expect(st.helper).toMatchObject({ found: true, version: "0.38.2" });
+    expect(ownExe(runs.at(-1)!.cmd)).toBe(true);
+  });
+});

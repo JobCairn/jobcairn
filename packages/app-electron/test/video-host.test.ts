@@ -29,6 +29,13 @@ describe("install hand-off", () => {
     expect(withBrewPath("/usr/bin:/opt/homebrew/bin", "darwin", () => true)).toBe("/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin");
   });
 
+  it("Windows (simulated): keeps the env's own `Path` key and adds no second PATH", () => {
+    const win = electronVideoHost({ ...BASE, packaged: true, platform: "win32", env: { Path: "C:\\Tools" }, exists: () => false, confirm: async () => false });
+    // The person's PATH first; on a real Windows the saved-PATH and installer folders follow.
+    expect(win.env.Path).toMatch(/^C:\\Tools(;|$)/);
+    expect(Object.keys(win.env).filter((k) => k.toUpperCase() === "PATH")).toEqual(["Path"]);
+  });
+
   it("asks first, then runs the shipped setup runner, in development and packaged alike", async () => {
     const runner = fakeRunner(() => ({ stdout: '{"ok":true,"message":"done"}' }));
     let asked = "";

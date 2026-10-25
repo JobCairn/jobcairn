@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { findBrew, findNpm, findTool, NODE, PYTHON, readVersion, toolPath, whichTool } from "../src/toolchain.js";
+import { findBrew, findNpm, findTool, NODE, probeEnv, PYTHON, readVersion, toolPath, whichTool } from "../src/toolchain.js";
 import { toolEnv } from "../src/tts-runner.js";
 
 const BREW = (p: string) => p === "/opt/homebrew/bin" || p === "/opt/homebrew/sbin";
@@ -81,5 +81,45 @@ describe("findNpm, whichTool, findBrew", () => {
     expect(readVersion("Python 3.12.15")).toBe("3.12.15");
     expect(readVersion("ffmpeg version 7.1")).toBe("7.1.0");
     expect(readVersion("nothing")).toBeNull();
+  });
+});
+
+describe("Windows (simulated)", () => {
+  const env = { Path: "C:\\Windows\\system32;\"C:\\Program Files\\nodejs\";C:\\Python312;C:\\ffmpeg\\bin;relative;\\rooted", PATHEXT: ".COM;.EXE;.BAT;.CMD" };
+
+  it("finds node.exe and python.exe through PATHEXT, reading `Path`, never a shim", () => {
+    const versions: Record<string, string> = { "C:\\Program Files\\nodejs\\node.EXE": "22.13.0", "C:\\Python312\\python.EXE": "3.12.4", "C:\\Windows\\system32\\node.CMD": "22.0.0" };
+    const o = { platform: "win32" as const, isExec: (p: string) => p in versions, probe: (p: string) => versions[p] ?? null };
+    expect(findTool(NODE, env, o).tool?.path).toBe("C:\\Program Files\\nodejs\\node.EXE");
+    expect(findTool(PYTHON, env, o).tool).toEqual({ path: "C:\\Python312\\python.EXE", version: "3.12.4", ok: true });
+  });
+
+  it("falls back to the py launcher when there is no python.exe", () => {
+    const r = findTool(PYTHON, env, { platform: "win32", isExec: (p) => p === "C:\\Windows\\system32\\py.EXE", probe: () => "3.13.1" });
+    expect(r.tool?.path).toBe("C:\\Windows\\system32\\py.EXE");
+  });
+
+  it("whichTool returns ffmpeg.exe, never ffmpeg.cmd or a bare name", () => {
+    expect(whichTool("ffmpeg", env, { platform: "win32", isExec: (p) => p === "C:\\ffmpeg\\bin\\ffmpeg.EXE" })).toBe("C:\\ffmpeg\\bin\\ffmpeg.EXE");
+    expect(whichTool("ffmpeg", env, { platform: "win32", isExec: (p) => /ffmpeg(\.CMD|\.BAT)?$/.test(p) })).toBeNull();
+  });
+
+  it("runs npm as node.exe <node folder>\\node_modules\\npm\\bin\\npm-cli.js, never npm.cmd", () => {
+    const node = "C:\\Program Files\\nodejs\\node.EXE";
+    const cli = "C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npm-cli.js";
+    const o = { platform: "win32" as const, isExec: (p: string) => p === node || p === cli, probe: () => "22.13.0" };
+    expect(findNpm(env, o)).toEqual({ npm: cli, node: { path: node, version: "22.13.0", ok: true }, cmd: node, pre: [cli] });
+    expect(findNpm(env, { ...o, isExec: (p: string) => p === node || p.endsWith("npm.cmd") })).toBeNull();
+  });
+
+  it("macOS npm runs as itself", () => {
+    const exec = new Set(["/opt/homebrew/bin/node", "/opt/homebrew/bin/npm"]);
+    expect(findNpm({ PATH: "" }, { platform: "darwin", exists: BREW, isExec: (p) => exec.has(p), probe: () => "22.13.0" })).toMatchObject({ npm: "/opt/homebrew/bin/npm", cmd: "/opt/homebrew/bin/npm", pre: [] });
+  });
+
+  it("a version probe gets the Windows system variables, and nothing else beyond PATH and HOME", () => {
+    const source = { HOME: "/h", SystemRoot: "C:\\Windows", windir: "C:\\Windows", TEMP: "C:\\t", PATHEXT: ".EXE", USERPROFILE: "C:\\Users\\alex", ANTHROPIC_API_KEY: "sk-must-not-leak" };
+    expect(probeEnv("C:\\Python312\\python.exe", "win32", source)).toEqual({ PATH: "C:\\Python312", HOME: "/h", SystemRoot: "C:\\Windows", windir: "C:\\Windows", TEMP: "C:\\t", PATHEXT: ".EXE", USERPROFILE: "C:\\Users\\alex" });
+    expect(probeEnv("/opt/homebrew/bin/node", "darwin", source)).toEqual({ PATH: "/opt/homebrew/bin", HOME: "/h" });
   });
 });

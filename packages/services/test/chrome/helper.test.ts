@@ -2,7 +2,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { fileLock, memoryLock, parseHelperJson, safeArgs, sessionLockDir, supportedVersion } from "../../src/chrome/helper.js";
+import { fileLock, helperCandidates, memoryLock, parseHelperJson, safeArgs, sessionLockDir, supportedVersion } from "../../src/chrome/helper.js";
 
 describe("helper arguments (I2)", () => {
   it("lets through only the app's own flags; any other argument that looks like a flag is refused", () => {
@@ -101,5 +101,36 @@ describe("session lock (C1)", () => {
       expect(fs.existsSync(`${at}.takeover`)).toBe(false);
       r();
     } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+  });
+});
+
+describe("where the helper is looked for", () => {
+  it("macOS: unchanged - own copy, PATH, Homebrew, npm prefix bin, ~/.npm-global/bin", () => {
+    expect(helperCandidates({ ownDir: "/data/own", env: { PATH: "/a::rel", npm_config_prefix: "/pfx" }, platform: "darwin", home: "/Users/alex" })).toEqual([
+      "/data/own/node_modules/.bin/agent-browser", "/a/agent-browser", "/opt/homebrew/bin/agent-browser", "/usr/local/bin/agent-browser", "/pfx/bin/agent-browser", "/Users/alex/.npm-global/bin/agent-browser",
+    ]);
+  });
+
+  it("Windows: the package's own .exe (never agent-browser.cmd), in each npm prefix, which is the prefix itself", () => {
+    const exe = "node_modules\\agent-browser\\bin\\agent-browser-win32-x64.exe";
+    const c = helperCandidates({
+      ownDir: "C:\\Users\\alex\\AppData\\Roaming\\App\\browser-helper", platform: "win32", home: "C:\\Users\\alex", arch: "x64",
+      env: { Path: "C:\\Tools;\\rooted;rel", npm_config_prefix: "D:\\npm", APPDATA: "C:\\Users\\alex\\AppData\\Roaming" },
+    });
+    expect(c).toEqual([
+      `C:\\Users\\alex\\AppData\\Roaming\\App\\browser-helper\\${exe}`,
+      "C:\\Tools\\agent-browser.exe", `C:\\Tools\\${exe}`,
+      `D:\\npm\\${exe}`,
+      `C:\\Users\\alex\\AppData\\Roaming\\npm\\${exe}`,
+    ]);
+    expect(c.some((p) => /\.(cmd|bat)$/i.test(p) || p.includes("\\bin\\agent-browser\\") || p.includes(".bin"))).toBe(false);
+  });
+
+  it("Windows on ARM: an arm64 build first, then the x64 one; %APPDATA% falls back to the home folder", () => {
+    const c = helperCandidates({ ownDir: "C:\\own", platform: "win32", home: "C:\\Users\\alex", arch: "arm64", env: {} });
+    expect(c).toEqual([
+      "C:\\own\\node_modules\\agent-browser\\bin\\agent-browser-win32-arm64.exe", "C:\\own\\node_modules\\agent-browser\\bin\\agent-browser-win32-x64.exe",
+      "C:\\Users\\alex\\AppData\\Roaming\\npm\\node_modules\\agent-browser\\bin\\agent-browser-win32-arm64.exe", "C:\\Users\\alex\\AppData\\Roaming\\npm\\node_modules\\agent-browser\\bin\\agent-browser-win32-x64.exe",
+    ]);
   });
 });

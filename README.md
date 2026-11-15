@@ -59,3 +59,7 @@ Signing is optional and set up with environment variables; see [docs/packaging.m
 You need your own Claude plan that includes Claude Code. JobCairn is an independent product and isn't affiliated with Anthropic.
 
 If JobCairn helps, please ⭐ star this repo. It helps others find it.
+
+## More from Lax Society
+
+Part of [Lax Society](https://laxsociety.github.io): open-source apps, built in public.
